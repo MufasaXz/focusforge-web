@@ -1,13 +1,11 @@
-/* One material, one spine: text, capture and notes turn as a single leaf. */
-.toolkit-shell{--sheet-offset:0px;isolation:isolate}
+/* Launcher screens, not paper leaves. Native horizontal gestures remain reversible. */
+.toolkit-shell{isolation:isolate}
 .feature-rail{display:block;border:0;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:pan-x pan-y}
-.sheet-track{width:300%;position:relative}
-.sheet-stop{position:absolute;top:0;width:33.333333%;height:1px;scroll-snap-align:start;scroll-snap-stop:always;pointer-events:none}
-.sheet-stack{width:33.333333%;display:grid;perspective:2200px;transform:translateX(var(--sheet-offset));isolation:isolate}
-.feature-slide{grid-area:1/1;width:100%;transform-origin:0 50%;transform:rotateY(var(--turn,0deg));transform-style:preserve-3d;background:var(--white);border:1px solid var(--line);border-radius:3px 14px 14px 3px;box-shadow:inset 8px 0 12px #2629230b,2px 3px 0 #d7d7c8,5px 6px 0 #e8e9dd;position:relative;backface-visibility:hidden}
-.feature-slide:before{content:'';position:absolute;inset:0;background:linear-gradient(90deg,#26292324,transparent 5%,transparent 90%,#2629230c);pointer-events:none;border-radius:inherit;transform:translateZ(2px)}
-.feature-slide:after{content:'';position:absolute;inset:0;background:#e8e9dd;border:1px solid var(--line);transform:rotateY(180deg);backface-visibility:hidden}
-.feature-slide>div{backface-visibility:hidden;transform:translateZ(1px)}
+.screen-track{display:flex;width:300%;position:relative;transform-style:preserve-3d}
+/* An untransformed endpoint preserves scroll extent as the final plane recedes. */
+.screen-track:after{content:'';position:absolute;right:0;top:0;width:1px;height:1px;pointer-events:none}
+.feature-slide{width:33.333333%;flex:0 0 33.333333%;transform-origin:50% 50%;transform:perspective(1400px) translateZ(var(--screen-depth,0px)) rotateY(var(--screen-angle,0deg));backface-visibility:hidden;background:var(--white);border:1px solid var(--line);border-radius:14px;position:relative}
+.feature-slide:before,.feature-slide:after{content:none}
 .current .feature-copy,.current .feature-aside .check-list,.current .feature-phone img{animation:none}
 .feature-phone img{opacity:1;transform:none;animation:none;filter:drop-shadow(0 16px 14px #26292320)}
 .feature-rings{display:none}.feature-copy .eyebrow{font-size:12px;letter-spacing:0}.feature-aside .check-list,.preview-caption{font-size:12px}
@@ -15,6 +13,22 @@
 .hero-phone.phone-front{container-type:inline-size}
 .hero-demo-clock{position:absolute;left:33.68%;top:41.81%;width:32.94%;height:5.23%;display:grid;place-items:center;background:linear-gradient(100deg,#2c2d30,#27282b);color:#f4eee3;font-family:InterDisplay,Inter,sans-serif;font-size:12.65cqw;font-weight:700;letter-spacing:-.048em;line-height:1.05;font-variant-numeric:tabular-nums;white-space:nowrap}
 .hero-demo-clock>span{display:block}
+/* Three app-backed faces; only this calibrated dial slot changes. */
+.hero-demo-clock,.hero-retro-pointer,.hero-face{opacity:0;transition:opacity 480ms ease,transform 480ms ease;pointer-events:none}.hero-demo-clock.face-visible,.hero-retro-pointer.face-visible,.hero-face.face-visible{opacity:1;transform:none}
+.hero-retro-pointer{position:absolute;inset:0;width:100%;height:100%}
+.hero-face{position:absolute;left:12.06%;top:26.55%;width:75.88%;height:34.32%;border-radius:50%;background:#1f1f1e;display:flex;align-items:center;justify-content:center;transform:translateY(5px);color:#f4eee3;font-family:InterDisplay,Inter,sans-serif}
+.demo-flip-board{display:flex;align-items:center;gap:1cqw}.demo-flip-card{position:relative;width:10cqw;height:17cqw;background:linear-gradient(#333432 50%,#2e2f2d 50%);border-radius:1.5cqw;display:grid;place-items:center;font-size:12cqw;font-weight:700;line-height:1}.demo-flip-card i{position:absolute;top:50%;left:0;right:0;height:1px;background:#77776f;box-shadow:0 2px 2px #0004}.demo-flip-colon{color:#e5c36c;font-size:12cqw}
+.demo-flip-card{perspective:350px}.flip-half{position:absolute;left:0;right:0;height:50%;overflow:hidden;backface-visibility:hidden;background:#333432}.flip-half>span{position:absolute;left:0;right:0;height:17cqw;display:grid;place-items:center}.flip-top{top:0;border-radius:1.5cqw 1.5cqw 0 0;transform-origin:bottom}.flip-top>span{top:0}.flip-bottom{bottom:0;background:#2e2f2d;border-radius:0 0 1.5cqw 1.5cqw;transform-origin:top}.flip-bottom>span{bottom:0}.flip-falling,.flip-rising{visibility:hidden}
+.hero-face-minimal{flex-direction:column;font-family:Inter,Arial,sans-serif;font-size:12.65cqw;font-weight:200;letter-spacing:-.02em}.hero-face-minimal>i{width:46cqw;height:2px;background:#ffffff19;margin-top:2.5cqw}.hero-face-minimal b{display:block;height:100%;background:#e5c36c;transform-origin:left}
+.clock-a11y{position:absolute;width:1px;height:1px;clip-path:inset(50%);overflow:hidden;white-space:nowrap}
+.podium{height:260px;display:flex;justify-content:center;align-items:flex-end;gap:22px;padding:70px 8px 0;border-bottom:1px solid var(--line);margin-bottom:16px;position:relative;color:var(--ink)}
+.podium-column{position:relative;width:75px;max-width:27%;height:var(--bar-height);outline-offset:6px}.podium-bar{position:absolute;inset:0}.podium-outline,.podium-fill{position:absolute;inset:0;border-radius:4px 4px 0 0;transform-origin:bottom}.podium-outline{border:1px solid #52752b}.podium-fill{background:#52752b;inset:2px 2px 0}.podium-label{position:absolute;bottom:calc(100% + 9px);left:50%;width:100px;text-align:center;translate:-50% 0;display:flex;align-items:center;flex-direction:column;font-size:14px}.podium-name{font-weight:700}.podium-medal{display:flex;align-items:center;flex-direction:column;margin-bottom:5px}.podium-medal svg{width:30px;height:36px}.podium-medal text{fill:#262923;font-family:Inter,Arial,sans-serif;font-size:14px;font-weight:700}.podium-medal small{font-size:11px;color:var(--muted)}.medal-1{color:#e9bc67}.medal-2{color:#bdc0b6}.medal-3{color:#bca083}
+.podium-tooltip{position:absolute;bottom:8px;left:50%;translate:-50% 0;background:var(--white);color:var(--ink);padding:5px 7px;border-radius:3px;font-size:12px;white-space:nowrap;visibility:hidden}.podium-column:hover .podium-tooltip,.podium-column:focus .podium-tooltip{visibility:visible}
+.ranking-table{font-size:12px;color:var(--muted);margin:14px 0}.ranking-table summary{cursor:pointer}.ranking-table table{width:100%;border-collapse:collapse;margin-top:12px;color:var(--ink)}.ranking-table caption{text-align:left;margin-bottom:8px}.ranking-table th,.ranking-table td{text-align:left;padding:5px;border-bottom:1px solid var(--line)}
+.group-demo-note{font-size:12px;color:var(--muted);margin:20px 0 8px}.friends-art .study-circle{height:auto}.friends-art .study-member{height:64px;overflow:visible}.friend-timer{text-align:right;font-size:15px;font-variant-numeric:tabular-nums;white-space:nowrap}.friend-timer small{font-size:11px;color:var(--muted)}
+@media(prefers-reduced-motion:reduce){.hero-demo-clock,.hero-retro-pointer,.hero-face{transition:none}.hero-face{transform:none}}
+@media(forced-colors:active){.podium-fill{background:CanvasText;background-image:repeating-linear-gradient(45deg,CanvasText 0 2px,Canvas 2px 6px)}.podium-outline{border-color:CanvasText}}
+@media print{.podium-fill{background:repeating-linear-gradient(45deg,#262923 0 2px,#fff 2px 6px)}}
 .art-footnote{font-size:12px;letter-spacing:0;max-width:100%;text-align:center}
 .community-pair .rank-art,.community-pair .friends-art{padding:26px 24px;border:1px solid var(--line);border-radius:6px;background:#f7f6ef;box-shadow:0 3px 0 #26292308;min-height:430px}
 .community-art-title{align-items:center;padding-bottom:18px;border-bottom:1px solid var(--line);font-size:16px}.community-art-title b{font-weight:600}

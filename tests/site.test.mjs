@@ -74,7 +74,7 @@ test('home keeps native story and feature navigation without retired controls', 
 });
 test('pencil story and whole sheet retain motion corrections without cinematic overlays', async () => {
  const html = await read('dist/index.html');
- for (const text of ['class="sheet-stack"', 'class="rank-list"', 'class="study-circle"', 'Sharing &amp; privacy', 'hero-demo-clock']) assert.ok(html.includes(text), text);
+ for (const text of ['class="screen-track"', 'class="podium"', 'class="study-circle"', 'Sharing &amp; privacy', 'hero-demo-clock']) assert.ok(html.includes(text), text);
  for (const text of ['story-pov', 'pov-device', 'story-timer', 'flip-clock', 'toolkit-phone', 'toolkit-flip', 'rank-sculpture']) assert.ok(!html.includes(text), text);
  const story = await read('src/DistractionStory.tsx');
  for (const stage of ['thoughtful', 'dust', 'study']) assert.ok(story.includes(`'${stage}'`), stage);
@@ -91,17 +91,37 @@ test('woody background keeps the original charcoal, green and typography', async
 });
 test('countdown and sheet motion use bounded, cleanup-safe mechanisms', async () => {
  const clock = await read('src/HeroClock.tsx');
- assert.match(clock, /const deadline = Date.now\(\) \+ 25 \* 60 \* 1000/);
- assert.match(clock, /deadline - Date.now\(\) - \(left - 1\) \* 1000/);
- assert.match(clock, /clearTimeout\(timer\); observer\?\.disconnect\(\)/);
- assert.match(clock, /document.hidden \|\| !visible/);
+ assert.match(clock, /1500 - useDemoElapsed\(active, 1500\)/);
+ const ticker = await read('src/useDemoActivity.ts');
+ assert.match(ticker, /Math.floor\(\(now - started\) \/ 1000\)/);
+ assert.match(ticker, /document.hidden \|\| !clockSubscribers.size/);
+ assert.match(ticker, /clockSubscribers.delete\(sync\)/);
+ assert.match(ticker, /clearTimeout\(clockTimer\)/);
  const story = await read('src/DistractionStory.tsx');
  assert.match(story, /dust.length < 420/);
  assert.match(story, /if \(document.hidden\) \{ cancelAnimationFrame\(frame\); frame = 0; \}/);
  const corrections = await read('src/corrections.css');
- assert.match(corrections, /\.feature-slide\{[^}]*transform:rotateY/);
- assert.match(corrections, /\.sheet-stop\{[^}]*scroll-snap-align:start/);
+ assert.match(corrections, /\.feature-slide\{[^}]*rotateY\(var\(--screen-angle/);
+ assert.match(corrections, /\.feature-rail\{[^}]*scroll-snap-type:x mandatory/);
+ assert.ok(!corrections.includes('rotateY(180deg)'));
+ assert.ok(!corrections.includes('--sheet-offset'));
+ const launcher = await read('src/useLauncherFlip.ts');
+ assert.match(launcher, /next !== current/);
+ assert.match(launcher, /cancelAnimationFrame\(frame\); observer.disconnect/);
  assert.ok(!(await read('src/styles.css')).includes('story-pov'));
+});
+test('community uses explicit fictional podium rankings and elapsed group plans', async () => {
+ const html = await read('dist/index.html');
+ for (const text of ['Keshab', 'Sudeep', 'Pranshu', 'Silver', 'Gold', 'Bronze', 'View demo rankings', 'Not focusing', 'Fictional weekly focus minutes']) assert.ok(html.includes(text), text);
+ assert.ok(!html.includes('class="rank-list"'));
+ const group = await read('src/Community.tsx');
+ for (const delay of ['1100, 1000', '2100, 1', '2150, 450']) assert.ok(group.includes(delay), delay);
+ assert.match(group, /useDemoElapsed\(active/);
+ assert.match(await read('src/useDemoActivity.ts'), /Date.now\(\)/);
+ const clock = await read('src/HeroClock.tsx');
+ assert.ok(clock.includes("['Retro', 'Flip', 'Minimal']"));
+ assert.ok(!clock.includes("'Neon'"));
+ assert.match(clock, /hold.current = 5480/);
 });
 test('motion respects accessibility settings and deploy headers are present', async () => {
  assert.match(await read('src/styles.css'), /prefers-reduced-motion:reduce/);

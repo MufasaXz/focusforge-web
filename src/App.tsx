@@ -1,4 +1,5 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import { useLauncherFlip } from './useLauncherFlip';
 import { useMotion } from './useMotion';
 import DistractionStory from './DistractionStory';
 import Community from './Community';
@@ -30,40 +31,26 @@ const faq = [
   ['Can I delete my account and data?', 'Yes, you can request account and data deletion on our Delete account page without reinstalling the app. In-app deletion is also available. Parent-sharing and historical leaderboard records need additional cleanup; the deletion page explains these limitations.']
 ];
 function Toolkit() {
-  const [index, setIndex] = useState(0);
-  const rail = useRef<HTMLDivElement>(null);
+  const { rail, index, navigate: go, target } = useLauncherFlip(3);
   const content: Record<string, { title: string; description: string; image: string; label: string; features: string[] }> = {
     shield: { title: 'Close the feed.\nKeep the lecture.', description: 'Your phone is a tool. Keep it that way. Shield distracting apps, give your favorites a daily budget, and filter supported YouTube feeds without giving up your lectures.', image: 'shield', label: 'Distractions, meet boundaries.', features: ['Selected-app shielding', 'Daily time budgets', 'Focus-only blocking'] },
     focus: { title: 'One thing.\nYour full attention.', description: 'A quiet workspace for your next study session. Choose a Pomodoro preset or make your own plan, pick a subject, and let ambient sounds set the mood.', image: 'focus', label: 'A rhythm that feels like yours.', features: ['Pomodoro & custom plans', 'Ambient sound mixes', 'Full-screen study timer'] },
     progress: { title: 'Small sessions.\nSomething bigger.', description: 'Make your effort visible with daily goals, subject totals, weekly views and streaks. Not a race to be perfect. Just a reason to show up again.', image: 'dashboard', label: 'Notice the work you put in.', features: ['Daily study goals', 'Subject-by-subject history', 'Streaks, XP & badges'] }
   };
   const entries = Object.entries(content);
-  const go = (next: number) => {
-    const element = rail.current;
-    if (!element) return;
-    element.scrollTo({ left: Math.max(0, Math.min(entries.length - 1, next)) * element.clientWidth, behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'instant' : 'smooth' });
-  };
   const keyboard = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return;
     event.preventDefault();
-    go(event.key === 'Home' ? 0 : event.key === 'End' ? entries.length - 1 : index + (event.key === 'ArrowRight' ? 1 : -1));
+    go(event.key === 'Home' ? 0 : event.key === 'End' ? entries.length - 1 : target.current + (event.key === 'ArrowRight' ? 1 : -1));
   };
   return <section className="toolkit section" id="features"><div className="section-heading reveal"><span className="eyebrow">01 / THE TOOLKIT</span><h2>A little structure.<br/><span className="serif">A lot more possibility.</span></h2><p>Everything you need to turn “I should study”<br className="desktop-break"/> into “I’m glad I did.”</p></div>
-    <div className="toolkit-shell"><div className="feature-rail" ref={rail} tabIndex={0} role="region" aria-roledescription="carousel" aria-label="Explore the toolkit. Swipe or use left and right arrow keys." onKeyDown={keyboard} onScroll={event => {
-      const element = event.currentTarget;
-      const progress = element.scrollLeft / element.clientWidth;
-      element.style.setProperty('--sheet-offset', `${element.scrollLeft}px`);
-      element.querySelectorAll<HTMLElement>('.feature-slide').forEach((sheet, position) => {
-        sheet.style.setProperty('--turn', `${Math.max(0, Math.min(1, progress - position)) * -180}deg`);
-      });
-      setIndex(Math.round(progress));
-    }}><div className="sheet-track">{entries.map(([key], position) => <span key={key} className="sheet-stop" style={{ left: `${position * 100 / entries.length}%` }} aria-hidden="true"/>)}<div className="sheet-stack">
-      {entries.map(([key, item], position) => <article key={key} className={`feature-slide ${key} ${position === index ? 'current' : ''}`} style={{ zIndex: entries.length - position }} role="group" aria-roledescription="slide" aria-label={`${position + 1} of ${entries.length}: ${item.label}`} inert={position !== index}>
+    <div className="toolkit-shell"><div className="feature-rail" ref={rail} tabIndex={0} role="region" aria-roledescription="carousel" aria-label="Explore the toolkit. Swipe or use left and right arrow keys." onKeyDown={keyboard}><div className="screen-track">
+      {entries.map(([key, item], position) => <article key={key} className={`feature-slide ${key} ${position === index ? 'current' : ''}`} role="group" aria-roledescription="slide" aria-label={`${position + 1} of ${entries.length}: ${item.label}`} inert={position !== index}>
         <div className="feature-copy"><span className="eyebrow">0{position + 1} / {item.label}</span><h3>{item.title.split('\n').map((line, i) => <span key={line} className={i ? 'serif' : ''}>{line}<br/></span>)}</h3><p>{item.description}</p></div>
-        <div className="feature-phone"><div className="feature-rings" aria-hidden="true"/><img src={asset(`images/${item.image}-dark.png`)} alt={`FocusForge ${item.image} dark-mode widget-test app preview with fictional demo data`} width="680" height="1416" loading="lazy"/></div>
+        <div className="feature-phone"><div className="feature-rings" aria-hidden="true"/><img src={asset(`images/${item.image}-dark.png`)} alt={`FocusForge ${item.image} dark-mode widget-test app preview with fictional demo data`} width="680" height="1416" loading="eager" decoding="async"/></div>
         <div className="feature-aside"><div className={`feature-glyph glyph-${key}`} aria-hidden="true">{key === 'shield' ? <svg viewBox="0 0 120 140"><path d="M60 9 103 26v41c0 27-27 48-43 58C44 115 17 94 17 67V26Z"/><path className="glyph-line" d="m38 66 16 16 31-36"/></svg> : key === 'focus' ? <><i/><i/><span>One thing<br/><em>at a time.</em></span></> : <><i/><i/><i/><span>Keep showing up.</span></>}</div><ul className="check-list">{item.features.map(feature => <li key={feature}><span aria-hidden="true">↗</span>{feature}</li>)}</ul></div>
       </article>)}
-    </div></div></div><div className="feature-controls"><button aria-label="Previous feature" disabled={index === 0} onClick={() => go(index - 1)}>←</button><span aria-live="polite" aria-atomic="true">0{index + 1} <span aria-hidden="true">/</span> 03</span><button aria-label="Next feature" disabled={index === entries.length - 1} onClick={() => go(index + 1)}>→</button></div></div><p className="preview-caption">Actual app widget-test renders with fictional demo data in stylized frames. Not physical-device screenshots.</p></section>;
+    </div></div><div className="feature-controls"><button aria-label="Previous feature" disabled={index === 0} onClick={() => go(target.current - 1)}>←</button><span aria-live="polite" aria-atomic="true">0{index + 1} <span aria-hidden="true">/</span> 03</span><button aria-label="Next feature" disabled={index === entries.length - 1} onClick={() => go(target.current + 1)}>→</button></div></div><p className="preview-caption">Actual app widget-test renders with fictional demo data in stylized frames. Not physical-device screenshots.</p></section>;
 
 }
 function Home() {

@@ -61,7 +61,7 @@ try {
     await page.waitForTimeout(100);
     assert.ok(await page.locator('.writing-hand').evaluate((el, time) => el.getAnimations()[0].playState === 'running' && el.getAnimations()[0].currentTime > time, writingTime), 'hand visibly writes at the desk');
     await page.mouse.wheel(0, 1500);
-    await page.waitForTimeout(150);
+    await page.waitForFunction(() => document.querySelector('.story-scroll').getBoundingClientRect().bottom < innerHeight);
     assert.ok(await page.locator('.story-scroll').evaluate(el => el.getBoundingClientRect().bottom < innerHeight), 'ordinary wheel scroll exits the sticky scene without trapping');
   } else {
     assert.equal(await page.locator('.reduced-story').isVisible(), true);
@@ -79,12 +79,13 @@ try {
   await page.waitForFunction(() => document.querySelector('.feature-slide.progress').classList.contains('current'));
   assert.equal(await page.locator('.toolkit-phone, .toolkit-flip').count(), 0);
   assert.equal(await page.locator('.feature-slide:not(.current)').evaluateAll(elements => elements.every(el => el.inert)), true);
-  await page.getByRole('button', { name: 'Preview a completed session' }).click();
-  await page.getByRole('button', { name: 'Reset illustration', pressed: true }).waitFor();
-  assert.equal(await page.locator('.is-you .rank-number').textContent(), '1');
-  assert.equal(await page.locator('.rank-sculpture').count(), 0);
-  await page.getByRole('button', { name: 'Preview a group session' }).click();
-  await page.getByRole('button', { name: 'Reset connections', pressed: true }).waitFor();
+  await page.locator('.podium').scrollIntoViewIfNeeded();
+  assert.deepEqual(await page.locator('.podium-name').allTextContents(), ['Keshab', 'Sudeep', 'Pranshu']);
+  assert.equal(await page.locator('.rank-list').count(), 0);
+  assert.equal(await page.getByRole('button', { name: 'Replay podium' }).isDisabled(), reducedMotion === 'reduce');
+  await page.locator('.friends-art').scrollIntoViewIfNeeded();
+  assert.equal(await page.locator('.friend-timer').count(), 4);
+  assert.equal(await page.locator('.friend-timer').last().innerText(), '—\nNot focusing');
   await page.locator('summary').filter({ hasText: 'Is FocusForge really free?' }).click();
   assert.equal(await page.locator('.faq-list details').first().getAttribute('open'), '');
   if (width <= 768) {
@@ -123,7 +124,7 @@ try {
  assert.ok((await animated.locator('.phone-front').evaluate(el => getComputedStyle(el).animationName)).includes('float-front'));
  const seconds = time => time.split(':').reduce((minutes, seconds) => Number(minutes) * 60 + Number(seconds));
  const clockBefore = await animated.locator('.hero-demo-clock').textContent();
- await animated.waitForTimeout(1600);
+ await animated.waitForFunction(before => document.querySelector('.hero-demo-clock').textContent !== before, clockBefore, { timeout: 3500 });
  assert.notEqual(await animated.locator('.hero-demo-clock').textContent(), clockBefore, 'illustrative countdown advances');
  const alignment = await animated.locator('.phone-front').evaluate(el => {
    const clock = el.querySelector('.hero-demo-clock');
@@ -172,16 +173,20 @@ try {
  assert.equal(await wheel.evaluate(el => el.getAnimations()[0].currentTime), pausedTime);
  await animated.locator('.feature-rail').evaluate(el => el.scrollTo({ left: el.clientWidth * .35, behavior: 'instant' }));
  await animated.waitForTimeout(80);
- // Native snap settles on a leaf; inspect an explicit mid-turn before allowing snap.
- const turn = await animated.locator('.feature-rail').evaluate(el => {
+ // Inspect two coordinated launcher planes at reversible gesture progress.
+ const turn = await animated.locator('.feature-rail').evaluate(async el => {
    el.style.scrollSnapType = 'none';
    el.scrollLeft = el.clientWidth * .35;
    el.dispatchEvent(new Event('scroll'));
+   await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
    const leaf = el.querySelector('.feature-slide');
    return { matrix: getComputedStyle(leaf).transform, parts: ['.feature-copy', '.feature-phone', '.feature-aside'].every(selector => leaf.contains(leaf.querySelector(selector))), independent: getComputedStyle(leaf.querySelector('.feature-phone img')).transform, exposed: el.querySelectorAll('.feature-slide:not([inert])').length };
  });
- assert.notEqual(turn.matrix, 'none', 'full article owns the page-turn transform');
- assert.ok(turn.parts && turn.independent === 'none' && turn.exposed === 1, 'text phone and graphics share one leaf without independent flips or accessibility duplicates');
+ assert.notEqual(turn.matrix, 'none', 'whole screen owns the launcher transform');
+ assert.ok(turn.parts && turn.independent === 'none' && turn.exposed === 1, 'text phone and graphics share one plane without independent flips or accessibility duplicates');
+ const launcherPlanes = await animated.locator('.feature-rail').evaluate(el => [...el.querySelectorAll('.feature-slide')].map(screen => ({ angle: parseFloat(screen.style.getPropertyValue('--screen-angle')), before: getComputedStyle(screen, ':before').content, after: getComputedStyle(screen, ':after').content })));
+ assert.ok(launcherPlanes[0].angle > 0 && launcherPlanes[1].angle < 0, 'incoming and outgoing screens tilt together in opposite directions');
+ assert.ok(launcherPlanes.every(screen => Math.abs(screen.angle) <= 38 && screen.before === 'none' && screen.after === 'none'), 'restrained launcher angles without leaf backs or shadows');
  await animated.locator('.feature-rail').evaluate(el => { el.style.scrollSnapType = ''; el.scrollTo({ left: 0, behavior: 'instant' }); });
  await animated.waitForFunction(() => document.querySelector('.feature-slide.shield').classList.contains('current'));
  await animated.locator('.feature-rail').focus();
@@ -195,6 +200,18 @@ try {
  await animated.waitForFunction(() => document.querySelector('.feature-slide.progress').classList.contains('current'));
  await animated.keyboard.press('Home');
  await animated.waitForFunction(() => document.querySelector('.feature-slide.shield').classList.contains('current'));
+ await animated.locator('.feature-rail').focus();
+ await animated.keyboard.press('ArrowRight');
+ await animated.keyboard.press('ArrowRight');
+ await animated.waitForFunction(() => document.querySelector('.feature-slide.progress').classList.contains('current'));
+ await animated.waitForTimeout(600);
+ assert.ok(await animated.locator('.feature-rail').evaluate(el => Math.abs(el.scrollLeft - el.clientWidth * 2) < 2), 'final launcher screen settles fully centered without perspective compressing scroll extent');
+ await animated.setViewportSize({ width: 900, height: 900 });
+ await animated.waitForTimeout(150);
+ assert.ok(await animated.locator('.feature-rail').evaluate(el => Math.abs(el.scrollLeft - el.clientWidth * 2) < 2), 'resize preserves selected screen');
+ await animated.setViewportSize({ width: 1440, height: 1000 });
+ await animated.waitForTimeout(150);
+
  await animated.locator('.feature-rail').evaluate(el => el.scrollTo({ left: el.clientWidth, behavior: 'instant' }));
  await animated.waitForFunction(() => document.querySelector('.feature-slide.focus').classList.contains('current'));
  await animated.evaluate(() => {
