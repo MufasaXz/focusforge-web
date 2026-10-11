@@ -5,6 +5,7 @@
     "dashboard.png": "docs/screenshots/01-dashboard.png",
     "shield.png": "docs/screenshots/02-shield.png",
     "focus.png": "docs/screenshots/03-focus.png",
-    "focus-dark.png": "docs/screenshots/dark/03-focus.png"
+    "focus-dark.png": "docs/screenshots/dark/03-focus.png",
+    "focusforge-icon.png": "focusforge-premium/web/icons/Icon-512.png (verified app web manifest icon; copied unchanged, also used as public/favicon.png)"
   }
 }

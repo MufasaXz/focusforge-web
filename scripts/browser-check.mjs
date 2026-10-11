@@ -1,22 +1,26 @@
 import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
-const base = process.env.TEST_URL || 'http://localhost:4173';
+const base = (process.env.TEST_URL || 'http://localhost:4173').replace(/\/$/, '') + '/';
+const routeUrl = route => `${base}${route.replace(/^\//, '')}.html`;
 const browser = await chromium.launch({ args: ['--no-sandbox'] });
 const errors = [];
 await mkdir('/tmp/focusforge-web-review', { recursive: true });
 try {
- for (const colorScheme of ['light', 'dark']) for (const width of [320, 390, 768, 1440]) {
-  const page = await browser.newPage({ viewport: { width, height: 1000 }, colorScheme, reducedMotion: 'reduce' });
+ for (const reducedMotion of ['reduce', 'no-preference']) for (const colorScheme of ['light', 'dark']) for (const width of [320, 390, 768, 1440]) {
+  const page = await browser.newPage({ viewport: { width, height: 1000 }, colorScheme, reducedMotion });
   page.on('pageerror', error => errors.push(error.message));
+  page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
   await page.goto(base);
   await page.getByRole('heading', { name: /Make room/ }).waitFor();
   await page.evaluate(() => document.fonts.ready);
+  assert.ok(await page.locator('.wordmark img').evaluateAll(images => images.every(img => img.complete && img.naturalWidth === 512)));
+  assert.ok(await page.locator('img').evaluateAll(images => images.every(img => new URL(img.src).pathname.startsWith(new URL(document.URL).pathname))));
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `horizontal overflow at ${width}`);
   await page.keyboard.press('Tab');
   assert.equal(await page.locator(':focus').textContent(), 'Skip to content');
   assert.equal(await page.locator(':focus').evaluate(el => getComputedStyle(el).outlineStyle), 'solid');
-  assert.equal(await page.locator('.phone-front').evaluate(el => getComputedStyle(el).animationName), 'none');
+  assert.equal(await page.locator('.phone-front').evaluate(el => getComputedStyle(el).animationName), reducedMotion === 'reduce' ? 'none' : 'phone-front-enter');
   const downloads = await page.locator('a[href*="releases/latest"]').evaluateAll(links => links.map(link => link.href));
   assert.ok(downloads.length >= 3);
   assert.ok(downloads.every(href => href === 'https://github.com/MufasaXz/focusforge/releases/latest'));
@@ -37,25 +41,45 @@ try {
    assert.equal(await page.getByRole('button', { name: 'Menu' }).getAttribute('aria-expanded'), 'false');
   }
   await page.evaluate(() => window.scrollTo(0, 0));
-  await page.screenshot({ path: `/tmp/focusforge-web-review/home-${width}-${colorScheme}.png`, fullPage: true });
+  await page.screenshot({ path: `/tmp/focusforge-web-review/home-${width}-${colorScheme}-${reducedMotion}.png`, fullPage: true });
   for (const route of ['/privacy', '/terms', '/support', '/delete-account']) {
-   await page.goto(`${base}${route}`);
+   await page.goto(routeUrl(route));
    assert.equal(await page.locator('h1').count(), 1);
    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${route} overflow at ${width}`);
   }
   await page.close();
  }
  const animated = await browser.newPage({ reducedMotion: 'no-preference' });
+ animated.on('pageerror', error => errors.push(error.message));
  await animated.goto(base);
- assert.equal(await animated.locator('.phone-front').evaluate(el => getComputedStyle(el).animationName), 'float-front');
+ assert.equal(await animated.locator('.phone-front').evaluate(el => getComputedStyle(el).animationName), 'phone-front-enter');
+ assert.equal(await animated.locator('.phone-front').evaluate(el => getComputedStyle(el).animationIterationCount), '1');
+ await animated.waitForTimeout(1500);
+ const art = animated.locator('.hero-art');
+ const bounds = await art.boundingBox();
+ await animated.mouse.move(bounds.x + bounds.width * .8, bounds.y + bounds.height * .3);
+ await animated.waitForTimeout(400);
+ assert.notEqual(await art.evaluate(el => el.style.getPropertyValue('--depth-x')), '0.000px');
+ await animated.emulateMedia({ reducedMotion: 'reduce' });
+ assert.equal(await animated.locator('.phone-front').evaluate(el => getComputedStyle(el).animationName), 'none');
+ assert.equal(await art.evaluate(el => el.style.getPropertyValue('--depth-x')), '');
+ assert.equal(await animated.evaluate(() => document.getAnimations().length), 0);
+ await animated.emulateMedia({ reducedMotion: 'no-preference' });
+ await animated.locator('.steps').scrollIntoViewIfNeeded();
+ await animated.waitForTimeout(1000);
+ assert.ok(await animated.locator('.steps article').evaluateAll(elements => elements.every(el => getComputedStyle(el).opacity === '1')));
  await animated.close();
  const page = await browser.newPage({ javaScriptEnabled: false, viewport: { width: 320, height: 900 } });
+ page.on('pageerror', error => errors.push(error.message));
+  page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
  await page.goto(base);
  await page.getByRole('navigation', { name: 'Main navigation' }).waitFor({ state: 'visible' });
  assert.equal(await page.getByRole('button', { name: 'Menu' }).isVisible(), false);
- await page.goto(`${base}/privacy`);
+ await page.getByRole('link', { name: 'Privacy policy', exact: true }).last().click();
+ assert.equal(page.url(), routeUrl('/privacy'));
  assert.match(await page.locator('main').innerText(), /installed-app catalog/);
- await page.goto(`${base}/delete-account`);
+ await page.getByRole('link', { name: 'Delete account', exact: true }).click();
+ assert.equal(page.url(), routeUrl('/delete-account'));
  const email = new URL(await page.getByRole('link', { name: 'Email a deletion request' }).getAttribute('href'));
  assert.equal(email.protocol, 'mailto:');
  assert.equal(email.pathname, 'sudeepyadav7272@gmail.com');
