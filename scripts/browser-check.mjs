@@ -17,6 +17,9 @@ try {
   assert.ok(await page.locator('.wordmark img').evaluateAll(images => images.every(img => img.complete && img.naturalWidth === 512)));
   assert.ok(await page.locator('img').evaluateAll(images => images.every(img => new URL(img.src).pathname.startsWith(new URL(document.URL).pathname))));
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `horizontal overflow at ${width}`);
+  assert.equal(await page.locator('body').evaluate(el => getComputedStyle(el).backgroundColor), 'rgb(244, 236, 223)', 'warm paper remains consistent under browser color preferences');
+  assert.equal(await page.locator('body').evaluate(el => getComputedStyle(el).color), 'rgb(56, 43, 35)', 'readable dark-brown ink');
+  assert.match(await page.locator('body').evaluate(el => getComputedStyle(el).backgroundImage), /repeating-linear-gradient/, 'subtle CSS grain, no photo texture');
   await page.keyboard.press('Tab');
   assert.equal(await page.locator(':focus').textContent(), 'Skip to content');
   assert.equal(await page.locator(':focus').evaluate(el => getComputedStyle(el).outlineStyle), 'solid');
@@ -42,11 +45,18 @@ try {
   assert.equal(await page.locator('.sketch-stage').evaluate(el => el.style.getPropertyValue('--thought-opacity')), '1');
   assert.notEqual(await page.locator('.sketch-phone').evaluate(el => getComputedStyle(el).stroke), await page.locator('.sketch-phone > path').first().evaluate(el => getComputedStyle(el).fill), 'pencil phone remains legible against paper');
   if (reducedMotion !== 'reduce') {
-    await page.locator('.story-scroll').evaluate(el => window.scrollTo({ top: el.getBoundingClientRect().top + scrollY + (el.offsetHeight - innerHeight) * .38, behavior: 'instant' }));
+    await page.locator('.story-scroll').evaluate(el => window.scrollTo({ top: el.getBoundingClientRect().top + scrollY + (el.offsetHeight - innerHeight) * .22, behavior: 'instant' }));
     await page.waitForTimeout(100);
     assert.ok(Math.abs(await page.locator('.sketch-stage').evaluate(el => el.getBoundingClientRect().top)) < 2, 'drawing remains pinned while the document moves');
     assert.ok(await page.locator('.thought-dust').evaluate(canvas => canvas.getContext('2d').getImageData(0, 0, canvas.width, canvas.height).data.some((value, i) => i % 4 === 3 && value > 0)), 'scroll dissolves actual pencil paths into visible particles');
-    await page.locator('.story-scroll').evaluate(el => window.scrollTo({ top: el.getBoundingClientRect().top + scrollY + (el.offsetHeight - innerHeight) * .9, behavior: 'instant' }));
+    for (const [progress, shot, selector] of [[.43, 'phone-pov', '.story-pov'], [.7, 'flip-timer', '.story-timer']]) {
+      await page.locator('.story-scroll').evaluate((el, progress) => window.scrollTo({ top: el.getBoundingClientRect().top + scrollY + (el.offsetHeight - innerHeight) * progress, behavior: 'instant' }), progress);
+      await page.waitForTimeout(100);
+      assert.equal(await page.locator('.sketch-stage').getAttribute('data-shot'), shot);
+      assert.equal(await page.locator(selector).evaluate(el => getComputedStyle(el).opacity), '1');
+    }
+    assert.match(await page.locator('.pov-device img').getAttribute('src'), /shield-dark/);
+    await page.locator('.story-scroll').evaluate(el => window.scrollTo({ top: el.getBoundingClientRect().top + scrollY + (el.offsetHeight - innerHeight) * .94, behavior: 'instant' }));
     await page.waitForTimeout(100);
     assert.equal(await page.locator('.sketch-stage').getAttribute('data-studying'), 'true');
     assert.equal(await page.locator('.sketch-stage').getAttribute('data-dissolved'), 'true');
@@ -54,12 +64,13 @@ try {
     const writingTime = await page.locator('.writing-hand').evaluate(el => el.getAnimations()[0].currentTime);
     await page.waitForTimeout(100);
     assert.ok(await page.locator('.writing-hand').evaluate((el, time) => el.getAnimations()[0].playState === 'running' && el.getAnimations()[0].currentTime > time, writingTime), 'hand visibly writes at the desk');
-    await page.mouse.wheel(0, 600);
+    await page.mouse.wheel(0, 1500);
     await page.waitForTimeout(150);
     assert.ok(await page.locator('.story-scroll').evaluate(el => el.getBoundingClientRect().bottom < innerHeight), 'ordinary wheel scroll exits the sticky scene without trapping');
   } else {
     assert.equal(await page.locator('.reduced-story').isVisible(), true);
     assert.equal(await page.locator('.writing-hand').evaluate(el => el.getAnimations().length), 0);
+    assert.equal(await page.locator('.study-desk').evaluate(el => getComputedStyle(el).opacity), '1', 'reduced motion exposes the study outcome');
   }
   if (width === 320) {
     assert.ok(await page.locator('.mind-sketch').evaluate(svg => {
@@ -67,8 +78,17 @@ try {
       return [...svg.querySelectorAll('.mobile-thoughts text, .study-desk')].every(el => { const b = el.getBoundingClientRect(); return b.left >= bounds.left - 1 && b.right <= bounds.right + 1 && b.bottom <= bounds.bottom + 1; });
     }), 'mobile thoughts and desk fit the drawing');
   }
+  await page.locator('.feature-controls').scrollIntoViewIfNeeded();
+  const fixedPhone = await page.locator('.toolkit-phone').boundingBox();
+  await page.getByRole('button', { name: 'Next feature' }).click();
+  await page.waitForFunction(() => document.querySelector('.feature-slide.progress').classList.contains('current'));
+  const afterFlip = await page.locator('.toolkit-phone').boundingBox();
+  assert.ok(Math.abs(fixedPhone.x - afterFlip.x) < 1 && Math.abs(fixedPhone.width - afterFlip.width) < 1, 'phone frame stays fixed during toolkit flip');
+  assert.match(await page.locator('.toolkit-flip img').getAttribute('src'), /dashboard-dark/);
   await page.getByRole('button', { name: 'Celebrate the effort' }).click();
   await page.getByRole('button', { name: 'Reset illustration', pressed: true }).waitFor();
+  assert.equal(await page.locator('.is-you .rank-number').textContent(), '1');
+  assert.equal(await page.locator('.rank-sculpture').count(), 0);
   await page.getByRole('button', { name: 'Bring the circle together' }).click();
   await page.getByRole('button', { name: 'Reset connections', pressed: true }).waitFor();
   await page.locator('summary').filter({ hasText: 'Is FocusForge really free?' }).click();
@@ -88,6 +108,22 @@ try {
   }
   await page.close();
  }
+ for (const viewport of [{ width: 320, height: 480 }, { width: 900, height: 420 }]) {
+   const short = await browser.newPage({ viewport, reducedMotion: 'no-preference' });
+   short.on('pageerror', error => errors.push(error.message));
+   await short.goto(base);
+   for (const [progress, shot] of [[.94, 'study'], [.7, 'flip-timer'], [.43, 'phone-pov'], [0, 'thoughtful']]) {
+    await short.locator('.story-scroll').evaluate((el, progress) => window.scrollTo({ top: el.getBoundingClientRect().top + scrollY + (el.offsetHeight - innerHeight) * progress, behavior: 'instant' }), progress);
+    await short.waitForTimeout(120);
+    assert.equal(await short.locator('.sketch-stage').getAttribute('data-shot'), shot, 'short viewports reverse through every shot');
+    assert.ok(await short.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
+    if (shot === 'flip-timer') assert.ok(await short.locator('.flip-clock').evaluate(el => { const b = el.getBoundingClientRect(); return b.top >= 0 && b.bottom <= innerHeight && b.left >= 0 && b.right <= innerWidth; }));
+   }
+   await short.locator('#faq').scrollIntoViewIfNeeded();
+   await short.waitForTimeout(100);
+   assert.equal(await short.locator('.sketch-stage').getAttribute('data-motion'), 'paused');
+   await short.close();
+  }
  const animated = await browser.newPage({ reducedMotion: 'no-preference' });
  animated.on('pageerror', error => errors.push(error.message));
  await animated.goto(base);
@@ -123,6 +159,16 @@ try {
  await animated.waitForFunction(() => document.querySelector('.feature-slide.shield').classList.contains('current'));
  await animated.locator('.feature-rail').evaluate(el => el.scrollTo({ left: el.clientWidth, behavior: 'instant' }));
  await animated.waitForFunction(() => document.querySelector('.feature-slide.focus').classList.contains('current'));
+ await animated.evaluate(() => {
+   Object.defineProperty(document, 'hidden', { configurable: true, value: true });
+   document.dispatchEvent(new Event('visibilitychange'));
+ });
+ assert.ok(await animated.locator('.hero-art, .toolkit-shell, .community-pair, .sketch-stage').evaluateAll(elements => elements.every(el => el.dataset.motion === 'paused')), 'hidden documents suspend every motion container');
+ await animated.evaluate(() => {
+   Object.defineProperty(document, 'hidden', { configurable: true, value: false });
+   document.dispatchEvent(new Event('visibilitychange'));
+ });
+ assert.equal(await animated.locator('.toolkit-shell').getAttribute('data-motion'), 'running', 'visible toolkit resumes after document visibility returns');
  await animated.emulateMedia({ reducedMotion: 'reduce' });
  assert.equal(await animated.locator('.phone-front').evaluate(el => getComputedStyle(el).animationName), 'none');
  assert.equal(await art.evaluate(el => el.style.getPropertyValue('--depth-x')), '');
@@ -145,6 +191,19 @@ try {
  await touchPage.waitForFunction(() => document.querySelector('.feature-slide.focus').classList.contains('current'));
  assert.ok(await touchPage.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'touch swipe does not overflow page');
  await touchPage.close();
+ const fallback = await browser.newPage({ viewport: { width: 390, height: 900 } });
+ const fallbackErrors = [];
+ fallback.on('pageerror', error => fallbackErrors.push(error.message));
+ await fallback.addInitScript(() => { delete window.IntersectionObserver; });
+ await fallback.goto(base);
+ await fallback.waitForTimeout(250);
+ assert.equal(await fallback.locator('#main').count(), 1, 'missing observers must not unmount the page');
+ assert.deepEqual(fallbackErrors, [], 'missing observers keep progressive enhancement safe');
+ assert.equal(await fallback.locator('.study-desk').evaluate(el => getComputedStyle(el).opacity), '1', 'unsupported scroll motion retains the final study outcome');
+ await fallback.locator('.feature-rail').focus();
+ await fallback.keyboard.press('ArrowRight');
+ await fallback.waitForFunction(() => document.querySelector('.feature-slide.focus').classList.contains('current'));
+ await fallback.close();
  const page = await browser.newPage({ javaScriptEnabled: false, viewport: { width: 320, height: 900 } });
  page.on('pageerror', error => errors.push(error.message));
   page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });

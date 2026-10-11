@@ -60,10 +60,17 @@ export function useMotion(path: string) {
       };
       const reset = () => { targetX = targetY = 0; schedule(); };
       const toolkit = document.querySelector<HTMLElement>('.toolkit-shell');
+      const community = document.querySelector<HTMLElement>('.community-pair');
+      let communityVisible = true;
+      const communityObserver = 'IntersectionObserver' in window
+        ? new IntersectionObserver(([entry]) => { communityVisible = entry.isIntersecting; syncPlayback(); })
+        : undefined;
+      if (community) communityObserver?.observe(community);
       let toolkitVisible = true;
       const syncPlayback = () => {
         if (art) art.dataset.motion = visible && !document.hidden ? 'running' : 'paused';
         if (toolkit) toolkit.dataset.motion = toolkitVisible && !document.hidden ? 'running' : 'paused';
+        if (community) community.dataset.motion = communityVisible && !document.hidden ? 'running' : 'paused';
       };
       const toolkitObserver = 'IntersectionObserver' in window
         ? new IntersectionObserver(([entry]) => { toolkitVisible = entry.isIntersecting; syncPlayback(); })
@@ -92,6 +99,8 @@ export function useMotion(path: string) {
         observer?.disconnect();
         artObserver?.disconnect();
         toolkitObserver?.disconnect();
+        communityObserver?.disconnect();
+        community?.removeAttribute('data-motion');
         art?.removeAttribute('data-motion');
         toolkit?.removeAttribute('data-motion');
         animations.forEach(animation => animation.cancel());

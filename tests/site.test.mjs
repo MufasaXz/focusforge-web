@@ -72,6 +72,20 @@ test('home keeps native story and feature navigation without retired controls', 
  for (const text of ['class="story-scroll"', 'class="study-desk"', 'class="writing-hand"', 'class="feature-rail"', 'aria-roledescription="carousel"', 'Next feature', 'Previous feature', 'class="community-pair"', 'aria-label="Main navigation"']) assert.ok(html.includes(text), `redesign structure: ${text}`);
  assert.equal((html.match(/aria-roledescription="slide"/g) || []).length, 3);
 });
+test('cinematic shots, flip toolkit and minimal community replace the old visuals', async () => {
+ const html = await read('dist/index.html');
+ for (const text of ['class="story-pov"', 'class="pov-device"', 'class="story-timer"', 'class="flip-clock"', 'class="toolkit-phone"', 'class="toolkit-flip"', 'class="rank-list"', 'class="study-circle"', 'Full-screen timer concept', 'Sharing &amp; privacy']) assert.ok(html.includes(text), text);
+ assert.ok(!html.includes('rank-sculpture'));
+ const story = await read('src/DistractionStory.tsx');
+ for (const stage of ['thoughtful', 'dust', 'phone-pov', 'flip-timer', 'study']) assert.ok(story.includes(`'${stage}'`), stage);
+ assert.match(story, /document.hidden \|\| !active/);
+});
+test('warm woody surfaces preserve original app screenshot colors', async () => {
+ const css = await read('src/styles.css');
+ for (const token of ['--paper:#f4ecdf', '--ink:#382b23', '--muted:#706050', '--line:#d8c6af']) assert.ok(css.includes(token), token);
+ assert.match(css, /body\{[^}]*background-image:repeating-linear-gradient/);
+ assert.ok(!/\.feature-phone img\{[^}]*filter:[^}]*sepia/.test(css), 'no tint applied to app previews');
+});
 test('motion respects accessibility settings and deploy headers are present', async () => {
  assert.match(await read('src/styles.css'), /prefers-reduced-motion:reduce/);
  const config = JSON.parse(await read('vercel.json'));
