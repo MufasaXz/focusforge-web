@@ -11,7 +11,7 @@ export function useMotion(path: string) {
       if (preference.matches) return;
       const animations = new Set<Animation>();
       const targets = document.querySelectorAll<HTMLElement>(
-        '.reveal, .steps article, .noise-stage, .circle-art, .privacy-strip > div, .faq > div, .final-cta > :not(.cta-orbit):not(.cta-flower)',
+        '.reveal, .steps article, .faq > div, .final-cta > :not(.cta-orbit):not(.cta-flower)',
       );
       let observer: IntersectionObserver | undefined;
       if ('IntersectionObserver' in window) {

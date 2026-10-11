@@ -9,12 +9,12 @@ try {
  const { pageLink } = await vite.ssrLoadModule('/src/paths.ts');
  const template = await readFile('dist/index.html', 'utf8');
  const base = vite.config.base;
- const site = process.env.SITE_URL;
+ const site = process.env.SITE_URL || 'https://focusforgeorg.vercel.app';
  let origin;
  if (site) {
   const url = new URL(site);
   if (url.protocol !== 'https:' || url.username || url.password || url.search || url.hash || `${url.pathname.replace(/\/$/, '')}/` !== base) {
-   throw new Error('SITE_URL must be a public HTTPS site URL whose path matches BASE_PATH (e.g. https://mufasaxz.github.io/focusforge-web).');
+   throw new Error('SITE_URL must be a public HTTPS site URL whose path matches BASE_PATH (e.g. https://focusforgeorg.vercel.app).');
   }
   origin = url.origin;
  }

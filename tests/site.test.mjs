@@ -1,12 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 const base = process.env.BASE_PATH || '/';
 const link = path => `${base}${path}.html`;
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 test('assets and verified icon use the configured deployment base', async () => {
  const html = await read('dist/index.html');
- for (const path of ['favicon.png', 'images/focusforge-icon.png', 'images/dashboard.png', 'images/focus.png', 'fonts/Inter-Regular.ttf']) assert.ok(html.includes(`${base}${path}`), path);
+ for (const path of ['favicon.png', 'images/focusforge-icon.png', 'images/dashboard-dark.png', 'images/focus-dark.png', 'fonts/Inter-Regular.ttf']) assert.ok(html.includes(`${base}${path}`), path);
  const icon = await readFile(new URL('../public/images/focusforge-icon.png', import.meta.url));
  assert.deepEqual(icon, await readFile(new URL('../public/favicon.png', import.meta.url)));
  for (const match of html.matchAll(/(?:src|href)="([^"#]+)"/g)) {
@@ -18,12 +19,7 @@ test('assets and verified icon use the configured deployment base', async () => 
 });
 test('canonical, social, sitemap and robots metadata match SITE_URL', async () => {
  const html = await read('dist/privacy.html');
- if (!process.env.SITE_URL) {
-  assert.ok(!html.includes('rel="canonical"'));
-  assert.ok(!(await read('dist/robots.txt')).includes('Sitemap:'));
-  return;
- }
- const site = process.env.SITE_URL.replace(/\/$/, '');
+ const site = (process.env.SITE_URL || 'https://focusforgeorg.vercel.app').replace(/\/$/, '');
  const legal = `${site}/privacy${base === '/' ? '' : '.html'}`;
  assert.ok(html.includes(`rel="canonical" href="${legal}"`));
  assert.ok(html.includes(`property="og:url" content="${legal}"`));
@@ -58,6 +54,17 @@ test('download destination is an existing release, not an invented store listing
  assert.match(html, /https:\/\/github.com\/MufasaXz\/focusforge\/releases\/latest/);
  assert.match(html, /fictional demo data/);
  assert.ok(!html.includes('play.google.com/store/apps'));
+});
+test('redesigned home uses dark captures and distinct honest social illustrations', async () => {
+ const html = await read('dist/index.html');
+ for (const text of ['One more video', 'Wait…', 'What time is it?', 'id="leaderboard"', 'id="friends"', 'not actual standings', 'no live users or presence']) assert.ok(html.includes(text), text);
+ assert.ok(!html.includes('class="privacy-strip'));
+ assert.ok(!html.includes('class="quiet-orb'));
+ // SHA-256 of the verified source captures in focusforge-premium/docs/screenshots/dark.
+ for (const [name, digest] of [['dashboard', 'eb382d81a73c819c85dd20235f3f45fb3f033fd8d59e39589c56fd68a6d0aaab'], ['shield', 'aa0eb94e878bd78c5136cc3d6da0d1f1843b49f983d9c1ae2d188d2360d71f1b'], ['focus', '914f546b72796ec34a146b540ebb14abe6ddd5a3b993fad888bd77ae06b9d3fe']]) {
+  const capture = await readFile(new URL(`../public/images/${name}-dark.png`, import.meta.url));
+  assert.equal(createHash('sha256').update(capture).digest('hex'), digest);
+ }
 });
 test('motion respects accessibility settings and deploy headers are present', async () => {
  assert.match(await read('src/styles.css'), /prefers-reduced-motion:reduce/);
