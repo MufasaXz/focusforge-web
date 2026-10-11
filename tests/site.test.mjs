@@ -72,19 +72,36 @@ test('home keeps native story and feature navigation without retired controls', 
  for (const text of ['class="story-scroll"', 'class="study-desk"', 'class="writing-hand"', 'class="feature-rail"', 'aria-roledescription="carousel"', 'Next feature', 'Previous feature', 'class="community-pair"', 'aria-label="Main navigation"']) assert.ok(html.includes(text), `redesign structure: ${text}`);
  assert.equal((html.match(/aria-roledescription="slide"/g) || []).length, 3);
 });
-test('cinematic shots, flip toolkit and minimal community replace the old visuals', async () => {
+test('pencil story and whole sheet retain motion corrections without cinematic overlays', async () => {
  const html = await read('dist/index.html');
- for (const text of ['class="story-pov"', 'class="pov-device"', 'class="story-timer"', 'class="flip-clock"', 'class="toolkit-phone"', 'class="toolkit-flip"', 'class="rank-list"', 'class="study-circle"', 'Full-screen timer concept', 'Sharing &amp; privacy']) assert.ok(html.includes(text), text);
- assert.ok(!html.includes('rank-sculpture'));
+ for (const text of ['class="sheet-stack"', 'class="rank-list"', 'class="study-circle"', 'Sharing &amp; privacy', 'hero-demo-clock']) assert.ok(html.includes(text), text);
+ for (const text of ['story-pov', 'pov-device', 'story-timer', 'flip-clock', 'toolkit-phone', 'toolkit-flip', 'rank-sculpture']) assert.ok(!html.includes(text), text);
  const story = await read('src/DistractionStory.tsx');
- for (const stage of ['thoughtful', 'dust', 'phone-pov', 'flip-timer', 'study']) assert.ok(story.includes(`'${stage}'`), stage);
+ for (const stage of ['thoughtful', 'dust', 'study']) assert.ok(story.includes(`'${stage}'`), stage);
  assert.match(story, /document.hidden \|\| !active/);
 });
-test('warm woody surfaces preserve original app screenshot colors', async () => {
+test('woody background keeps the original charcoal, green and typography', async () => {
  const css = await read('src/styles.css');
- for (const token of ['--paper:#f4ecdf', '--ink:#382b23', '--muted:#706050', '--line:#d8c6af']) assert.ok(css.includes(token), token);
+ for (const token of ['--paper:#f4ecdf', '--ink:#262923', '--muted:#67695f', '--line:#d7d7c8', '--green:#dce4c7', '--yellow:#e9bc67', '--white:#fffefa', 'font-family:Inter,Arial,sans-serif', 'font-family:InterDisplay,Arial,sans-serif', 'font-weight:700']) assert.ok(css.includes(token), token);
+ for (const retired of ['--ink:#382b23', '--muted:#706050', '#594434', '#49382b']) assert.ok(!css.includes(retired), retired);
+ const corrections = await read('src/corrections.css');
+ for (const retired of ['#705432', '#ead9bb', '#74643e', '#ad8d51']) assert.ok(!corrections.includes(retired), retired);
  assert.match(css, /body\{[^}]*background-image:repeating-linear-gradient/);
- assert.ok(!/\.feature-phone img\{[^}]*filter:[^}]*sepia/.test(css), 'no tint applied to app previews');
+ assert.ok(!/\.feature-phone img\{[^}]*filter:[^}]*sepia/.test(css));
+});
+test('countdown and sheet motion use bounded, cleanup-safe mechanisms', async () => {
+ const clock = await read('src/HeroClock.tsx');
+ assert.match(clock, /const deadline = Date.now\(\) \+ 25 \* 60 \* 1000/);
+ assert.match(clock, /deadline - Date.now\(\) - \(left - 1\) \* 1000/);
+ assert.match(clock, /clearTimeout\(timer\); observer\?\.disconnect\(\)/);
+ assert.match(clock, /document.hidden \|\| !visible/);
+ const story = await read('src/DistractionStory.tsx');
+ assert.match(story, /dust.length < 420/);
+ assert.match(story, /if \(document.hidden\) \{ cancelAnimationFrame\(frame\); frame = 0; \}/);
+ const corrections = await read('src/corrections.css');
+ assert.match(corrections, /\.feature-slide\{[^}]*transform:rotateY/);
+ assert.match(corrections, /\.sheet-stop\{[^}]*scroll-snap-align:start/);
+ assert.ok(!(await read('src/styles.css')).includes('story-pov'));
 });
 test('motion respects accessibility settings and deploy headers are present', async () => {
  assert.match(await read('src/styles.css'), /prefers-reduced-motion:reduce/);

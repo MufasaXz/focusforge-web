@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { asset } from './paths';
 
 type Dust = { x: number; y: number; dx: number; dy: number; size: number };
 export default function DistractionStory() {
@@ -30,7 +29,7 @@ export default function DistractionStory() {
     const dust: Dust[] = [];
     element.querySelectorAll<SVGGeometryElement>(`.${compact ? 'mobile' : 'desktop'}-thoughts .thought-lines path`).forEach(shape => {
       const length = shape.getTotalLength();
-      for (let distance = 0; distance < length; distance += 7) {
+      for (let distance = 0; distance < length && dust.length < 420; distance += 7) {
         const point = shape.getPointAtLength(distance), seed = dust.length + 1;
         dust.push({ x: point.x, y: point.y, dx: Math.sin(seed * 12.9898) * 95 + 55, dy: Math.cos(seed * 7.23) * 70 - 60, size: .8 + (seed % 3) * .4 });
       }
@@ -42,20 +41,13 @@ export default function DistractionStory() {
       // Hold the complete first drawing, then dissolve, then settle into study.
       const raw = Math.max(0, Math.min(1, -bounds.top / Math.max(1, bounds.height - innerHeight)));
       const ramp = (start: number, end: number) => Math.max(0, Math.min(1, (raw - start) / (end - start)));
-      const dissolve = ramp(.12, .3);
-      const study = ramp(.79, .9);
-      const pov = ramp(.28, .4) * (1 - ramp(.56, .65));
-      const timer = ramp(.56, .65) * (1 - ramp(.78, .88));
-      const camera = ramp(.2, .39) * (1 - ramp(.79, .93));
-      element.style.setProperty('--pov', String(preference.matches ? 0 : pov));
-      element.style.setProperty('--timer', String(preference.matches ? 0 : timer));
-      element.style.setProperty('--camera', String(preference.matches ? 0 : camera));
-      element.style.setProperty('--timer-turn', `${(1 - ramp(.56, .68)) * -80}deg`);
-      element.dataset.shot = preference.matches ? 'study' : raw < .12 ? 'thoughtful' : raw < .3 ? 'dust' : raw < .56 ? 'phone-pov' : raw < .79 ? 'flip-timer' : 'study';
-      element.style.setProperty('--thought-opacity', String(preference.matches ? 1 : 1 - dissolve));
-      element.style.setProperty('--study', String(preference.matches ? 0 : study));
-      element.dataset.dissolved = String(!preference.matches && dissolve >= .99);
-      element.dataset.studying = String(!preference.matches && study >= .99);
+      const dissolve = ramp(.16, .6);
+      const study = ramp(.58, .82);
+      element.dataset.shot = preference.matches ? 'study' : raw < .16 ? 'thoughtful' : raw < .6 ? 'dust' : 'study';
+      element.style.setProperty('--thought-opacity', String(preference.matches ? 0 : 1 - dissolve));
+      element.style.setProperty('--study', String(preference.matches ? 1 : study));
+      element.dataset.dissolved = String(preference.matches || dissolve >= .99);
+      element.dataset.studying = String(preference.matches || study >= .99);
       element.dataset.motion = !preference.matches && active && !document.hidden ? 'running' : 'paused';
       if (!context) return;
       const drawing = element.querySelector('svg')!;
@@ -74,7 +66,7 @@ export default function DistractionStory() {
       if (preference.matches || dissolve <= 0 || dissolve >= 1) return;
       context.fillStyle = getComputedStyle(element).color;
       context.globalAlpha = Math.sin(dissolve * Math.PI) * .75;
-      dust.slice(0, 420).forEach(p => {
+      dust.forEach(p => {
         context.beginPath(); context.arc(p.x + p.dx * dissolve, p.y + p.dy * dissolve, p.size * (1 - dissolve * .6), 0, Math.PI * 2); context.fill();
       });
       context.globalAlpha = 1;
@@ -87,7 +79,8 @@ export default function DistractionStory() {
     });
     const visibility = () => {
       element.dataset.motion = active && !document.hidden && !preference.matches ? 'running' : 'paused';
-      schedule();
+      if (document.hidden) { cancelAnimationFrame(frame); frame = 0; }
+      else schedule();
     };
     observer.observe(scrollTrack);
     window.addEventListener('scroll', schedule, { passive: true });
@@ -101,7 +94,7 @@ export default function DistractionStory() {
     };
   }, [compact]);
   return <section className="manifesto section" id="manifesto"><span className="eyebrow">YOU DON’T NEED MORE WILLPOWER.</span><h2 className="reveal">You need a little<br/><span className="serif">space between</span><br/>the impulse and the scroll.</h2><p className="story-intro">A moment to notice the pull. A little room to choose differently.</p><div className="story-scroll" ref={track}><div className="sketch-stage" ref={stage}>
-    <div className="sketch-paper"><svg className="mind-sketch" viewBox={compact ? '260 0 400 650' : '0 0 900 570'} role="img" aria-labelledby="sketch-title sketch-description"><title id="sketch-title">From a crowded mind to a quiet study session</title><desc id="sketch-description">A hand-drawn boy holds a phone beneath looping thoughts: One more video, Wait…, and What time is it? As the page moves, the pencil lines break into dust and he puts his phone down to write in an open book. The camera moves over his shoulder to a real FocusForge Shield app render, then into an illustrative full-screen flip timer before pulling back to show him studying. Reduced motion shows the final study scene without camera moves.</desc>
+    <div className="sketch-paper"><svg className="mind-sketch" viewBox={compact ? '260 0 400 650' : '0 0 900 570'} role="img" aria-labelledby="sketch-title sketch-description"><title id="sketch-title">From a crowded mind to a quiet study session</title><desc id="sketch-description">A hand-drawn boy holds a phone beneath looping thoughts: One more video, Wait…, and What time is it? As the page moves, the pencil lines break into dust and he puts his phone down to write in an open book. Reduced motion shows the final study scene without animation.</desc>
       <defs><marker id="pencil-arrow" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="m1 1 6 3-6 3" fill="none" stroke="currentColor" strokeWidth="1.3"/></marker><pattern id="pencil-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(24)"><path d="M0 0V5" stroke="currentColor" strokeWidth=".55" opacity=".3"/></pattern></defs>
       <g className="desktop-thoughts"><g className="thought-lines" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M423 154C376 125 363 185 321 157S300 90 331 111 302 160 270 118L242 96" markerEnd="url(#pencil-arrow)"/>
@@ -121,6 +114,6 @@ export default function DistractionStory() {
         </g>
         <g className="study-desk"><path fill="var(--paper)" d="m305 395 326-2 5 11-333 2z"/><path d="m321 407-8 105m300-107 12 106m-300-85 287-1m-292 83-8 5m313-6 8 5"/><path className="pencil-echo" d="m310 398 317-2m-303 14-8 93m302-88 8 88"/><path fill="var(--paper)" d="m464 383 40-17 33 11 35-10 40 21-73 7z"/><path d="m537 377 2 18m-70-9 67 12 72-8m-123-11 18-6 22 7m-34 0 12-4 22 7m29-3 18-5 18 9m-31 1 13-3 17 7"/><path fill="url(#pencil-hatch)" d="m329 375 18-1 5 20h-28z"/><path d="m349 379c16-5 15 13 1 11m-21-26c-9-12 10-13 1-24"/><path className="desk-phone" d="m584 399 30-3 9 4-31 3z"/></g>
       </g>
-    </svg><canvas className="thought-dust" aria-hidden="true"/></div><div className="story-pov" aria-hidden="true"><svg className="shoulder-foreground" viewBox="0 0 800 600"><path d="M-80 650V405Q-10 320 90 298L112 258Q30 210 66 118Q95 20 192 65Q269 110 233 202L210 258Q310 295 357 385L400 650"/><path className="pov-arm" d="M308 505Q393 454 470 385L486 247Q490 222 505 228L517 280 533 258Q546 246 552 264L566 349Q565 397 537 424L432 554"/></svg><div className="pov-device"><img src={asset('images/shield-dark.png')} alt="" width="680" height="1416"/><span className="pov-touch"/></div><p>Choose your boundaries.</p><small>Actual app widget-test render · fictional demo data</small></div><div className="story-timer" aria-hidden="true"><span>Focus session</span><div className="flip-clock"><div className="flip-digit">25<span className="flip-leaf">25</span></div><b>:</b><div className="flip-digit">00<span className="flip-leaf">00</span></div></div><p>One thing at a time.</p><small>Full-screen timer concept · not a running session</small></div><div className="story-captions" aria-hidden="true"><span className="before-caption">A little less in your head.</span><span className="after-caption">A little more here.</span></div><p className="reduced-story">Choose app boundaries. Set a full-screen timer. Put the phone down and make room for studying. App preview and timer sequence are illustrations, not live controls.</p>
+    </svg><canvas className="thought-dust" aria-hidden="true"/></div><div className="story-captions" aria-hidden="true"><span className="before-caption">A little less in your head.</span><span className="after-caption">A little more here.</span></div><p className="reduced-story">Put the phone down. Open a book. One small choice makes room for the work ahead.</p>
   </div></div></section>;
 }
