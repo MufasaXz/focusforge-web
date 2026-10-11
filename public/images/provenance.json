@@ -1,0 +1,10 @@
+{
+  "description": "Actual FocusForge app widget-test renders with fictional local demo data, composed in stylized phone frames. These are not physical-device screenshots or user records.",
+  "sourceRepository": "https://github.com/MufasaXz/focusforge",
+  "assets": {
+    "dashboard.png": "docs/screenshots/01-dashboard.png",
+    "shield.png": "docs/screenshots/02-shield.png",
+    "focus.png": "docs/screenshots/03-focus.png",
+    "focus-dark.png": "docs/screenshots/dark/03-focus.png"
+  }
+}
