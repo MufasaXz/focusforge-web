@@ -2,85 +2,107 @@ import { useEffect, useRef, useState } from 'react';
 
 type Dust = { x: number; y: number; dx: number; dy: number; size: number };
 export default function DistractionStory() {
+  const track = useRef<HTMLDivElement>(null);
   const stage = useRef<HTMLDivElement>(null);
-  const [quiet, setQuiet] = useState(false);
-  const manual = useRef<boolean | null>(null);
+  const [compact, setCompact] = useState(false);
+  useEffect(() => {
+    const media = matchMedia('(max-width: 520px)');
+    const update = () => setCompact(media.matches);
+    update(); media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
   useEffect(() => {
     const element = stage.current!;
+    const scrollTrack = track.current!;
     const canvas = element.querySelector('canvas')!;
     const context = canvas.getContext('2d');
     const preference = matchMedia('(prefers-reduced-motion: reduce)');
-    let frame = 0;
-    let active = true;
+    let frame = 0, active = true;
     const dust: Dust[] = [];
-    // Sample original thought contours, not a screen-sized particle field.
-    element.querySelectorAll<SVGGeometryElement>('.thought-lines path, .thought-lines rect').forEach(shape => {
+    element.querySelectorAll<SVGGeometryElement>(`.${compact ? 'mobile' : 'desktop'}-thoughts .thought-lines path`).forEach(shape => {
       const length = shape.getTotalLength();
-      for (let distance = 0; distance < length; distance += 9) {
-        const point = shape.getPointAtLength(distance);
-        const seed = dust.length + 1;
-        dust.push({ x: point.x, y: point.y, dx: Math.sin(seed * 12.9898) * 105 + 80, dy: Math.cos(seed * 7.23) * 75 - 65, size: 1 + (seed % 3) * .45 });
+      for (let distance = 0; distance < length; distance += 7) {
+        const point = shape.getPointAtLength(distance), seed = dust.length + 1;
+        dust.push({ x: point.x, y: point.y, dx: Math.sin(seed * 12.9898) * 95 + 55, dy: Math.cos(seed * 7.23) * 70 - 60, size: .8 + (seed % 3) * .4 });
       }
     });
-    const particles = dust.slice(0, 420);
     const render = () => {
       frame = 0;
       if (document.hidden || !active) return;
-      const bounds = element.querySelector('svg')!.getBoundingClientRect();
-      canvas.style.height = `${bounds.height}px`;
-      const progress = manual.current !== null ? (manual.current ? 1 : 0) : Math.max(0, Math.min(1, (innerHeight * .28 - bounds.top) / (bounds.height * .65)));
-      element.style.setProperty('--thought-opacity', String(Math.max(0, 1 - progress * 2.2)));
-      element.dataset.dissolved = String(progress >= .99);
-      const scale = Math.min(devicePixelRatio || 1, 2);
-      canvas.width = Math.round(bounds.width * scale);
-      canvas.height = Math.round(bounds.height * scale);
+      const bounds = scrollTrack.getBoundingClientRect();
+      // Hold the complete first drawing, then dissolve, then settle into study.
+      const raw = Math.max(0, Math.min(1, -bounds.top / Math.max(1, bounds.height - innerHeight)));
+      const dissolve = Math.max(0, Math.min(1, (raw - .16) / .44));
+      const study = Math.max(0, Math.min(1, (raw - .58) / .24));
+      element.style.setProperty('--thought-opacity', String(preference.matches ? 1 : 1 - dissolve));
+      element.style.setProperty('--study', String(preference.matches ? 0 : study));
+      element.dataset.dissolved = String(!preference.matches && dissolve >= .99);
+      element.dataset.studying = String(!preference.matches && study >= .99);
+      element.dataset.motion = !preference.matches && active && !document.hidden ? 'running' : 'paused';
       if (!context) return;
-      context.setTransform(canvas.width / 900, 0, 0, canvas.height / 510, 0, 0);
-      context.clearRect(0, 0, 900, 510);
-      if (preference.matches || progress <= 0 || progress >= 1) return;
+      const drawing = element.querySelector('svg')!;
+      const svg = drawing.getBoundingClientRect();
+      const scale = Math.min(devicePixelRatio || 1, 2);
+      const width = Math.round(svg.width * scale), height = Math.round(svg.height * scale);
+      if (canvas.width !== width || canvas.height !== height) { canvas.width = width; canvas.height = height; }
+      context.resetTransform();
+      context.clearRect(0, 0, width, height);
+      // SVG preserves its aspect ratio inside the paper. Use its real transform,
+      // including any letterboxing, so each particle starts on its pencil line.
+      const matrix = drawing.getScreenCTM();
+      if (!matrix || !svg.width || !svg.height) return;
+      const sx = width / svg.width, sy = height / svg.height;
+      context.setTransform(matrix.a * sx, matrix.b * sy, matrix.c * sx, matrix.d * sy, (matrix.e - svg.left) * sx, (matrix.f - svg.top) * sy);
+      if (preference.matches || dissolve <= 0 || dissolve >= 1) return;
       context.fillStyle = getComputedStyle(element).color;
-      context.globalAlpha = Math.sin(progress * Math.PI) * .8;
-      particles.forEach(p => {
-        context.beginPath();
-        context.arc(p.x + p.dx * progress, p.y + p.dy * progress + progress * progress * 50, p.size * (1 - progress * .6), 0, Math.PI * 2);
-        context.fill();
+      context.globalAlpha = Math.sin(dissolve * Math.PI) * .75;
+      dust.slice(0, 420).forEach(p => {
+        context.beginPath(); context.arc(p.x + p.dx * dissolve, p.y + p.dy * dissolve, p.size * (1 - dissolve * .6), 0, Math.PI * 2); context.fill();
       });
       context.globalAlpha = 1;
     };
-    const schedule = () => { if (!frame) frame = requestAnimationFrame(render); };
-    const observer = new IntersectionObserver(([entry]) => { active = entry.isIntersecting; if (active) schedule(); });
-    observer.observe(element);
+    const schedule = () => { if (!frame && active && !document.hidden) frame = requestAnimationFrame(render); };
+    const observer = new IntersectionObserver(([entry]) => {
+      active = entry.isIntersecting;
+      element.dataset.motion = active && !document.hidden && !preference.matches ? 'running' : 'paused';
+      if (active) schedule(); else { cancelAnimationFrame(frame); frame = 0; }
+    });
+    const visibility = () => {
+      element.dataset.motion = active && !document.hidden && !preference.matches ? 'running' : 'paused';
+      schedule();
+    };
+    observer.observe(scrollTrack);
     window.addEventListener('scroll', schedule, { passive: true });
     window.addEventListener('resize', schedule, { passive: true });
-    document.addEventListener('visibilitychange', schedule);
-    preference.addEventListener('change', schedule);
-    schedule();
+    document.addEventListener('visibilitychange', visibility);
+    preference.addEventListener('change', schedule); schedule();
     return () => {
       cancelAnimationFrame(frame); observer.disconnect();
       window.removeEventListener('scroll', schedule); window.removeEventListener('resize', schedule);
-      document.removeEventListener('visibilitychange', schedule); preference.removeEventListener('change', schedule);
+      document.removeEventListener('visibilitychange', visibility); preference.removeEventListener('change', schedule);
     };
-  }, [quiet]);
-  return <section className="manifesto section" id="manifesto"><span className="eyebrow">YOU DON’T NEED MORE WILLPOWER.</span><h2 className="reveal">You need a little<br/><span className="serif">space between</span><br/>the impulse and the scroll.</h2><p className="story-intro">A moment to notice the pull. A little room to choose differently.</p><div className="sketch-stage" ref={stage}>
-    <svg className="mind-sketch" viewBox="0 0 900 510" role="img" aria-labelledby="sketch-title sketch-description"><title id="sketch-title">A pencil-outline boy looking at his phone</title><desc id="sketch-description">Curly thought arrows connect his mind to the distractions: One more video, Wait…, and What time is it? Scroll past to let the thoughts dissolve, or use the button below.</desc>
-      <defs><marker id="pencil-arrow" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="m1 1 6 3-6 3" fill="none" stroke="currentColor" strokeWidth="1.3"/></marker></defs>
-      <g className="thought-lines" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+  }, [compact]);
+  return <section className="manifesto section" id="manifesto"><span className="eyebrow">YOU DON’T NEED MORE WILLPOWER.</span><h2 className="reveal">You need a little<br/><span className="serif">space between</span><br/>the impulse and the scroll.</h2><p className="story-intro">A moment to notice the pull. A little room to choose differently.</p><div className="story-scroll" ref={track}><div className="sketch-stage" ref={stage}>
+    <div className="sketch-paper"><svg className="mind-sketch" viewBox={compact ? '260 0 400 650' : '0 0 900 570'} role="img" aria-labelledby="sketch-title sketch-description"><title id="sketch-title">From a crowded mind to a quiet study session</title><desc id="sketch-description">A hand-drawn boy holds a phone beneath looping thoughts: One more video, Wait…, and What time is it? As the page moves, the pencil lines break into dust and he puts his phone down to write in an open book. With reduced motion, the original drawing stays still.</desc>
+      <defs><marker id="pencil-arrow" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto"><path d="m1 1 6 3-6 3" fill="none" stroke="currentColor" strokeWidth="1.3"/></marker><pattern id="pencil-hatch" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(24)"><path d="M0 0V5" stroke="currentColor" strokeWidth=".55" opacity=".3"/></pattern></defs>
+      <g className="desktop-thoughts"><g className="thought-lines" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
         <path d="M423 154C376 125 363 185 321 157S300 90 331 111 302 160 270 118L242 96" markerEnd="url(#pencil-arrow)"/>
         <path d="M475 129C505 95 502 44 550 59S587 112 560 99 582 50 629 64" markerEnd="url(#pencil-arrow)"/>
         <path d="M489 181C545 157 553 229 590 213S624 169 599 173 611 226 658 210" markerEnd="url(#pencil-arrow)"/>
-        <rect x="51" y="40" width="210" height="65" rx="8"/><rect x="645" y="31" width="145" height="62" rx="8"/><rect x="664" y="182" width="218" height="64" rx="8"/>
+        <path d="M57 42 255 39 261 102 53 106Z M651 33 788 30 792 92 646 95Z M668 183 878 180 881 246 665 249Z"/>
+      </g><g className="thought-words" fill="currentColor" textAnchor="middle"><text x="156" y="79">One more video</text><text x="717" y="69">Wait…</text><text x="773" y="221">What time is it?</text></g></g>
+      <g className="mobile-thoughts"><g className="thought-lines" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="m285 22 173-2 2 43-176 3z M493 29l130 2-1 43-129-2z M385 101l216-3 2 44-219 2z M349 69c-23 33 62 17 47 47s-37-8-16-13 43 22 49 65 M558 76c22 24-21 25-22 10s-37 25-54 84"/></g><g className="thought-words" textAnchor="middle" fill="currentColor"><text x="371" y="50">One more video</text><text x="558" y="59">Wait…</text><text x="492" y="129">What time is it?</text></g></g>
+      <g className="figure-scene" fill="none" stroke="currentColor" strokeWidth="2.1" strokeLinecap="round" strokeLinejoin="round">
+        <g className="boy-outline">
+          <g className="boy-head"><path d="M411 194c-17-30-8-69 18-80 31-13 69 2 72 37l-5 22 11 15-14 5c-2 25-15 38-35 35l-3 24m-35-46-7 35"/><path fill="url(#pencil-hatch)" d="M408 164c-8-31 7-62 33-64 3-15 19-10 24-3 14-7 35 4 36 18 17 6 15 27 4 37l-17-13-7 12-16-18-9 16-17-12-8 27m-14 16c-17-19-23 3-9 13l9 1"/><path d="m413 122 14-13m-15 25 16-18m-14 29 16-18m3-16 6 15m6-24 6 21m9-15 4 14m12-7 3 11m-62 54 4 6m58-17 7 2m-11-8 11 1m-12 36 13-2m-12 12 10-3"/><path className="pencil-echo" d="M400 170c-9-27-1-57 25-69m40 128 18-7m-76-43 3 13"/></g>
+          <path fill="url(#pencil-hatch)" d="m423 241 25 17 15-17 30 14 20 49-18 42-9 80-108-10 14-65-14-21 13-71z"/><path d="m423 241 25 17 15-17 30 14 19 49m-89-63-32 18-36 95c-6 19 5 32 25 24l66-28m-44-72-20 62 51-17m-53 62-9 73m-35-23 112 12 11-60m-84-91 9 14m-7 78 4 14m64-11-3 27m-49-38 3 49m8-39 1 42m9-24v26"/>
+          <g className="phone-pose"><path d="m479 291 40 46 37-30m-65 31 18 20c9 10 19 8 29 0l36-35m-71-6 21-14m-36 13 22-12 15 3 17-17c7-7 15-2 10 5l-16 25-27 9m32-27 23 6m-14-12 19 7m-20-20 17 9m-22 14 17 7"/>
+          <g className="sketch-phone"><path fill="var(--paper)" d="m545 256 31 11q5 2 3 7l-18 48q-2 4-6 2l-31-11q-4-1-2-6l18-47q1-5 5-4Z"/><path d="m546 264 25 9-15 41-25-9z m5-3 10 4m-19 47 5 2"/><path className="pencil-echo" d="m544 278 20 7m-23 0 20 7m-23 0 15 5m-13 1 10 4"/><path strokeWidth=".8" d="m575 276-17 44m-31-11 28 10"/></g></g>
+          <g className="writing-pose"><path d="m480 290 32 47 49 36m-71-36 16 22 45 25m-128-50 40 25 43 12m-87-20 39 22 39 9"/><g className="writing-hand"><path fill="var(--paper)" d="m549 372 9-8 14 5 7 12-8 6-20-5z"/><path d="m563 369 13 6m-16-1 13 7m-16-2 12 7m-5-21 17 32m-3-1 4 1-1-5"/></g><path d="m499 369 16 2 9 6-3 7-20-4m6-5 12 4"/></g>
+          <path d="m381 421 86 9 58 25m-75-27-59 35m-34 5 220 1m-185-58 5-32m12 38 5-30m12 32 5-28m12 29 5-27"/><path className="pencil-echo" d="m355 355c-5 20 7 35 28 28m-5 44 91 9m-72 33 176 4m-39-17-12 8"/>
+        </g>
+        <g className="study-desk"><path fill="var(--paper)" d="m305 395 326-2 5 11-333 2z"/><path d="m321 407-8 105m300-107 12 106m-300-85 287-1m-292 83-8 5m313-6 8 5"/><path className="pencil-echo" d="m310 398 317-2m-303 14-8 93m302-88 8 88"/><path fill="var(--paper)" d="m464 383 40-17 33 11 35-10 40 21-73 7z"/><path d="m537 377 2 18m-70-9 67 12 72-8m-123-11 18-6 22 7m-34 0 12-4 22 7m29-3 18-5 18 9m-31 1 13-3 17 7"/><path fill="url(#pencil-hatch)" d="m329 375 18-1 5 20h-28z"/><path d="m349 379c16-5 15 13 1 11m-21-26c-9-12 10-13 1-24"/><path className="desk-phone" d="m584 399 30-3 9 4-31 3z"/></g>
       </g>
-      <g className="thought-words" fill="currentColor" textAnchor="middle"><text x="156" y="79">One more video</text><text x="717" y="69">Wait…</text><text x="773" y="221">What time is it?</text></g>
-      <g className="boy-outline" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
-        <path d="M411 194c-17-30-8-69 18-80 31-13 69 2 72 37l-5 22 11 15-14 5c-2 25-15 38-35 35l-3 24m-35-46-7 35"/>
-        <path d="M408 164c-8-31 7-62 33-64 3-15 19-10 24-3 14-7 35 4 36 18 17 6 15 27 4 37l-17-13-7 12-16-18-9 16-17-12-8 27m-14 16c-17-19-23 3-9 13l9 1m-12-62 13-13m-9 24 15-17m-13 27 15-16"/>
-        <path d="m477 170 7 2m-10 29 13-2m-64 43 25 16 15-17 30 14 19 49m-89-63-32 18-36 95c-6 19 5 32 25 24l66-28m-44-72-20 62 51-17m36-40 40 46 37-30m-65 31 18 20c9 10 19 8 29 0l36-35m-71-6 21-14m-102 63-9 73m-35-23 112 12 11-60"/>
-        <path d="m488 316 22-12 15 3 17-17c7-7 15-2 10 5l-16 25-27 9m32-27 23 6m-14-12 19 7m-20-20 17 9m-22 14 17 7"/>
-        <path className="sketch-phone" d="m543 260 33 12-19 49-33-12zM547 267l20 7-13 34-20-7z"/>
-        <path d="m381 421 86 9 58 25m-75-27-59 35m-34 5 220 1m-185-58 5-32m12 38 5-30m12 32 5-28m12 29 5-27"/>
-        <path className="pencil-echo" d="M400 170c-9-27-1-57 25-69m-70 254c-5 20 7 35 28 28m-5 44 91 9m-72 33 176 4"/>
-      </g><g className="sketch-spark" stroke="currentColor" strokeWidth="1.5"><path d="m323 247-12-9m9 26-18 2m282 118 14-9m-9 24 18 4"/></g>
-    </svg><canvas className="thought-dust" aria-hidden="true"/>
-    <span className="sketch-caption">A little less in your head. A little more here.</span>
-  </div><div className="noise-control"><p>Scroll to let the distractions go. Your attention stays.</p><button className="button" aria-pressed={quiet} onClick={() => { manual.current = !quiet; setQuiet(!quiet); }}>{quiet ? 'Bring back the noise' : 'Make a little space'}<span aria-hidden="true">{quiet ? '↺' : '↗'}</span></button><small>An interactive illustration. Actual shielding runs in the Android app.</small></div></section>;
+    </svg><canvas className="thought-dust" aria-hidden="true"/></div><div className="story-captions" aria-hidden="true"><span className="before-caption">A little less in your head.</span><span className="after-caption">A little more here.</span></div><p className="reduced-story">Put the phone down. Open a book. One small choice makes room for the work ahead.</p>
+  </div></div></section>;
 }

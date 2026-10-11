@@ -59,11 +59,23 @@ export function useMotion(path: string) {
         schedule();
       };
       const reset = () => { targetX = targetY = 0; schedule(); };
-      const visibility = () => { if (document.hidden) { cancelAnimationFrame(frame); frame = 0; } else schedule(); };
+      const toolkit = document.querySelector<HTMLElement>('.toolkit-shell');
+      let toolkitVisible = true;
+      const syncPlayback = () => {
+        if (art) art.dataset.motion = visible && !document.hidden ? 'running' : 'paused';
+        if (toolkit) toolkit.dataset.motion = toolkitVisible && !document.hidden ? 'running' : 'paused';
+      };
+      const toolkitObserver = 'IntersectionObserver' in window
+        ? new IntersectionObserver(([entry]) => { toolkitVisible = entry.isIntersecting; syncPlayback(); })
+        : undefined;
+      if (toolkit) toolkitObserver?.observe(toolkit);
+      syncPlayback();
+      const visibility = () => { syncPlayback(); if (document.hidden) { cancelAnimationFrame(frame); frame = 0; } else schedule(); };
       let artObserver: IntersectionObserver | undefined;
       if (art && 'IntersectionObserver' in window) {
         artObserver = new IntersectionObserver(([entry]) => {
           visible = entry.isIntersecting;
+          syncPlayback();
           if (visible) schedule();
           else { cancelAnimationFrame(frame); frame = 0; }
         });
@@ -79,6 +91,9 @@ export function useMotion(path: string) {
       dispose = () => {
         observer?.disconnect();
         artObserver?.disconnect();
+        toolkitObserver?.disconnect();
+        art?.removeAttribute('data-motion');
+        toolkit?.removeAttribute('data-motion');
         animations.forEach(animation => animation.cancel());
         cancelAnimationFrame(frame);
         art?.removeEventListener('pointermove', move);

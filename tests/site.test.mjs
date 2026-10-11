@@ -66,6 +66,12 @@ test('redesigned home uses dark captures and distinct honest social illustration
   assert.equal(createHash('sha256').update(capture).digest('hex'), digest);
  }
 });
+test('home keeps native story and feature navigation without retired controls', async () => {
+ const html = await read('dist/index.html');
+ for (const text of ['Make a little space', 'Less setting up', 'class="noise-control', 'class="tabs', 'class="ritual', 'role="tab"']) assert.ok(!html.includes(text), `retired UI: ${text}`);
+ for (const text of ['class="story-scroll"', 'class="study-desk"', 'class="writing-hand"', 'class="feature-rail"', 'aria-roledescription="carousel"', 'Next feature', 'Previous feature', 'class="community-pair"', 'aria-label="Main navigation"']) assert.ok(html.includes(text), `redesign structure: ${text}`);
+ assert.equal((html.match(/aria-roledescription="slide"/g) || []).length, 3);
+});
 test('motion respects accessibility settings and deploy headers are present', async () => {
  assert.match(await read('src/styles.css'), /prefers-reduced-motion:reduce/);
  const config = JSON.parse(await read('vercel.json'));
