@@ -1,0 +1,332 @@
+{
+  "description": "Actual FocusForge 1.0.3+2019 Flutter widget renders with fictional local fixtures. Only timer glyph paint is cleared; live website overlays use independently measured native render bounds. Original board, ring, caption, spacing and controls remain app pixels.",
+  "sourceRepository": "https://github.com/MufasaXz/focusforge",
+  "sourceCommit": "508c63d3681a3ccd43afbdbf781fcdc6de671163",
+  "phoneFrame": {
+    "width": 680,
+    "height": 1416,
+    "screen": [
+      22,
+      20,
+      658,
+      1396
+    ]
+  },
+  "assets": [
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "face": "flip",
+      "clock": {
+        "x": 21.854689025878912,
+        "y": 206.0,
+        "width": 346.29062194824223,
+        "height": 122.5
+      },
+      "digits": [
+        {
+          "x": 31.854689025878912,
+          "y": 224.75,
+          "width": 53.58515548706055,
+          "height": 85.0
+        },
+        {
+          "x": 31.854689025878912,
+          "y": 224.75,
+          "width": 53.58515548706055,
+          "height": 85.0
+        },
+        {
+          "x": 31.854689025878912,
+          "y": 224.75,
+          "width": 53.58515548706055,
+          "height": 85.0
+        },
+        {
+          "x": 111.68984451293946,
+          "y": 224.75,
+          "width": 53.58515548706055,
+          "height": 85.0
+        },
+        {
+          "x": 111.68984451293946,
+          "y": 224.75,
+          "width": 53.58515548706055,
+          "height": 85.0
+        },
+        {
+          "x": 111.68984451293946,
+          "y": 224.75,
+          "width": 53.58515548706055,
+          "height": 85.0
+        },
+        {
+          "x": 224.725,
+          "y": 224.75,
+          "width": 53.585155487060575,
+          "height": 85.0
+        },
+        {
+          "x": 224.725,
+          "y": 224.75,
+          "width": 53.585155487060575,
+          "height": 85.0
+        },
+        {
+          "x": 224.725,
+          "y": 224.75,
+          "width": 53.585155487060575,
+          "height": 85.0
+        },
+        {
+          "x": 304.56015548706057,
+          "y": 224.75,
+          "width": 53.58515548706055,
+          "height": 85.0
+        },
+        {
+          "x": 304.56015548706057,
+          "y": 224.75,
+          "width": 53.58515548706055,
+          "height": 85.0
+        },
+        {
+          "x": 304.56015548706057,
+          "y": 224.75,
+          "width": 53.58515548706055,
+          "height": 85.0
+        }
+      ],
+      "caption": {
+        "x": 20.0,
+        "y": 344.5,
+        "width": 350.0,
+        "height": 37.0
+      },
+      "cards": [
+        {
+          "x": 21.854689025878912,
+          "y": 206.0,
+          "width": 73.58515548706055,
+          "height": 122.5
+        },
+        {
+          "x": 101.68984451293946,
+          "y": 206.0,
+          "width": 73.58515548706055,
+          "height": 122.5
+        },
+        {
+          "x": 214.725,
+          "y": 206.0,
+          "width": 73.58515548706058,
+          "height": 122.5
+        },
+        {
+          "x": 294.56015548706057,
+          "y": 206.0,
+          "width": 73.58515548706055,
+          "height": 122.5
+        }
+      ],
+      "fonts": [
+        {
+          "text": "2",
+          "family": "InterDisplay",
+          "size": 85.00000000000001,
+          "weight": 700,
+          "spacing": -1.2,
+          "lineHeight": 1.0
+        },
+        {
+          "text": "2",
+          "family": "InterDisplay",
+          "size": 85.00000000000001,
+          "weight": 700,
+          "spacing": -1.2,
+          "lineHeight": 1.0
+        },
+        {
+          "text": "2",
+          "family": "InterDisplay",
+          "size": 85.00000000000001,
+          "weight": 700,
+          "spacing": -1.2,
+          "lineHeight": 1.0
+        },
+        {
+          "text": "5",
+          "family": "InterDisplay",
+          "size": 85.00000000000001,
+          "weight": 700,
+          "spacing": -1.2,
+          "lineHeight": 1.0
+        },
+        {
+          "text": "5",
+          "family": "InterDisplay",
+          "size": 85.00000000000001,
+          "weight": 700,
+          "spacing": -1.2,
+          "lineHeight": 1.0
+        },
+        {
+          "text": "5",
+          "family": "InterDisplay",
+          "size": 85.00000000000001,
+          "weight": 700,
+          "spacing": -1.2,
+          "lineHeight": 1.0
+        },
+        {
+          "text": "0",
+          "family": "InterDisplay",
+          "size": 85.00000000000001,
+          "weight": 700,
+          "spacing": -1.2,
+          "lineHeight": 1.0
+        },
+        {
+          "text": "0",
+          "family": "InterDisplay",
+          "size": 85.00000000000001,
+          "weight": 700,
+          "spacing": -1.2,
+          "lineHeight": 1.0
+        },
+        {
+          "text": "0",
+          "family": "InterDisplay",
+          "size": 85.00000000000001,
+          "weight": 700,
+          "spacing": -1.2,
+          "lineHeight": 1.0
+        },
+        {
+          "text": "0",
+          "family": "InterDisplay",
+          "size": 85.00000000000001,
+          "weight": 700,
+          "spacing": -1.2,
+          "lineHeight": 1.0
+        },
+        {
+          "text": "0",
+          "family": "InterDisplay",
+          "size": 85.00000000000001,
+          "weight": 700,
+          "spacing": -1.2,
+          "lineHeight": 1.0
+        },
+        {
+          "text": "0",
+          "family": "InterDisplay",
+          "size": 85.00000000000001,
+          "weight": 700,
+          "spacing": -1.2,
+          "lineHeight": 1.0
+        }
+      ],
+      "asset": "focus-flip-dark.png",
+      "sha256": "f46566604627dabe23c7fa2eb9d038d387a28ff1983f40f0e1d12e662c173a89"
+    },
+    {
+      "viewport": {
+        "width": 390,
+        "height": 844
+      },
+      "face": "minimal",
+      "clock": {
+        "x": 88.0,
+        "y": 274.5949074074074,
+        "width": 214.0,
+        "height": 73.81018518518522
+      },
+      "digits": [
+        {
+          "x": 113.3625739076991,
+          "y": 274.5949074074074,
+          "width": 37.12491432825723,
+          "height": 60.270061728395035
+        },
+        {
+          "x": 150.48748823595633,
+          "y": 274.5949074074074,
+          "width": 37.12491432825723,
+          "height": 60.270061728395035
+        },
+        {
+          "x": 187.6124025642136,
+          "y": 274.5949074074074,
+          "width": 14.775194871572808,
+          "height": 60.270061728395035
+        },
+        {
+          "x": 202.3875974357864,
+          "y": 274.5949074074074,
+          "width": 37.12491432825723,
+          "height": 60.270061728395035
+        },
+        {
+          "x": 239.51251176404364,
+          "y": 274.5949074074074,
+          "width": 37.12491432825723,
+          "height": 60.270061728395035
+        }
+      ],
+      "caption": {
+        "x": 69.0,
+        "y": 354.5,
+        "width": 252.0,
+        "height": 37.0
+      },
+      "cards": [],
+      "fonts": [
+        {
+          "text": "2",
+          "family": "InterDisplay",
+          "size": 72.0,
+          "weight": 200,
+          "spacing": -1.44,
+          "lineHeight": 1.02
+        },
+        {
+          "text": "5",
+          "family": "InterDisplay",
+          "size": 72.0,
+          "weight": 200,
+          "spacing": -1.44,
+          "lineHeight": 1.02
+        },
+        {
+          "text": ":",
+          "family": "InterDisplay",
+          "size": 72.0,
+          "weight": 200,
+          "spacing": -1.44,
+          "lineHeight": 1.02
+        },
+        {
+          "text": "0",
+          "family": "InterDisplay",
+          "size": 72.0,
+          "weight": 200,
+          "spacing": -1.44,
+          "lineHeight": 1.02
+        },
+        {
+          "text": "0",
+          "family": "InterDisplay",
+          "size": 72.0,
+          "weight": 200,
+          "spacing": -1.44,
+          "lineHeight": 1.02
+        }
+      ],
+      "asset": "focus-minimal-dark.png",
+      "sha256": "972f746004c9cfc0e8047b2cb6543307c62e73f277111777688e5cd8a2ef6b58"
+    }
+  ]
+}
