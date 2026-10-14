@@ -275,7 +275,10 @@ try {
  assert.equal(await page.getByRole('button', { name: 'Menu' }).isVisible(), false);
  await page.getByRole('link', { name: 'Privacy policy', exact: true }).last().click();
  assert.equal(page.url(), routeUrl('/privacy'));
- assert.match(await page.locator('main').innerText(), /installed-app catalog/);
+ const privacyText = await page.locator('main').innerText();
+ assert.match(privacyText, /Draw over other apps/);
+ assert.match(privacyText, /Normal-app shielding does not require this service/);
+ assert.match(privacyText, /Private achievement backup/);
  await page.getByRole('link', { name: 'Delete account', exact: true }).click();
  assert.equal(page.url(), routeUrl('/delete-account'));
  const email = new URL(await page.getByRole('link', { name: 'Email a deletion request' }).getAttribute('href'));

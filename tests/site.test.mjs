@@ -48,6 +48,12 @@ test('deletion page provides a private external request with honest limitations'
 test('privacy covers actual sensitive access and optional cloud features', async () => {
  const html = await read('dist/privacy.html');
  for (const text of ['Accessibility', 'Usage Access', 'Firebase', 'Parent control has been removed', '24 hours', 'Anonymous sign-in still contacts Firebase', 'Vercel', 'retention']) assert.ok(html.includes(text), text);
+ assert.match(html, /Draw over other apps/);
+ assert.match(html, /Accessibility is only used for supported YouTube/);
+ assert.match(html, /foreground notification/);
+ assert.match(html, /Stop shielding/);
+ assert.ok(!html.includes('Do Not Disturb access'));
+ assert.ok(!html.includes('does not declare SYSTEM_ALERT_WINDOW'));
  assert.ok(!html.includes('we collect nothing'));
 });
 test('download destination is an existing release, not an invented store listing', async () => {
