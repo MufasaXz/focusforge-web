@@ -41,13 +41,15 @@ test('deletion page provides a private external request with honest limitations'
  const html = await read('dist/delete-account.html');
  assert.match(html, /mailto:sudeepyadav7272@gmail.com\?subject=FocusForge%20account%20and%20data%20deletion%20request/);
  assert.match(html, /not an automated deletion backend/);
- assert.match(html, /historical leaderboard entries/);
- assert.match(html, /server and reviewed Firestore rules/);
+ assert.match(html, /Sign out/);
+ assert.match(html, /does not provide an in-app account-deletion button/);
+ assert.doesNotMatch(html, /You → Account → Delete account/);
+ assert.match(html, /trusted backend access/);
  assert.match(html, /without reinstalling/);
 });
 test('privacy covers actual sensitive access and optional cloud features', async () => {
  const html = await read('dist/privacy.html');
- for (const text of ['Accessibility', 'Usage Access', 'Firebase', 'Parent control has been removed', '24 hours', 'Anonymous sign-in still contacts Firebase', 'Vercel', 'retention']) assert.ok(html.includes(text), text);
+ for (const text of ['Accessibility', 'Usage Access', 'Firebase', 'Parent control has been removed', 'Sign out', 'Anonymous sign-in still contacts Firebase', 'Vercel', 'retention']) assert.ok(html.includes(text), text);
  assert.match(html, /Draw over other apps/);
  assert.match(html, /Accessibility is only used for supported YouTube/);
  assert.match(html, /foreground notification/);
