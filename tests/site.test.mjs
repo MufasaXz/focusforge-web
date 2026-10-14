@@ -41,12 +41,13 @@ test('deletion page provides a private external request with honest limitations'
  const html = await read('dist/delete-account.html');
  assert.match(html, /mailto:sudeepyadav7272@gmail.com\?subject=FocusForge%20account%20and%20data%20deletion%20request/);
  assert.match(html, /not an automated deletion backend/);
- assert.match(html, /does <strong>not<\/strong> automatically purge/);
+ assert.match(html, /historical leaderboard entries/);
+ assert.match(html, /server and reviewed Firestore rules/);
  assert.match(html, /without reinstalling/);
 });
 test('privacy covers actual sensitive access and optional cloud features', async () => {
  const html = await read('dist/privacy.html');
- for (const text of ['Accessibility', 'Usage Access', 'Firebase', 'installed-app catalog', 'salted PIN digest', 'Anonymous sign-in still contacts Firebase', 'Vercel', 'retention']) assert.ok(html.includes(text), text);
+ for (const text of ['Accessibility', 'Usage Access', 'Firebase', 'Parent control has been removed', '24 hours', 'Anonymous sign-in still contacts Firebase', 'Vercel', 'retention']) assert.ok(html.includes(text), text);
  assert.ok(!html.includes('we collect nothing'));
 });
 test('download destination is an existing release, not an invented store listing', async () => {
