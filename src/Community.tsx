@@ -24,11 +24,19 @@ function Podium() {
     };
     element.querySelectorAll<HTMLElement>('.podium-column').forEach(column => {
       const rise = Number(column.dataset.rise);
-      make(column.querySelector('.podium-outline')!, [{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], 0, 1000);
-      make(column.querySelector('.podium-label')!, [{ transform: `translateY(${rise}px)` }, { transform: 'translateY(0)' }], 0, 1000);
-      make(column.querySelector('.podium-fill')!, [{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], 1100, 1000);
-      make(column.querySelector('.podium-name')!, [{ fontWeight: 400 }, { fontWeight: 700 }], 2100, 1);
-      make(column.querySelector('.podium-medal')!, [{ opacity: 0, transform: 'translateY(-12px) scale(.8)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], 2150, 450);
+      const rank = Number(column.dataset.rank);
+      const stagger = (rank - 1) * 120;
+      make(column.querySelector('.podium-outline')!, [{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], stagger, 900);
+      make(column.querySelector('.podium-label')!, [{ transform: `translateY(${rise}px)` }, { transform: 'translateY(0)' }], stagger, 900);
+      if (rank === 1) {
+        make(column.querySelector('.podium-fill')!, [{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], 1100, 1000);
+        make(column.querySelector('.podium-name')!, [{ fontWeight: 400 }, { fontWeight: 700 }], 2100, 1);
+        make(column.querySelector('.podium-medal')!, [{ opacity: 0, transform: 'translateY(-12px) scale(.8)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], 2150, 450);
+      } else {
+        make(column.querySelector('.podium-fill')!, [{ transform: 'scaleY(0)' }, { transform: 'scaleY(1)' }], 1100 + stagger, 1000);
+        make(column.querySelector('.podium-name')!, [{ fontWeight: 400 }, { fontWeight: 700 }], 2100 + stagger, 1);
+        make(column.querySelector('.podium-medal')!, [{ opacity: 0, transform: 'translateY(-12px) scale(.8)' }, { opacity: 1, transform: 'translateY(0) scale(1)' }], 2150 + stagger, 450);
+      }
     });
     return () => { animations.current.forEach(animation => animation.cancel()); animations.current = []; };
   }, [replay, reduced]);
@@ -45,7 +53,7 @@ function Podium() {
   return <div className="rank-art">
     <div className="community-art-title"><b>Weekly leaderboard</b><span>Focus minutes · demo</span></div>
     <div className="podium" ref={chart} aria-label="Fictional weekly focus minutes" data-motion={active ? 'running' : 'paused'}>
-      {standings.map(person => <div className="podium-column" key={person.name} data-rise={person.minutes * .5} style={{ '--bar-height': `${person.minutes * .5}px` } as React.CSSProperties} tabIndex={0} aria-label={`${person.rank}. ${person.name}, ${person.minutes} minutes, ${person.medal} medal`}>
+      {standings.map(person => <div className="podium-column" key={person.name} data-rank={person.rank} data-rise={person.minutes * .5} style={{ '--bar-height': `${person.minutes * .5}px` } as React.CSSProperties} tabIndex={0} aria-label={`${person.rank}. ${person.name}, ${person.minutes} minutes, ${person.medal} medal`}>
         <div className="podium-label"><span className={`podium-medal medal-${person.rank}`} aria-hidden="true"><svg viewBox="0 0 40 48"><path d="m12 2 8 17 8-17M8 2h9l7 17M32 2h-9l-7 17" fill="none" stroke="currentColor" strokeWidth="3"/><circle cx="20" cy="29" r="14" fill="currentColor"/><text x="20" y="34" textAnchor="middle">{person.rank}</text></svg><small>{person.medal}</small></span><span className="podium-name">{person.name}</span></div>
         <div className="podium-bar"><div className="podium-outline"/><div className="podium-fill"/></div>
         <span className="podium-tooltip" role="tooltip">{person.minutes} min · #{person.rank}</span>
