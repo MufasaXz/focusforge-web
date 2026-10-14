@@ -42,8 +42,9 @@ test('deletion page provides a private external request with honest limitations'
  assert.match(html, /mailto:sudeepyadav7272@gmail.com\?subject=FocusForge%20account%20and%20data%20deletion%20request/);
  assert.match(html, /not an automated deletion backend/);
  assert.match(html, /Sign out/);
- assert.match(html, /does not provide an in-app account-deletion button/);
- assert.doesNotMatch(html, /You → Account → Delete account/);
+ assert.match(html, /Delete account/);
+ assert.match(html, /legacy migration/);
+ assert.match(html, /password or choose your Google account/);
  assert.match(html, /trusted backend access/);
  assert.match(html, /without reinstalling/);
 });
