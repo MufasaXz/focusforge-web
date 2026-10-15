@@ -23,7 +23,7 @@ try {
   const title = pageTitles[path] || 'Page not found — FocusForge';
   let html = template.replace('<div id="root"></div>', `<div id="root">${renderToString(createElement(App, { path }))}</div>`).replace(/<title>.*?<\/title>/, `<title>${title}</title>`).replace(/<meta property="og:title" content="[^"]*"\/>/, `<meta property="og:title" content="${title}"/>`);
   if (path !== '/') {
-   const descriptions = { '/privacy': 'Read the FocusForge privacy policy: Android permissions, local data, Firebase accounts, optional sharing, retention and deletion.', '/terms': 'Terms of use for the FocusForge Android app and website.', '/support': 'Contact FocusForge support for installation, permissions, account and privacy help.', '/delete-account': 'Request FocusForge account and associated data deletion without reinstalling the app. Private email request and in-app instructions.' };
+   const descriptions = { '/privacy': 'Read the FocusForge privacy policy: Android permissions, local data, Firebase accounts, optional sharing, retention and deletion.', '/terms': 'Terms of use for the FocusForge Android app and website.', '/support': 'Contact FocusForge support for installation, permissions, account and privacy help.', '/delete-account': 'Sign in with email or Google to permanently delete your FocusForge account and associated cloud data, without reinstalling the app.' };
    const description = descriptions[path] || 'This FocusForge page could not be found.';
    html = html.replace(/<meta name="description" content="[^"]*"\/>/, `<meta name="description" content="${description}"/>`).replace(/<meta property="og:description" content="[^"]*"\/>/, `<meta property="og:description" content="${description}"/>`);
   }

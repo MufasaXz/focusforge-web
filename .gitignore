@@ -8,3 +8,5 @@ test-results/
 *.local
 *.tsbuildinfo
 *.tsbuildinfo
+
+.firebase-web-config.json

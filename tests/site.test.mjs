@@ -37,16 +37,12 @@ test('every public route has meaningful pre-rendered HTML', async () => {
   assert.match(html, /<title>[^<]+FocusForge|<title>FocusForge/);
  }
 });
-test('deletion page provides a private external request with honest limitations', async () => {
+test('deletion page offers authenticated deletion with explicit confirmation and accurate scope', async () => {
  const html = await read('dist/delete-account.html');
- assert.match(html, /mailto:sudeepyadav7272@gmail.com\?subject=FocusForge%20account%20and%20data%20deletion%20request/);
- assert.match(html, /not an automated deletion backend/);
- assert.match(html, /Sign out/);
- assert.match(html, /Delete account/);
- assert.match(html, /legacy migration/);
- assert.match(html, /password or choose your Google account/);
- assert.match(html, /trusted backend access/);
- assert.match(html, /without reinstalling/);
+ for (const text of ['Sign in with email', 'Continue with Google', 'What is removed', 'Cloud cleanup', 'cannot erase history', 'Enable JavaScript', 'Signing out', 'Delete account']) assert.ok(html.includes(text), text);
+ assert.ok(!html.includes('Request deletion by email'));
+ assert.ok(!html.includes('not an automated deletion backend'));
+ assert.ok(!html.includes('7 to 30 business days'));
 });
 test('privacy covers actual sensitive access and optional cloud features', async () => {
  const html = await read('dist/privacy.html');

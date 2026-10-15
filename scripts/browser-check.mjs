@@ -21,7 +21,7 @@ try {
   assert.equal(await page.locator('body').evaluate(el => getComputedStyle(el).color), 'rgb(38, 41, 35)', 'original charcoal ink');
   assert.match(await page.locator('body').evaluate(el => getComputedStyle(el).backgroundImage), /repeating-linear-gradient/, 'subtle CSS grain, no photo texture');
   assert.equal(await page.locator('body').evaluate(el => getComputedStyle(el).fontFamily), 'Inter, Arial, sans-serif');
-  assert.equal(await page.locator('h1').evaluate(el => getComputedStyle(el).fontFamily), 'InterDisplay, Arial, sans-serif');
+  assert.equal(await page.locator('h1').evaluate(el => getComputedStyle(el).fontFamily), 'InterDisplay, Inter, Arial, sans-serif');
   await page.keyboard.press('Tab');
   assert.equal(await page.locator(':focus').textContent(), 'Skip to content');
   assert.equal(await page.locator(':focus').evaluate(el => getComputedStyle(el).outlineStyle), 'solid');
@@ -281,11 +281,11 @@ try {
  assert.match(privacyText, /Private achievement backup/);
  await page.getByRole('link', { name: 'Delete account', exact: true }).click();
  assert.equal(page.url(), routeUrl('/delete-account'));
- const email = new URL(await page.getByRole('link', { name: 'Email a deletion request' }).getAttribute('href'));
+ await page.getByRole('heading', { name: 'Sign in to delete your account.', exact: true }).waitFor();
+ assert.ok(await page.getByText('Enable JavaScript', { exact: false }).isVisible());
+ const email = new URL(await page.getByRole('link', { name: 'Email support', exact: true }).getAttribute('href'));
  assert.equal(email.protocol, 'mailto:');
  assert.equal(email.pathname, 'sudeepyadav7272@gmail.com');
- assert.equal(email.searchParams.get('subject'), 'FocusForge account and data deletion request');
- assert.match(email.searchParams.get('body'), /I will not send passwords, PINs, or verification codes/);
  assert.deepEqual(errors, []);
  console.log('PASS: widths 320/390/768/1440 in light/dark browser preferences; direct routes, keyboard feature rail, centered dark previews, pinned scroll study story, FAQ, menu Escape, reduced/normal motion and running/paused wheel, download/mailto destinations, no-JS mobile navigation/legal pages, no page errors.');
 } finally { await browser.close(); }
