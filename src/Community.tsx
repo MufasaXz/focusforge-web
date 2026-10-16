@@ -87,7 +87,7 @@ function StudyGroup() {
 }
 export default function Community() {
   return <div className="community-pair">
-    <section className="community-section leaderboard-section section" id="leaderboard"><div className="community-copy"><h2>A little friendly momentum.</h2><p>Make the time you put in visible.</p></div><Podium/><p className="community-disclosure">Opt-in names, levels and weekly minutes stay shared after sign-out until you turn sharing off or delete your account. <a href={pageLink('/privacy')}>Sharing & privacy</a></p></section>
+    <section className="community-section leaderboard-section section" id="leaderboard"><div className="community-copy"><h2>A little friendly momentum.</h2><p>Make the time you put in visible.</p></div><Podium/><p className="community-disclosure">Opt-in names, chosen profile photos, levels and weekly minutes can remain visible in that week’s top 100 after sign-out. Turn sharing off or delete your account to withdraw your entries. <a href={pageLink('/privacy')}>Sharing & privacy</a></p></section>
     <section className="community-section friends-section section" id="friends"><div className="community-copy"><h2>Your people. Your pace.</h2><p>Separate desks. A shared study session.</p></div><StudyGroup/><p className="community-disclosure">Groups share names, minutes and timer status, not verified presence. <a href={pageLink('/privacy')}>Sharing & privacy</a></p></section>
   </div>;
 }

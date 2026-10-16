@@ -51,3 +51,5 @@ page on 2026-10-15. Independent administrator reads confirmed absence of its
 Auth record, profile, private badge record and leaderboard entry. Google OAuth
 opened accounts.google.com, and cancellation returned safely; a complete Google
 account sign-in/deletion was not performed. No existing user's account was used.
+
+Profile-photo disclosure update (2026-10-16): the app stores a re-encoded 128-pixel photo thumbnail in its private settings backup and, only with leaderboard sharing, in weekly entries. The existing preferences and owned-entry cleanup also removes these thumbnails; no separate image bucket or deletion path was added. The website privacy policy, FAQ, community notice, terms, support and deletion scope describe the chosen photo, metadata removal, private/public audiences and sync/removal limits. Permission declarations were already submitted by the owner and approved for closed testing; this copy update does not change them or claim approval of future builds.
