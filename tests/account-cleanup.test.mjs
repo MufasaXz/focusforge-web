@@ -34,6 +34,10 @@ test('cleanup removes private and historical rows, transfers groups, then delete
  await seed({
   'accountCleanup/schema': { version: 2 }, 'users/alex': { name: 'Alex' },
   'users/alex/achievements/earned': { version: 1, unlockedAt: { first_focus: 1 } },
+  'users/alex/preferences/studyBackup': { version: 1, ownerUid: 'alex', data: '{"subjects":[]}', modifiedAt: 1 },
+  'users/alex/sessionData/c2Vzc2lvbi0x': { ownerUid: 'alex', id: 'session-1', subjectId: 'math', label: 'Math', minutes: 25, startedAt: 1, completed: true },
+  'users/blair/preferences/studyBackup': { ownerUid: 'blair', keep: true },
+  'users/blair/sessionData/c2Vzc2lvbi0y': { ownerUid: 'blair', keep: true },
   'users/alex/old/nested/private/record': { legacy: true },
   'users/alex/deletionRefs/legacy': { path: 'users/alex/old/nested/private/record' },
   'leaderboard/2025-01-06/entries/alex': { ownerUid: 'alex' },
@@ -50,12 +54,14 @@ test('cleanup removes private and historical rows, transfers groups, then delete
  let deleted = false;
  await deleteAccountAndData({ uid: 'alex', getIdToken: async () => '', delete: async () => {
   assert.equal(await exists('users/alex'), false);
+  assert.equal(await exists('users/alex/preferences/studyBackup'), false);
+  assert.equal(await exists('users/alex/sessionData/c2Vzc2lvbi0x'), false);
   assert.equal(await exists('leaderboard/2025-01-06/entries/alex'), false);
   deleted = true;
  } }, db('alex'));
  assert.ok(deleted);
  for (const path of ['users/alex/achievements/earned', 'users/alex/old/nested/private/record', 'users/alex/deletionRefs/legacy', 'studyGroups/shared/members/alex', 'studyGroups/solo', 'groupInvites/WXYZ234567', 'studyGroups/missing/members/alex']) assert.equal(await exists(path), false, path);
- for (const path of ['leaderboard/2025-01-06/entries/blair', 'studyGroups/shared/members/blair', 'groupInvites/ABCD234567', 'accountDeletions/alex']) assert.equal(await exists(path), true, path);
+ for (const path of ['users/blair/preferences/studyBackup', 'users/blair/sessionData/c2Vzc2lvbi0y', 'leaderboard/2025-01-06/entries/blair', 'studyGroups/shared/members/blair', 'groupInvites/ABCD234567', 'accountDeletions/alex']) assert.equal(await exists(path), true, path);
  await env.withSecurityRulesDisabled(async c => {
   const data = (await getDoc(doc(c.firestore(), 'studyGroups/shared'))).data();
   assert.deepEqual(data.memberIds, ['blair']); assert.equal(data.ownerUid, 'blair');

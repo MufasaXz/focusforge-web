@@ -1,7 +1,7 @@
 /* Launcher screens, not paper leaves. Native horizontal gestures remain reversible. */
 .toolkit-shell{isolation:isolate}
 .feature-rail{display:block;border:0;scroll-snap-type:x mandatory;scrollbar-width:none;touch-action:pan-x pan-y}
-.screen-track{display:flex;width:300%;position:relative;transform-style:preserve-3d}
+.screen-track{display:flex;width:300%;position:relative;transform-style:flat;overflow:clip}
 /* An untransformed endpoint preserves scroll extent as the final plane recedes. */
 .screen-track:after{content:'';position:absolute;right:0;top:0;width:1px;height:1px;pointer-events:none}
 .feature-slide{width:33.333333%;flex:0 0 33.333333%;transform-origin:50% 50%;transform:perspective(1400px) translateZ(var(--screen-depth,0px)) rotateY(var(--screen-angle,0deg));backface-visibility:hidden;background:var(--white);border:1px solid var(--line);border-radius:14px;position:relative}

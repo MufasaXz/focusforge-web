@@ -46,7 +46,12 @@ test('deletion page offers authenticated deletion with explicit confirmation and
 });
 test('privacy covers actual sensitive access and optional cloud features', async () => {
  const html = await read('dist/privacy.html');
- for (const text of ['Accessibility', 'Usage Access', 'Firebase', 'Parent control has been removed', 'Sign out', 'Anonymous sign-in still contacts Firebase', 'Vercel', 'retention']) assert.ok(html.includes(text), text);
+ for (const text of ['Accessibility', 'Usage Access', 'Firebase', 'Parent control has been removed', 'Sign out', 'Existing anonymous Firebase sessions may still contact Firebase', 'Vercel', 'retention', 'Private study backup', 'custom plan library', 'dated completed focus sessions', 'Clear local analytics', 'Sharing options']) assert.ok(html.includes(text), text);
+ assert.match(html, /level, weekly focus minutes/);
+ assert.match(html, /including after you sign out/);
+ assert.match(html, /Screen-time and app-usage history, Shield events and Accessibility screen contents stay on your device/);
+ assert.match(html, /those study records can return when you recover that account/);
+ assert.ok(!html.includes('Detailed focus sessions, screen time and screen contents are not included'));
  assert.match(html, /Draw over other apps/);
  assert.match(html, /Accessibility is only used for supported YouTube/);
  assert.match(html, /foreground notification/);

@@ -92,7 +92,7 @@ export default function DeleteAccount() {
   <h2 id="account-title" tabIndex={-1} ref={heading}>{done ? 'Your account has been deleted.' : user ? 'Ready to say goodbye?' : 'Sign in to delete your account.'}</h2>
   {done ? <><p>Your Firebase sign-in account and associated cloud records have been removed. You can close this page.</p><p className="small">This website cannot erase data stored on your phone. Clear FocusForge’s app storage or uninstall it to remove remaining local history. A minimal security record prevents old sessions from recreating deleted data.</p></> : user ? <>
    <p className="account-identity">Signed in as <strong>{user.email || 'your linked account'}</strong></p>
-   <div className="account-warning"><strong>Deletion is permanent.</strong><p>Your login, private achievement backup, group memberships, shared progress and leaderboard entries will be removed. If you own a group, ownership transfers to another member; a group with no remaining members closes.</p></div>
+   <div className="account-warning"><strong>Deletion is permanent.</strong><p>Your login, private study and achievement backups, group memberships, shared progress and leaderboard entries will be removed. Your study backup includes subjects, custom plans, goals and dated focus sessions. If you own a group, ownership transfers to another member; a group with no remaining members closes.</p></div>
    <label className="account-confirm"><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} disabled={busy}/><span>I understand that deleting my account and cloud data cannot be undone.</span></label>
    <div className="account-actions"><button className="button account-danger" type="button" onClick={removeAccount} disabled={!confirmed || busy}>{deleting ? 'Deleting your account…' : 'Permanently delete my account'}</button><button className="account-secondary" type="button" onClick={signOut} disabled={busy}>Sign out</button></div>
    <p className="small">Keep this page open until completion. If interrupted, sign in again and retry. Signing out alone does not delete anything.</p>
@@ -109,6 +109,6 @@ export default function DeleteAccount() {
   </>}
   {status && <p className="account-status" role="status">{status}</p>}
   {error && <p className="account-error" role="alert">{error}</p>}
-  <noscript><p>Enable JavaScript to sign in and delete your account here. You can also use Delete account in the Android app or contact support below.</p></noscript>
+  {!ready && <p className="small">Enable JavaScript to sign in and delete your account here. You can also use Delete account in the Android app or contact support below.</p>}
  </section>;
 }

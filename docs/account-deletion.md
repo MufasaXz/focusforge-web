@@ -20,9 +20,19 @@ Function or automated email-processing service is required. An account-ID-only
 fence and request timestamp remain to block stale writers. Phone-local data
 cannot be erased from this website. Provider backup expiration is not promised.
 
+The known private collection list includes preferences and sessionData. These
+cover the linked account's studyBackup settings and dated completed focus
+sessions alongside the private achievement backup. No cleanup algorithm change
+is needed for the study-recovery release. The cleanup regression test verifies
+both paths are removed before Auth deletion while another account's backup
+and sessions remain intact.
+
 The migration marker and deployed Firestore rules were checked on 2026-10-15.
-The deployed rules matched tests/fixtures/firestore.rules. Keep this fixture in
-sync with the app's rules when changing the cleanup schema.
+The fixture includes the app's private study backup and leaderboard level rules
+for the 1.0.0+2022 release. On 2026-10-16 these rules were deployed and read back
+from Firebase, matching the app source exactly (SHA-256
+a64893be79a5525106106df6f0f7a31199425dd9490a0ff8964cdf5bb69eec2c).
+Keep the fixture in sync with the app's rules when changing the cleanup schema.
 
 Validation:
 
