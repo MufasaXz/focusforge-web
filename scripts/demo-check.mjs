@@ -20,7 +20,12 @@ try {
   assert.equal(await page.locator('.phone-front').getAttribute('data-face'), 'Retro');
   await page.waitForFunction(() => document.querySelector('.phone-front').dataset.face === 'Flip');
   await page.waitForTimeout(650);
-  assert.ok(1500 - seconds(await page.locator('.clock-a11y').textContent()) >= 5);
+  // The countdown updates on wall-clock seconds; face rotation uses a separate
+  // visible-time clock. Let the next countdown tick publish its elapsed value.
+  await page.waitForFunction(() => {
+    const [minutes, seconds] = document.querySelector('.clock-a11y').textContent.split(':').map(Number);
+    return 1500 - (minutes * 60 + seconds) >= 5;
+  }, undefined, { timeout: 2000 });
   assert.ok(seconds(initial) > seconds(await page.locator('.clock-a11y').textContent()));
   assert.equal(await page.locator('.hero-face-flip').evaluate(el => getComputedStyle(el).opacity), '1');
   await page.waitForFunction(() => document.querySelector('.demo-flip-card:last-child').getAnimations({ subtree: true }).some(animation => animation.playState === 'running'));
@@ -47,7 +52,12 @@ try {
   await page.waitForTimeout(1100);
   const filling = await inspect();
   assert.equal(filling.rise, 1); assert.ok(filling.fill > 0 && filling.fill < 1); assert.equal(filling.medal, '0');
-  await page.waitForTimeout(1200);
+  await page.waitForFunction(() => {
+    const column = document.querySelector('.podium-column');
+    return new DOMMatrix(getComputedStyle(column.querySelector('.podium-fill')).transform).m22 === 1
+      && getComputedStyle(column.querySelector('.podium-medal')).opacity === '1'
+      && Number(getComputedStyle(column.querySelector('.podium-name')).fontWeight) >= 699;
+  });
   const filled = await inspect();
   assert.equal(filled.fill, 1); assert.equal(filled.medal, '1'); assert.ok(Number(filled.weight) >= 699);
   assert.deepEqual(await page.locator('.podium-name').allTextContents(), ['Keshab', 'Sudeep', 'Pranshu']);
