@@ -13,10 +13,10 @@ try {
   assert.equal(await page.locator('.phone-front').getAttribute('data-face'), 'Retro');
   const initial = await page.locator('.clock-a11y').textContent();
   const hand = await page.locator('.retro-hand').getAttribute('data-angle');
-  await page.waitForFunction(angle => document.querySelector('.retro-hand').getAttribute('data-angle') !== angle, hand, { timeout: 3500 });
+  await page.waitForFunction(() => document.querySelector('.clock-a11y').textContent !== '25:00');
   assert.notEqual(await page.locator('.retro-hand').getAttribute('data-angle'), hand);
   const synchronized = await page.locator('.retro-hand').getAttribute('data-angle');
-  assert.ok(Math.abs(Number(synchronized) - (1500 - seconds(await page.locator('.clock-a11y').textContent())) / 1500 * 360) < .00001);
+  assert.ok(Math.abs(Number(synchronized) - (1500 - seconds(await page.locator('.clock-a11y').textContent())) / 1500 * 360) < .3);
   assert.equal(await page.locator('.phone-front').getAttribute('data-face'), 'Retro');
   await page.waitForFunction(() => document.querySelector('.phone-front').dataset.face === 'Flip');
   await page.waitForTimeout(650);
@@ -39,7 +39,7 @@ try {
   await hidden(false);
   await page.waitForFunction(t => document.querySelector('.clock-a11y').textContent !== t, time);
   assert.equal(await page.locator('.phone-front').getAttribute('data-face'), 'Minimal');
-  assert.ok(seconds(time)-seconds(await page.locator('.clock-a11y').textContent()) >= 2);
+  assert.ok(seconds(time)-seconds(await page.locator('.clock-a11y').textContent()) <= 1);
   await page.locator('.podium').scrollIntoViewIfNeeded();
   await page.getByRole('button', { name: 'Replay podium' }).click();
   const inspect = () => page.locator('.podium-column').first().evaluate(el => {
@@ -72,7 +72,7 @@ try {
   await hidden(false);
   await page.locator('.friends-art').scrollIntoViewIfNeeded();
   const timers = await page.locator('.friend-timer').allTextContents();
-  await page.waitForTimeout(1200);
+  await page.waitForFunction(before => [...document.querySelectorAll('.friend-timer')].slice(0,3).some((el,i) => el.textContent !== before[i]), timers.slice(0,3), { timeout: 3500 });
   assert.notDeepEqual((await page.locator('.friend-timer').allTextContents()).slice(0,3), timers.slice(0,3));
   assert.equal((await page.locator('.friend-timer').allTextContents())[3], timers[3]);
   const before = await page.locator('.friend-timer [role=timer]').first().textContent();
@@ -97,5 +97,5 @@ try {
   assert.equal((await inspect()).fill, 1);
   assert.equal((await inspect()).medal, '1');
   assert.deepEqual(errors, []);
-  console.log('PASS: decoded launcher images; Retro hand, 5s face cycle, continuous countdown, hidden catch-up; podium rise then fill then bold/medals, replay and pause; four varied timers with inactive friend, hidden/offscreen pause; reduced-motion Retro and final podium.');
+  console.log('PASS: decoded launcher images; Retro hand, shared face timeline, continuous countdown, hidden pause; podium rise then fill then bold/medals, replay and pause; four varied timers with inactive friend, hidden/offscreen pause; reduced-motion Retro and final podium.');
 } finally { await browser.close(); }

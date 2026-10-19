@@ -28,7 +28,7 @@ test('canonical, social, sitemap and robots metadata match SITE_URL', async () =
  assert.ok((await read('dist/robots.txt')).includes(`Sitemap: ${site}/sitemap.xml`));
 });
 test('every public route has meaningful pre-rendered HTML', async () => {
- for (const page of ['index', 'privacy', 'terms', 'support', 'delete-account']) {
+ for (const page of ['index', 'privacy', 'terms', 'support', 'delete-account', 'get-on-play']) {
   const html = await read(`dist/${page}.html`);
   assert.match(html, /<h1/);
   assert.match(html, /<main id="main"/);
@@ -60,9 +60,14 @@ test('privacy covers actual sensitive access and optional cloud features', async
  assert.ok(!html.includes('does not declare SYSTEM_ALERT_WINDOW'));
  assert.ok(!html.includes('we collect nothing'));
 });
-test('download destination is an existing release, not an invented store listing', async () => {
+test('homepage keeps original download actions without promoting the tester guide', async () => {
  const html = await read('dist/index.html');
  assert.match(html, /https:\/\/github.com\/MufasaXz\/focusforge\/releases\/latest/);
+ assert.ok(!html.includes('get-on-play'));
+ assert.match(html, /Download for Android/);
+ assert.match(html, /Take a closer look/);
+ assert.ok(!html.includes('Get on Play Store'));
+ assert.ok(!html.includes('Get on GitHub'));
  assert.match(html, /fictional demo data/);
  assert.ok(!html.includes('play.google.com/store/apps'));
 });
@@ -102,7 +107,8 @@ test('woody background keeps the original charcoal, green and typography', async
 });
 test('countdown and sheet motion use bounded, cleanup-safe mechanisms', async () => {
  const clock = await read('src/HeroClock.tsx');
- assert.match(clock, /1500 - useDemoElapsed\(active, 1500\)/);
+ assert.match(clock, /cancelAnimationFrame/);
+ assert.ok(!clock.includes('setTimeout('));
  const ticker = await read('src/useDemoActivity.ts');
  assert.match(ticker, /Math.floor\(\(now - started\) \/ 1000\)/);
  assert.match(ticker, /document.hidden \|\| !clockSubscribers.size/);
@@ -132,11 +138,27 @@ test('community uses explicit fictional podium rankings and elapsed group plans'
  const clock = await read('src/HeroClock.tsx');
  assert.ok(clock.includes("['Retro', 'Flip', 'Minimal']"));
  assert.ok(!clock.includes("'Neon'"));
- assert.match(clock, /hold.current = 5480/);
+ assert.ok(clock.includes('const hold = 6000'));
 });
 test('motion respects accessibility settings and deploy headers are present', async () => {
  assert.match(await read('src/styles.css'), /prefers-reduced-motion:reduce/);
  const config = JSON.parse(await read('vercel.json'));
  assert.equal(config.cleanUrls, true);
  assert.ok(config.headers[0].headers.some(header => header.key === 'Content-Security-Policy'));
+});
+
+test('closed-test guide preserves ordered links and useful no-JavaScript instructions', async () => {
+ const html = await read('dist/get-on-play.html');
+ const destinations = ['https://groups.google.com/g/focusforge', 'https://play.google.com/apps/testing/dev.focusforge.focusforge', 'https://play.google.com/store/apps/details?id=dev.focusforge.focusforge'];
+ let position = -1;
+ for (const destination of destinations) {
+  const next = html.indexOf('href="' + destination + '"');
+  assert.ok(next > position, destination);
+  position = next;
+ }
+ for (const text of ['50+ testers', 'same Gmail', '14 consecutive days', '1–5 minutes daily', 'honest feedback', 'private to the developer', 'Google makes the final approval decision']) assert.ok(html.includes(text), text);
+ assert.ok(!(await read('dist/sitemap.xml')).includes('get-on-play'));
+ assert.ok(html.includes('name="robots" content="noindex"'));
+ for (const page of ['index','privacy','support','terms','delete-account']) assert.ok(!(await read('dist/'+page+'.html')).includes('href="'+link('get-on-play')+'"'));
+
 });

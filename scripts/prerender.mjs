@@ -23,18 +23,18 @@ try {
   const title = pageTitles[path] || 'Page not found — FocusForge';
   let html = template.replace('<div id="root"></div>', `<div id="root">${renderToString(createElement(App, { path }))}</div>`).replace(/<title>.*?<\/title>/, `<title>${title}</title>`).replace(/<meta property="og:title" content="[^"]*"\/>/, `<meta property="og:title" content="${title}"/>`);
   if (path !== '/') {
-   const descriptions = { '/privacy': 'Read the FocusForge privacy policy: Android permissions, local data, Firebase accounts, optional sharing, retention and deletion.', '/terms': 'Terms of use for the FocusForge Android app and website.', '/support': 'Contact FocusForge support for installation, permissions, account and privacy help.', '/delete-account': 'Sign in with email or Google to permanently delete your FocusForge account and associated cloud data, without reinstalling the app.' };
+   const descriptions = { '/get-on-play': 'Help bring FocusForge to Google Play. Join the Google Group, become a tester, install the app and share honest feedback during the 14-day closed test.', '/privacy': 'Read the FocusForge privacy policy: Android permissions, local data, Firebase accounts, optional sharing, retention and deletion.', '/terms': 'Terms of use for the FocusForge Android app and website.', '/support': 'Contact FocusForge support for installation, permissions, account and privacy help.', '/delete-account': 'Sign in with email or Google to permanently delete your FocusForge account and associated cloud data, without reinstalling the app.' };
    const description = descriptions[path] || 'This FocusForge page could not be found.';
    html = html.replace(/<meta name="description" content="[^"]*"\/>/, `<meta name="description" content="${description}"/>`).replace(/<meta property="og:description" content="[^"]*"\/>/, `<meta property="og:description" content="${description}"/>`);
   }
   if (origin) {
    html = html.replace('</head>', `<link rel="canonical" href="${publicUrl(path)}"/><meta property="og:url" content="${publicUrl(path)}"/></head>`).replace(`content="${base}og.png"`, `content="${origin}${base}og.png"`);
   }
-  if (path === '/404') html = html.replace('</head>', '<meta name="robots" content="noindex"/></head>');
+  if (path === '/404' || path === '/get-on-play') html = html.replace('</head>', '<meta name="robots" content="noindex"/></head>');
   await writeFile(path === '/' ? 'dist/index.html' : `dist/${path.slice(1)}.html`, html);
  }
  if (origin) {
-  await writeFile('dist/sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${ROUTES.map(path => `<url><loc>${publicUrl(path)}</loc></url>`).join('')}</urlset>`);
+  await writeFile('dist/sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${ROUTES.filter(path => path !== '/get-on-play').map(path => `<url><loc>${publicUrl(path)}</loc></url>`).join('')}</urlset>`);
   await writeFile('dist/robots.txt', `User-agent: *\nAllow: /\nSitemap: ${origin}${base}sitemap.xml\n`);
  } else {
   // No invented canonical deployment URL. Set SITE_URL for deployment builds.

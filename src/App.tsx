@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
 import DeleteAccount from './DeleteAccount';
+import GetOnPlay from './GetOnPlay';
+import './getOnPlay.css';
 import { useLauncherFlip } from './useLauncherFlip';
 import { useMotion } from './useMotion';
 import DistractionStory from './DistractionStory';
@@ -9,9 +11,9 @@ import { asset, pageLink } from './paths';
 
 export const DOWNLOAD = 'https://github.com/MufasaXz/focusforge/releases/latest';
 export const EMAIL = 'sudeepyadav7272@gmail.com';
-export const ROUTES = ['/', '/privacy', '/terms', '/support', '/delete-account'];
+export const ROUTES = ['/', '/privacy', '/terms', '/support', '/delete-account', '/get-on-play'];
 const source = 'https://github.com/MufasaXz/focusforge';
-export const pageTitles: Record<string, string> = { '/': 'FocusForge — Make room for what matters.', '/privacy': 'Privacy policy — FocusForge', '/terms': 'Terms of use — FocusForge', '/support': 'Support — FocusForge', '/delete-account': 'Delete your account — FocusForge' };
+export const pageTitles: Record<string, string> = { '/': 'FocusForge — Make room for what matters.', '/privacy': 'Privacy policy — FocusForge', '/terms': 'Terms of use — FocusForge', '/support': 'Support — FocusForge', '/delete-account': 'Delete your account — FocusForge', '/get-on-play': 'Join the Play Store test — FocusForge' };
 const Arrow = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>;
 function Mark() { return <img className="mark" src={asset("images/focusforge-icon.png")} alt="" width="40" height="40" aria-hidden="true"/>; }
 function Download({ light = false, children = 'Get FocusForge' }: { light?: boolean; children?: React.ReactNode }) { return <a className={`button ${light ? 'light' : ''}`} href={DOWNLOAD}>{children}<Arrow/></a>; }
@@ -101,5 +103,5 @@ function Legal({ path }: { path: string }) {
 export default function App({ path = '/' }: { path?: string }) {
  useMotion(path);
  useEffect(() => { document.title = pageTitles[path] || 'Page not found — FocusForge'; }, [path]);
- return <><a className="skip-link" href="#main">Skip to content</a><Header path={path}/>{path === '/' ? <main id="main"><Home/></main> : ROUTES.includes(path) ? <Legal path={path}/> : <main id="main" className="legal section"><span className="eyebrow">404 / A LITTLE OFF TRACK</span><h1>Let’s find your focus.</h1><p>This page doesn’t exist.</p><a href={pageLink("/")} className="button">Back to home <Arrow/></a></main>}<Footer/></>;
+ return <><a className="skip-link" href="#main">Skip to content</a><Header path={path}/>{path === '/' ? <main id="main"><Home/></main> : path === '/get-on-play' ? <GetOnPlay/> : ROUTES.includes(path) ? <Legal path={path}/> : <main id="main" className="legal section"><span className="eyebrow">404 / A LITTLE OFF TRACK</span><h1>Let’s find your focus.</h1><p>This page doesn’t exist.</p><a href={pageLink("/")} className="button">Back to home <Arrow/></a></main>}<Footer/></>;
 }

@@ -123,29 +123,29 @@ try {
  await animated.goto(base);
  assert.ok((await animated.locator('.phone-front').evaluate(el => getComputedStyle(el).animationName)).includes('float-front'));
  const seconds = time => time.split(':').reduce((minutes, seconds) => Number(minutes) * 60 + Number(seconds));
- const clockBefore = await animated.locator('.hero-demo-clock').textContent();
- await animated.waitForFunction(before => document.querySelector('.hero-demo-clock').textContent !== before, clockBefore, { timeout: 3500 });
- assert.notEqual(await animated.locator('.hero-demo-clock').textContent(), clockBefore, 'illustrative countdown advances');
+ const clockBefore = await animated.locator('.hero-demo-clock>span').textContent();
+ await animated.waitForFunction(before => document.querySelector('.hero-demo-clock>span').textContent !== before, clockBefore, { timeout: 3500 });
+ assert.notEqual(await animated.locator('.hero-demo-clock>span').textContent(), clockBefore, 'illustrative countdown advances');
  const alignment = await animated.locator('.phone-front').evaluate(el => {
-   const clock = el.querySelector('.hero-demo-clock');
-   const scale = 680 / el.clientWidth;
-   return { x: clock.offsetLeft * scale, y: clock.offsetTop * scale, width: clock.clientWidth * scale, height: clock.clientHeight * scale, font: parseFloat(getComputedStyle(clock).fontSize) * scale };
+   const stage = el.querySelector('.hero-clock-stage');
+   const clock = stage.querySelector('.hero-demo-clock');
+   return { width: stage.clientWidth / el.clientWidth, aspect: stage.clientWidth / stage.clientHeight, font: parseFloat(getComputedStyle(clock).fontSize) / stage.clientWidth };
  });
- assert.ok(Math.abs(alignment.x - 229) < 3 && Math.abs(alignment.y - 592) < 3, 'mask aligns with measured source glyph origin');
- assert.ok(Math.abs(alignment.width - 224) < 3 && Math.abs(alignment.height - 74) < 3 && Math.abs(alignment.font - 86) < 1, 'mask and type match the 680 × 1416 source capture');
+ assert.ok(Math.abs(alignment.width - .853) < .01 && Math.abs(alignment.aspect - 1) < .01, 'clock surface stays inside its phone at every breakpoint');
+ assert.ok(Math.abs(alignment.font - .18) < .005, 'timer type scales with its clock surface');
  await animated.evaluate(() => {
    Object.defineProperty(document, 'hidden', { configurable: true, value: true });
    document.dispatchEvent(new Event('visibilitychange'));
  });
- const hiddenClock = await animated.locator('.hero-demo-clock').textContent();
+ const hiddenClock = await animated.locator('.hero-demo-clock>span').textContent();
  await animated.waitForTimeout(2200);
- assert.equal(await animated.locator('.hero-demo-clock').textContent(), hiddenClock, 'hidden timer does not render');
+ assert.equal(await animated.locator('.hero-demo-clock>span').textContent(), hiddenClock, 'hidden timer does not render');
  await animated.evaluate(() => {
    Object.defineProperty(document, 'hidden', { configurable: true, value: false });
    document.dispatchEvent(new Event('visibilitychange'));
  });
- await animated.waitForFunction(before => document.querySelector('.hero-demo-clock').textContent !== before, hiddenClock);
- assert.ok(seconds(hiddenClock) - seconds(await animated.locator('.hero-demo-clock').textContent()) >= 2, 'resume catches up to deadline instead of counting callbacks');
+ await animated.waitForFunction(before => document.querySelector('.hero-demo-clock>span').textContent !== before, hiddenClock);
+ assert.ok(seconds(hiddenClock) - seconds(await animated.locator('.hero-demo-clock>span').textContent()) <= 1, 'resume preserves the paused preview timeline');
  const wheel = animated.locator('.sunburst');
  const before = await wheel.evaluate(el => { const animation = el.getAnimations()[0]; return { time: animation.currentTime, state: animation.playState }; });
  assert.equal(before.state, 'running');
@@ -159,12 +159,12 @@ try {
  assert.notEqual(await art.evaluate(el => el.style.getPropertyValue('--depth-x')), '0.000px');
  await animated.locator('#features').scrollIntoViewIfNeeded();
  await animated.waitForTimeout(100);
- const offscreenClock = await animated.locator('.hero-demo-clock').textContent();
+ const offscreenClock = await animated.locator('.hero-demo-clock>span').textContent();
  await animated.waitForTimeout(2200);
- assert.equal(await animated.locator('.hero-demo-clock').textContent(), offscreenClock, 'offscreen countdown suspends rendering');
+ assert.equal(await animated.locator('.hero-demo-clock>span').textContent(), offscreenClock, 'offscreen countdown suspends rendering');
  await animated.evaluate(() => window.scrollTo({ top: 0, behavior: 'instant' }));
- await animated.waitForFunction(before => document.querySelector('.hero-demo-clock').textContent !== before, offscreenClock);
- assert.ok(seconds(offscreenClock) - seconds(await animated.locator('.hero-demo-clock').textContent()) >= 2, 'offscreen countdown catches up on re-entry');
+ await animated.waitForFunction(before => document.querySelector('.hero-demo-clock>span').textContent !== before, offscreenClock);
+ assert.ok(seconds(offscreenClock) - seconds(await animated.locator('.hero-demo-clock>span').textContent()) <= 1, 'offscreen preview resumes without jumping');
  await animated.locator('#features').scrollIntoViewIfNeeded();
  await animated.waitForTimeout(100);
  assert.equal(await wheel.evaluate(el => el.getAnimations()[0].playState), 'paused');

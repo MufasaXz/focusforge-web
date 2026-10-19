@@ -5,15 +5,34 @@ export function useDemoActivity(ref: RefObject<HTMLElement | null>) {
   const [active, setActive] = useState(false);
   const [reduced, setReduced] = useState(false);
   useEffect(() => {
-    let inView = !('IntersectionObserver' in window);
     const preference = matchMedia('(prefers-reduced-motion: reduce)');
-    const sync = () => { setActive(inView && !document.hidden); setReduced(preference.matches); };
-    const observer = 'IntersectionObserver' in window ? new IntersectionObserver(([entry]) => { inView = entry.isIntersecting; sync(); }, { threshold: 0 }) : undefined;
+    let pending = 0;
+    const sync = () => {
+      const bounds = ref.current?.getBoundingClientRect();
+      const inView = !!bounds && bounds.bottom > 0 && bounds.right > 0 && bounds.top < innerHeight && bounds.left < innerWidth;
+      setActive(inView && !document.hidden);
+      setReduced(preference.matches);
+    };
+    // Read current geometry rather than a queued observer entry from before the
+    // phone's entrance animation or a restored scroll position settled.
+    const schedule = () => { if (!pending) pending = requestAnimationFrame(() => { pending = 0; sync(); }); };
+    const observer = 'IntersectionObserver' in window ? new IntersectionObserver(sync, { threshold: 0 }) : undefined;
     if (ref.current) observer?.observe(ref.current);
     document.addEventListener('visibilitychange', sync);
     preference.addEventListener('change', sync);
+    window.addEventListener('scroll', schedule, { passive: true });
+    window.addEventListener('resize', schedule);
+    window.addEventListener('pageshow', schedule);
     sync();
-    return () => { observer?.disconnect(); document.removeEventListener('visibilitychange', sync); preference.removeEventListener('change', sync); };
+    return () => {
+      observer?.disconnect();
+      cancelAnimationFrame(pending);
+      document.removeEventListener('visibilitychange', sync);
+      preference.removeEventListener('change', sync);
+      window.removeEventListener('scroll', schedule);
+      window.removeEventListener('resize', schedule);
+      window.removeEventListener('pageshow', schedule);
+    };
   }, [ref]);
   return { active, reduced };
 }
