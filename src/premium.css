@@ -1,0 +1,413 @@
+/*
+  The finishing layer.
+
+  Loaded last, so it refines rather than redefines. The brand stays exactly
+  where it was — warm paper, charcoal ink, sage and amber — and nothing here
+  moves a layout. What it does change is the part that reads as "made with
+  care": how type is scaled and tracked, how many weights the page can call
+  on, what a raised surface looks like against paper, and how a control
+  answers the pointer.
+*/
+
+:root {
+  /*
+    Tracking belongs to a size, not to an element. Display type set at 100px
+    needs the letters pulled together or it reads as loose; the same tracking
+    on a 13px label closes the counters and reads as cramped. One token per
+    step, applied with the size it belongs to.
+  */
+  --track-display: -0.055em;
+  --track-xl: -0.04em;
+  --track-lg: -0.028em;
+  --track-md: -0.018em;
+  --track-sm: -0.008em;
+  --track-label: 0.085em;
+
+  /*
+    Shadows on paper are warm. A neutral grey shadow over #f4ecdf reads as
+    dirt; these are the paper's own brown, thinned, and stacked so the
+    contact edge stays tight while the ambient pool spreads.
+  */
+  --lift-1: 0 1px 2px #3b2a1408, 0 2px 6px #3b2a140a;
+  --lift-2: 0 1px 2px #3b2a140a, 0 4px 10px #3b2a140f, 0 12px 28px #3b2a1410;
+  --lift-3: 0 1px 2px #3b2a140d, 0 8px 18px #3b2a1412, 0 26px 54px #3b2a1416;
+
+  /* A hairline that belongs to the paper rather than sitting on top of it. */
+  --hairline: #cfc9b6;
+  --surface: linear-gradient(176deg, #fffefa, #fdfaf2);
+}
+
+/* ---------- Body copy ---------- */
+
+/*
+  17px over 16px. The line length on this site is generous, and 16px at these
+  measures asks the reader to work. The slightly tighter leading compensates
+  so the block keeps its shape.
+*/
+body {
+  font-size: 17px;
+  line-height: 1.62;
+  letter-spacing: var(--track-sm);
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+}
+
+p {
+  line-height: 1.62;
+  text-wrap: pretty;
+}
+
+/* ---------- Display type ---------- */
+
+/*
+  Headings now have a real weight below bold to reach for. The display cut at
+  600 carries the mid-level headings, which keeps 700 meaningful at the top of
+  the page instead of being the only option.
+*/
+h1,
+h2,
+h3 {
+  text-wrap: balance;
+  font-synthesis: none;
+}
+
+h1,
+.hero h1 {
+  letter-spacing: var(--track-display);
+}
+
+h2 {
+  letter-spacing: var(--track-xl);
+}
+
+h3 {
+  letter-spacing: var(--track-lg);
+}
+
+.feature-copy h3,
+.community-copy h2,
+.faq h2 {
+  letter-spacing: var(--track-xl);
+}
+
+/*
+  The hero is the one place the tracking goes further, because the line is
+  three words deep and the words have to read as one block.
+*/
+.hero h1 {
+  letter-spacing: -0.062em;
+  line-height: 0.96;
+}
+
+/* ---------- The serif voice ---------- */
+
+/*
+  Instrument Serif replaces the Georgia fallback. Georgia is a screen text
+  face: at 100px its strokes go flat and even, which is why the contrast line
+  in each heading read as a different site rather than a second voice of the
+  same one. Instrument Serif is drawn for display — high stroke contrast, a
+  tall x-height that sits level with Inter's, and an italic with real cursive
+  construction rather than a slant.
+
+  It sets optically smaller than Georgia at the same size, so the scale is
+  nudged up to keep the two voices on one line.
+*/
+.serif {
+  font-family: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  font-weight: 400;
+  font-style: italic;
+  letter-spacing: -0.015em;
+  font-size: 1.08em;
+}
+
+.hero h1 .serif {
+  font-size: 1.2em;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+}
+
+.final-cta h2 .serif,
+.section-heading h2 .serif,
+.manifesto h2 .serif,
+.faq h2 .serif,
+.community-copy h2 .serif {
+  font-size: 1.12em;
+  letter-spacing: -0.018em;
+}
+
+/* The sketch caption is the same voice, so it uses the same face. */
+.sketch-caption {
+  font-family: 'Instrument Serif', Georgia, serif;
+  font-size: 19px;
+  letter-spacing: -0.01em;
+}
+
+/* ---------- Labels ---------- */
+
+/*
+  Small caps labels carry the section numbering. At 11px with 700 the letters
+  were heavy enough to vibrate; 600 with slightly more tracking holds the line
+  without shouting.
+*/
+.eyebrow {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: var(--track-label);
+  color: var(--muted);
+}
+
+.section-heading .eyebrow,
+.feature-copy .eyebrow {
+  color: #8a7a55;
+}
+
+/* ---------- Micro copy ---------- */
+
+/*
+  Nothing on a page people are meant to read should be set at 9 or 10px.
+  These were the footnotes, the legal lines and the captions — the text that
+  signals whether a product sweats the details. Each moves up to a size that
+  can actually be read, and takes a weight so it still reads as secondary.
+*/
+.hero-bottom {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+}
+
+.hero-copy .download-note,
+.final-cta > p {
+  font-size: 13px;
+  letter-spacing: var(--track-sm);
+}
+
+.final-cta .eyebrow {
+  font-size: 11px;
+}
+
+.hero-secondary {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.faq-list summary {
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: var(--track-sm);
+}
+
+.faq-list details > p,
+.faq > div > p {
+  font-size: 15px;
+}
+
+.faq .text-link,
+.text-link {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.art-footnote,
+.preview-caption,
+.story-intro {
+  font-size: 13px;
+}
+
+.story-intro {
+  font-size: 15px;
+}
+
+/* ---------- Controls ---------- */
+
+/*
+  A button that does not move is a button that feels like an image. The lift
+  is small enough to read as pressure rather than animation, and it collapses
+  on press so the control feels sprung.
+*/
+.button {
+  font-weight: 600;
+  letter-spacing: var(--track-sm);
+  box-shadow: var(--lift-2);
+  transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1),
+    box-shadow 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+
+.button:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--lift-3);
+}
+
+.button:active {
+  transform: translateY(0);
+  box-shadow: var(--lift-1);
+}
+
+.text-link {
+  border-bottom-color: #c9c2ad;
+  transition: border-bottom-color 0.2s;
+}
+
+.text-link:hover {
+  border-bottom-color: currentColor;
+}
+
+/* ---------- Surfaces ---------- */
+
+/*
+  The cards were a flat white fill behind a one-pixel line, which on paper
+  reads as a hole rather than something resting on the page. A barely-there
+  vertical gradient gives the fill a top edge that catches light, and the
+  stacked shadow puts it above the grain.
+*/
+.feature-slide,
+.rank-art,
+.friends-art,
+.graphic-card {
+  background: var(--surface);
+  border-color: var(--hairline);
+  box-shadow: var(--lift-2);
+}
+
+.feature-slide.current {
+  box-shadow: var(--lift-3);
+}
+
+.pill {
+  background: var(--surface);
+  border-color: var(--hairline);
+  box-shadow: var(--lift-1);
+  font-weight: 500;
+}
+
+.floating-note {
+  box-shadow: var(--lift-3);
+  font-weight: 500;
+}
+
+/* ---------- The feature card's third column ---------- */
+
+/*
+  Three capability lines set at 11px, floating in the widest column of the
+  card, read as a footnote rather than as the answer to the heading beside
+  them. They get a readable size, a rule between each one so the column has a
+  spine, and the tick marks grow enough to be seen.
+*/
+.feature-aside .check-list {
+  font-size: 15px;
+  gap: 0;
+  margin-top: 26px;
+  border-top: 1px solid var(--hairline);
+}
+
+.feature-aside .check-list li {
+  align-items: center;
+  gap: 14px;
+  padding: 15px 2px;
+  border-bottom: 1px solid var(--hairline);
+  font-weight: 500;
+  letter-spacing: var(--track-sm);
+}
+
+.feature-aside .check-list li > span {
+  height: 26px;
+  width: 26px;
+  border-color: #b4bca2;
+  background: #ffffff8c;
+}
+
+/* ---------- Hero footnote ---------- */
+
+/*
+  The credit line sat on top of the phone art. It belongs under it.
+*/
+.art-footnote {
+  color: var(--muted);
+}
+
+@media (min-width: 981px) {
+  .art-footnote {
+    bottom: -26px;
+  }
+}
+
+/* ---------- Navigation ---------- */
+
+.site-nav a {
+  font-weight: 500;
+  letter-spacing: var(--track-sm);
+}
+
+.wordmark {
+  letter-spacing: -0.035em;
+}
+
+/* ---------- Decorative marks ---------- */
+
+/*
+  The sunburst and the replay arrow used to be literal characters — U+2733 and
+  U+21B6 — and neither exists in Inter, so both were drawn by whatever font the
+  operating system happened to fall back to. They changed shape between
+  machines. They are SVG now, which also lets the sunburst keep its stroke
+  weight while it rotates.
+*/
+.glyph {
+  display: inline-block;
+  vertical-align: middle;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+}
+
+/*
+  Each burst is still sized by the font-size the layout already sets for it, so
+  every existing responsive rule keeps working — the SVG just fills one em
+  rather than being a character inside it. A 24-unit box has no side bearings,
+  so it is held slightly under 1em to sit where the glyph used to.
+*/
+.sunburst,
+.cta-flower,
+.tiny-flower {
+  display: grid;
+  place-items: center;
+  line-height: 1;
+}
+
+.sunburst .glyph,
+.cta-flower .glyph {
+  width: 0.92em;
+  height: 0.92em;
+  /* Thin, because at 100px a 1.5 stroke in a 24 box lands near 6px. */
+  stroke-width: 0.85;
+}
+
+.tiny-flower .glyph {
+  width: 0.85em;
+  height: 0.85em;
+  stroke-width: 1.4;
+}
+
+.graphic-button .glyph {
+  width: 1.1em;
+  height: 1.1em;
+  stroke-width: 1.6;
+}
+
+/* ---------- Mobile ---------- */
+
+@media (max-width: 520px) {
+  body {
+    font-size: 16px;
+  }
+
+  .hero h1 {
+    letter-spacing: -0.05em;
+  }
+
+  .faq-list summary {
+    font-size: 15px;
+  }
+
+  .sketch-caption {
+    font-size: 17px;
+  }
+}

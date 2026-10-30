@@ -60,7 +60,7 @@ function Podium() {
       </div>)}
     </div>
     <details className="ranking-table"><summary>View demo rankings</summary><table><caption>Fictional weekly focus minutes</caption><thead><tr><th>Rank</th><th>Name</th><th>Minutes</th></tr></thead><tbody>{[...standings].sort((a,b) => a.rank-b.rank).map(person => <tr key={person.name}><td>{person.rank}</td><th scope="row">{person.name}</th><td>{person.minutes}</td></tr>)}</tbody></table></details>
-    {enhanced && <button className="graphic-button" disabled={reduced} onClick={() => setReplay(value => value + 1)}>Replay podium<span aria-hidden="true">↶</span></button>}
+    {enhanced && <button className="graphic-button" disabled={reduced} onClick={() => setReplay(value => value + 1)}>Replay podium<svg className="glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M4.5 9.5h9a5 5 0 0 1 0 10h-5"/><path d="M8 5.5 4 9.5l4 4"/></svg></button>}
     <small className="illustration-label">Fictional illustration · not actual standings</small>
   </div>;
 }

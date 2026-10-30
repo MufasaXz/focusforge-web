@@ -4,6 +4,7 @@ import App from './App';
 import { currentRoute } from './paths';
 import './styles.css';
 import './corrections.css';
+import './premium.css';
 const path = currentRoute(window.location.pathname);
 const root = document.getElementById('root')!;
 if (root.hasChildNodes()) hydrateRoot(root, <React.StrictMode><App path={path}/></React.StrictMode>);
