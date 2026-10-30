@@ -7,7 +7,7 @@ const link = path => `${base}${path}.html`;
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 test('assets and verified icon use the configured deployment base', async () => {
  const html = await read('dist/index.html');
- for (const path of ['favicon.png', 'images/focusforge-icon.png', 'images/dashboard-dark.png', 'images/focus-dark.png', 'fonts/Inter-Regular.ttf']) assert.ok(html.includes(`${base}${path}`), path);
+ for (const path of ['favicon.png', 'images/focusforge-icon.png', 'images/dashboard-dark.png', 'images/focus-dark.png', 'fonts/Inter-Regular.woff2']) assert.ok(html.includes(`${base}${path}`), path);
  const icon = await readFile(new URL('../public/images/focusforge-icon.png', import.meta.url));
  assert.deepEqual(icon, await readFile(new URL('../public/favicon.png', import.meta.url)));
  for (const match of html.matchAll(/(?:src|href)="([^"#]+)"/g)) {
