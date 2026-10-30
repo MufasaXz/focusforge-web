@@ -52,6 +52,14 @@ try {
  assert.equal(requests, before, 'website rejects password-reset actions without contacting Firebase');
  assert.equal(await page.locator('input').count(), 0);
  assert.equal(new URL(page.url()).search, '');
+ // Firebase's own handler finishes the verification, then offers a continue
+ // link back here. There is no code left to spend, so nothing is asked of it.
+ const afterReset = requests;
+ await page.goto(origin + '/verify-email.html?flow=complete');
+ await page.getByRole('heading', { name: 'Back to FocusForge.', exact: true }).waitFor();
+ assert.equal(requests, afterReset, 'the continue hand-off contacts nothing');
+ assert.equal(await page.getByRole('button', { name: 'Verify email address', exact: true }).count(), 0);
+ assert.equal(new URL(page.url()).search, '');
  await page.close();
- console.log('PASS: verification at 320/390/1440px, explicit confirmation, token scrubbing, expired link, no website password reset, no real Firebase requests.');
+ console.log('PASS: verification at 320/390/1440px, explicit confirmation, token scrubbing, expired link, continue hand-off, no website password reset, no real Firebase requests.');
 } finally { await browser.close(); }

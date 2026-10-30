@@ -16,6 +16,11 @@ export default function VerifyEmail() {
  const [done, setDone] = useState(false);
  const [error, setError] = useState('');
  const code = useRef<string | null>(null);
+ // Firebase's own handler confirms the address and then offers a continue link
+ // back here, carrying flow=complete and no code of its own. Read it before the
+ // query is scrubbed, so the page can speak to someone who has already finished
+ // rather than telling them to open a link they just followed.
+ const returning = useRef(false);
  const locked = useRef(false);
  const heading = useRef<HTMLHeadingElement>(null);
  useEffect(() => {
@@ -23,6 +28,7 @@ export default function VerifyEmail() {
   if (code.current === null) {
    const params = new URLSearchParams(window.location.search);
    code.current = params.get('mode') === 'verifyEmail' ? params.get('oobCode') || '' : '';
+   returning.current = params.get('flow') === 'complete';
    // Keep the one-time action code out of subsequent history entries and links.
    window.history.replaceState(null, '', window.location.pathname);
   }
@@ -50,12 +56,14 @@ export default function VerifyEmail() {
   <h1>One step closer<br/>to your next session.</h1>
   <p className="legal-intro">Confirm your email address for your FocusForge account.</p>
   <div className="legal-body"><section className="account-card" aria-busy={checking || busy}>
-   <h2 tabIndex={-1} ref={heading}>{done ? 'Your email is verified.' : checking ? 'Checking your verification link…' : email ? 'Confirm your email address.' : 'Continue in FocusForge.'}</h2>
+   <h2 tabIndex={-1} ref={heading}>{done ? 'Your email is verified.' : checking ? 'Checking your verification link…' : email ? 'Confirm your email address.' : returning.current ? 'Back to FocusForge.' : 'Continue in FocusForge.'}</h2>
    {checking && <p role="status">Checking the link securely. This will only take a moment.</p>}
    {done ? <p>Return to the FocusForge app and tap <strong>I’ve verified my email</strong> to continue. Your study setup is kept.</p> : email ? <>
     <p>Verify <strong>{email}</strong> for your FocusForge account.</p>
     <div className="account-actions"><button type="button" className="button" onClick={verify} disabled={busy}>{busy ? 'Verifying…' : 'Verify email address'}</button></div>
-   </> : !checking && !error ? <p>Open the verification link from your email to confirm your address. If you have already followed it, return to the app and tap <strong>I’ve verified my email</strong>. You can send a new verification email from the app if needed.</p> : null}
+   </> : !checking && !error ? (returning.current
+    ? <p>If the previous page confirmed your address, return to FocusForge and tap <strong>I’ve verified my email</strong> to continue. Your study setup is kept. You can send a new verification email from the app if anything went wrong.</p>
+    : <p>Open the verification link from your email to confirm your address. If you have already followed it, return to the app and tap <strong>I’ve verified my email</strong>. You can send a new verification email from the app if needed.</p>) : null}
    {error && <p className="account-error" role="alert">{error}</p>}
    <noscript><p>Enable JavaScript to confirm your email address here, then open this link again.</p></noscript>
    <p className="small">To reset your password, open the email sign-in form in FocusForge and choose Forgot password. The email link opens Firebase’s secure reset page.</p>
