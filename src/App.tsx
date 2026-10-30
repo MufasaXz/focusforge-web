@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import DeleteAccount from './DeleteAccount';
+import VerifyEmail from './VerifyEmail';
 import GetOnPlay from './GetOnPlay';
 import './getOnPlay.css';
 import { useLauncherFlip } from './useLauncherFlip';
@@ -11,9 +12,9 @@ import { asset, pageLink } from './paths';
 
 export const DOWNLOAD = 'https://github.com/MufasaXz/focusforge/releases/latest';
 export const EMAIL = 'sudeepyadav7272@gmail.com';
-export const ROUTES = ['/', '/privacy', '/terms', '/support', '/delete-account', '/get-on-play'];
+export const ROUTES = ['/', '/privacy', '/terms', '/support', '/delete-account', '/get-on-play', '/verify-email'];
 const source = 'https://github.com/MufasaXz/focusforge';
-export const pageTitles: Record<string, string> = { '/': 'FocusForge — Make room for what matters.', '/privacy': 'Privacy policy — FocusForge', '/terms': 'Terms of use — FocusForge', '/support': 'Support — FocusForge', '/delete-account': 'Delete your account — FocusForge', '/get-on-play': 'Join the Play Store test — FocusForge' };
+export const pageTitles: Record<string, string> = { '/': 'FocusForge — Make room for what matters.', '/privacy': 'Privacy policy — FocusForge', '/terms': 'Terms of use — FocusForge', '/support': 'Support — FocusForge', '/delete-account': 'Delete your account — FocusForge', '/get-on-play': 'Join the Play Store test — FocusForge', '/verify-email': 'Verify your email — FocusForge' };
 const Arrow = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>;
 export const Burst = () => <svg className="glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.6v20.8M1.6 12h20.8M4.65 4.65l14.7 14.7M19.35 4.65l-14.7 14.7"/></svg>;
 function Mark() { return <img className="mark" src={asset("images/focusforge-icon.png")} alt="" width="40" height="40" aria-hidden="true"/>; }
@@ -93,6 +94,7 @@ function Legal({ path }: { path: string }) {
  <Section title="Shielding not working?"><p>For normal apps, use <strong>Allow app usage</strong> on Home below Start session, review the disclosure and grant Usage Access. Allow <strong>Draw over other apps</strong> when configuring a boundary, then enable your chosen rule. Accessibility is only needed when you enable supported YouTube Shorts or feed filters. If you tapped <strong>Stop</strong> in the app-boundaries notification, enable an app rule again from FocusForge. Revoked access or device battery settings can interrupt background operation, and supported YouTube screens can change after updates. Review the <a href={pageLink("/privacy")}>access disclosure</a> before granting permissions.</p></Section>
  <Section title="Profile and shared-content help"><p>To change or remove your photo, open your profile avatar in the app. Linked accounts back up the thumbnail privately; leaderboard sharing makes it visible with your weekly entry. Turn sharing off from the leaderboard’s Sharing options menu to withdraw your entries. For concerns about a shared name or photo, email <a href={`mailto:${EMAIL}`}>{EMAIL}</a> with the displayed name, leaderboard week or group, and reason. Do not include passwords or sensitive personal information. Group report and hide controls are available inside groups.</p></Section>
  <Section title="Bugs and feature ideas"><p>Report non-private problems on <a href={`${source}/issues/new`}>GitHub Issues</a>. Include your Android version, app version and steps to reproduce. GitHub issues are public: never post account identifiers, private data or deletion requests there.</p></Section>
+ <Section title="Email and password help"><p>For a new email account, open the verification email and follow its link, then return to FocusForge and choose <strong>I’ve verified my email</strong>. Check your spam folder or send a new verification email from the app if needed.</p><p>To reset your password, open the email sign-in form in the app and choose <strong>Forgot password?</strong> Enter your account email and follow the reset link from your inbox. Choose a new password on Firebase’s secure hosted page, then return to the app to sign in.</p></Section>
  <Section title="Account and privacy help"><p><a href={pageLink("/delete-account")}>Sign in and delete your account and associated cloud data</a> directly from this website, without reinstalling FocusForge. Use the same email/password or Google account as the app, then confirm permanent deletion. Sign out keeps your account and data. For anonymous accounts, use Delete account in the app; contact support if you cannot access it. Read our <a href={pageLink("/privacy")}>privacy policy</a> for details.</p></Section>
  </> : <>
  <DeleteAccount/>
@@ -104,5 +106,5 @@ function Legal({ path }: { path: string }) {
 export default function App({ path = '/' }: { path?: string }) {
  useMotion(path);
  useEffect(() => { document.title = pageTitles[path] || 'Page not found — FocusForge'; }, [path]);
- return <><a className="skip-link" href="#main">Skip to content</a><Header path={path}/>{path === '/' ? <main id="main"><Home/></main> : path === '/get-on-play' ? <GetOnPlay/> : ROUTES.includes(path) ? <Legal path={path}/> : <main id="main" className="legal section"><span className="eyebrow">404 / A LITTLE OFF TRACK</span><h1>Let’s find your focus.</h1><p>This page doesn’t exist.</p><a href={pageLink("/")} className="button">Back to home <Arrow/></a></main>}<Footer/></>;
+ return <><a className="skip-link" href="#main">Skip to content</a><Header path={path}/>{path === '/' ? <main id="main"><Home/></main> : path === '/verify-email' ? <VerifyEmail/> : path === '/get-on-play' ? <GetOnPlay/> : ROUTES.includes(path) ? <Legal path={path}/> : <main id="main" className="legal section"><span className="eyebrow">404 / A LITTLE OFF TRACK</span><h1>Let’s find your focus.</h1><p>This page doesn’t exist.</p><a href={pageLink("/")} className="button">Back to home <Arrow/></a></main>}<Footer/></>;
 }

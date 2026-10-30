@@ -30,11 +30,11 @@ try {
   if (origin) {
    html = html.replace('</head>', `<link rel="canonical" href="${publicUrl(path)}"/><meta property="og:url" content="${publicUrl(path)}"/></head>`).replace(`content="${base}og.png"`, `content="${origin}${base}og.png"`);
   }
-  if (path === '/404' || path === '/get-on-play') html = html.replace('</head>', '<meta name="robots" content="noindex"/></head>');
+  if (path === '/404' || path === '/get-on-play' || path === '/verify-email') html = html.replace('</head>', '<meta name="robots" content="noindex"/></head>');
   await writeFile(path === '/' ? 'dist/index.html' : `dist/${path.slice(1)}.html`, html);
  }
  if (origin) {
-  await writeFile('dist/sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${ROUTES.filter(path => path !== '/get-on-play').map(path => `<url><loc>${publicUrl(path)}</loc></url>`).join('')}</urlset>`);
+  await writeFile('dist/sitemap.xml', `<?xml version="1.0" encoding="UTF-8"?><urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${ROUTES.filter(path => !['/get-on-play', '/verify-email'].includes(path)).map(path => `<url><loc>${publicUrl(path)}</loc></url>`).join('')}</urlset>`);
   await writeFile('dist/robots.txt', `User-agent: *\nAllow: /\nSitemap: ${origin}${base}sitemap.xml\n`);
  } else {
   // No invented canonical deployment URL. Set SITE_URL for deployment builds.

@@ -162,3 +162,16 @@ test('closed-test guide preserves ordered links and useful no-JavaScript instruc
  for (const page of ['index','privacy','support','terms','delete-account']) assert.ok(!(await read('dist/'+page+'.html')).includes('href="'+link('get-on-play')+'"'));
 
 });
+
+test('email verification is private, accessible and uses Firebase hosted password reset', async () => {
+ const html = await read('dist/verify-email.html');
+ assert.match(html, /<h1/);
+ assert.ok(html.includes('name="robots" content="noindex"'));
+ assert.ok(html.includes('Enable JavaScript to confirm your email address'));
+ assert.ok(html.includes('Firebase’s secure reset page'));
+ assert.ok(!(await read('dist/sitemap.xml')).includes('/verify-email'));
+ const config = JSON.parse(await read('vercel.json'));
+ const headers = config.headers.find(entry => entry.source === '/verify-email').headers;
+ assert.ok(headers.some(header => header.key === 'Referrer-Policy' && header.value === 'no-referrer'));
+ assert.ok(headers.some(header => header.key === 'Cache-Control' && header.value === 'no-store'));
+});

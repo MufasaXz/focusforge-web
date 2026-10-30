@@ -33,6 +33,19 @@
           "value": "no-store"
         }
       ]
+    },
+    {
+      "source": "/verify-email",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
     }
   ]
 }
