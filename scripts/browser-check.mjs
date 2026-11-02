@@ -84,9 +84,12 @@ try {
    assert.equal(await flip.getAttribute('aria-pressed'), 'true');
    assert.equal(await page.locator('.tool.is-light').count(), 1, 'only the clicked card turns');
    await page.waitForTimeout(900);
-   assert.equal(await card.locator('.tool-ink').getAttribute('aria-hidden'), 'false');
+   assert.equal(await card.locator('.tool-back').getAttribute('aria-hidden'), 'false');
+   assert.equal(await card.locator('.tool-back').evaluate(el => getComputedStyle(el).backgroundColor), await card.locator('.tool-face').first().evaluate(el => getComputedStyle(el).backgroundColor), 'the card keeps its colour; only the phone changes');
+   assert.equal(await card.locator('.tool-back .tool-label').textContent(), 'Dark');
+   assert.equal(await card.locator('.tool-copy').evaluate(el => getComputedStyle(el).opacity), '1', 'copy is back once the card has turned');
    assert.equal(await card.locator('.tool-face').first().getAttribute('aria-hidden'), 'true');
-   assert.match(await card.locator('.tool-ink img').getAttribute('src'), /-light\.webp$/);
+   assert.match(await card.locator('.tool-back img').getAttribute('src'), /-light\.webp$/);
    if (width === 1440) await page.screenshot({ path: `${shots}/flip-1440.png`, clip: await card.boundingBox() });
    await flip.focus();
    await page.keyboard.press('Enter');
@@ -108,6 +111,7 @@ try {
    await page.waitForFunction(() => document.querySelector('.session').dataset.reveal === 'played');
    await page.waitForTimeout(2300);
    assert.ok(await page.locator('.session li').evaluateAll(items => items.every(item => getComputedStyle(item, '::after').transform.startsWith('matrix(1') && getComputedStyle(item.querySelector('p')).opacity === '1')), 'every step finishes drawn and visible');
+   assert.deepEqual(await page.locator('.session li').evaluateAll(items => items.map(item => [getComputedStyle(item, '::before').content, getComputedStyle(item, '::before').opacity])), [['counter(step)', '1'], ['counter(step)', '1'], ['counter(step)', '1']], 'each step shows its number');
    await page.evaluate(() => window.scrollTo(0, 0));
   }
   // Questions fill the width on large screens instead of trailing one long
@@ -132,7 +136,7 @@ try {
   await page.evaluate(() => Promise.all([...document.images].map(img => img.decode().catch(() => {}))));
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.screenshot({ path: `${shots}/home-${width}-${colorScheme}.png`, fullPage: true });
-  for (const route of ['/privacy', '/terms', '/support', '/delete-account', '/get-on-play', '/verify-email']) {
+  for (const route of ['/guides', '/pomodoro-technique', '/block-distracting-apps', '/study-habit', '/privacy', '/terms', '/support', '/delete-account', '/get-on-play', '/verify-email']) {
    await page.goto(routeUrl(route));
    assert.equal(await page.locator('h1').count(), 1);
    assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `${route} overflow at ${width}`);
@@ -148,7 +152,7 @@ try {
  assert.equal(await reduced.locator('.session').getAttribute('data-reveal'), null);
  await reduced.locator('.tool').first().click({ position: { x: 40, y: 220 } });
  assert.equal(await reduced.locator('.tool-turn').first().evaluate(el => getComputedStyle(el).transform), 'none');
- assert.equal(await reduced.locator('.tool-ink').first().evaluate(el => getComputedStyle(el).visibility), 'visible');
+ assert.equal(await reduced.locator('.tool-back').first().evaluate(el => getComputedStyle(el).visibility), 'visible');
  await reduced.close();
  const page = await browser.newPage({ javaScriptEnabled: false, viewport: { width: 320, height: 900 } });
  watch(page);

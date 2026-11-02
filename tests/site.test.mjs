@@ -77,7 +77,9 @@ test('home is one sheet with real screenshots in OnePlus 15 frames', async () =>
  const html = await read('dist/index.html');
  assert.equal((html.match(/class="op15[ "]/g) || []).length, 8, 'hero, two faces on each of three tools, and the closing phone');
  assert.equal((html.match(/aria-pressed="false"/g) || []).length, 3, 'one flip control per tool card');
- assert.equal((html.match(/class="tool-face tool-ink" aria-hidden="true" inert=""/g) || []).length, 3, 'light faces start turned away and inert');
+ assert.equal((html.match(/class="tool-face tool-(?:lavender|white|sage) tool-back" aria-hidden="true" inert=""/g) || []).length, 3, 'light faces keep the card colour and start turned away and inert');
+ assert.equal((html.match(/class="tool-label"/g) || []).length, 6, 'the label is printed on both faces so it turns with the card');
+ for (const title of ['Close the feed', 'A timer that respects the work', 'Proof that it adds up']) assert.equal(html.split(`<h3>${title}</h3>`).length - 1, 1, `${title} appears once, not once per face`);
  assert.equal((html.match(/class="op15-camera"/g) || []).length, 8);
  assert.ok(!html.includes('op15-status'), 'no drawn status bar over a real one');
  for (const text of ['class="sheet"', 'class="hero"', 'class="session"', 'class="footer-wordmark"', 'id="features"', 'id="privacy"', 'id="faq"', 'class="closing"', 'aria-label="Main navigation"']) assert.ok(html.includes(text), text);
@@ -107,8 +109,8 @@ test('type is one self-hosted family with a heavy and a light italic voice', asy
 test('home keeps honest, specific claims', async () => {
  const html = await read('dist/index.html');
  assert.ok(!html.includes('Achievements to earn'));
- for (const text of ['Downloads so far', 'Ads and trackers', 'Languages built in', 'Oldest Android it runs on', 'Your app list stays here', 'never leave your phone', 'from this website']) assert.ok(html.includes(text), text);
- for (const text of ['testimonial', 'stars', 'rating', 'users trust']) assert.ok(!html.toLowerCase().includes(text), `no invented proof: ${text}`);
+ for (const text of ['Downloads so far', 'Ads and trackers', 'Languages built in', 'Oldest Android it runs on', 'What never leaves your phone', 'never uploaded', 'here on the web']) assert.ok(html.includes(text), text);
+ for (const pattern of [/testimonial/i, /\bstars?\b/i, /\bratings?\b/i, /aggregateRating/, /users trust/i]) assert.ok(!pattern.test(html), `no invented proof: ${pattern}`);
 });
 test('motion respects accessibility settings and deploy headers are present', async () => {
  assert.match(await read('src/styles.css'), /prefers-reduced-motion:reduce/);
@@ -144,4 +146,35 @@ test('email verification is private, accessible and uses Firebase hosted passwor
  const headers = config.headers.find(entry => entry.source === '/verify-email').headers;
  assert.ok(headers.some(header => header.key === 'Referrer-Policy' && header.value === 'no-referrer'));
  assert.ok(headers.some(header => header.key === 'Cache-Control' && header.value === 'no-store'));
+});
+
+test('structured data names the organisation, the app, the questions and each guide', async () => {
+ const blocks = async page => [...(await read(`dist/${page}.html`)).matchAll(/<script type="application\/ld\+json">(.*?)<\/script>/gs)].map(match => JSON.parse(match[1]));
+ const [home] = await blocks('index');
+ const types = home['@graph'].map(node => node['@type']);
+ for (const type of ['Organization', 'WebSite', 'MobileApplication', 'FAQPage']) assert.ok(types.includes(type), type);
+ const organization = home['@graph'].find(node => node['@type'] === 'Organization');
+ assert.equal(organization.email, 'focusforgehelp@gmail.com');
+ assert.ok(organization.sameAs.includes('https://github.com/MufasaXz/focusforge'));
+ const app = home['@graph'].find(node => node['@type'] === 'MobileApplication');
+ assert.equal(app.offers.price, '0');
+ assert.ok(!('aggregateRating' in app), 'no invented ratings');
+ const faq = home['@graph'].find(node => node['@type'] === 'FAQPage');
+ const html = await read('dist/index.html');
+ assert.equal(faq.mainEntity.length, (html.match(/<details>/g) || []).length, 'every visible question is in FAQPage and no more');
+ for (const slug of ['pomodoro-technique', 'block-distracting-apps', 'study-habit']) {
+  const [article] = await blocks(slug);
+  assert.equal(article['@type'], 'Article');
+  assert.ok(article.headline && article.datePublished && article.publisher.name === 'FocusForge', slug);
+  const page = await read(`dist/${slug}.html`);
+  assert.ok((page.match(/<p>/g) || []).length >= 8, `${slug} has real reading`);
+  assert.ok(page.includes('<meta name="description" content="') && !page.includes('could not be found'), `${slug} description`);
+  assert.ok((await read('dist/sitemap.xml')).includes(`/${slug}</loc>`), `${slug} in sitemap`);
+ }
+ assert.equal((await blocks('guides'))[0]['@type'], 'CollectionPage');
+});
+test('section headings vary; the two-line display is kept for the opening and closing', async () => {
+ const html = await read('dist/index.html');
+ assert.equal((html.match(/class="display"|class="heading"/g) || []).length, 2);
+ assert.ok((html.match(/class="title"/g) || []).length >= 4);
 });
