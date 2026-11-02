@@ -51,16 +51,16 @@ export default function VerifyEmail() {
   } catch (error) { setError(messageFor(error)); }
   finally { locked.current = false; setBusy(false); }
  }
- return <main id="main" className="legal section">
-  <a className="text-link" href={pageLink('/')}>← Back to FocusForge</a>
-  <h1>One step closer<br/>to your next session.</h1>
+ return <main id="main" className="legal">
+  <a className="text-link back-link" href={pageLink("/")}>Back to FocusForge</a>
+  <h1 className="legal-title">One step closer to your next session.</h1>
   <p className="legal-intro">Confirm your email address for your FocusForge account.</p>
   <div className="legal-body"><section className="account-card" aria-busy={checking || busy}>
    <h2 tabIndex={-1} ref={heading}>{done ? 'Your email is verified.' : checking ? 'Checking your verification link…' : email ? 'Confirm your email address.' : returning.current ? 'Back to FocusForge.' : 'Continue in FocusForge.'}</h2>
    {checking && <p role="status">Checking the link securely. This will only take a moment.</p>}
    {done ? <p>Return to the FocusForge app and tap <strong>I’ve verified my email</strong> to continue. Your study setup is kept.</p> : email ? <>
     <p>Verify <strong>{email}</strong> for your FocusForge account.</p>
-    <div className="account-actions"><button type="button" className="button" onClick={verify} disabled={busy}>{busy ? 'Verifying…' : 'Verify email address'}</button></div>
+    <div className="account-actions"><button type="button" className="button button-ink" onClick={verify} disabled={busy}>{busy ? 'Verifying…' : 'Verify email address'}</button></div>
    </> : !checking && !error ? (returning.current
     ? <p>If the previous page confirmed your address, return to FocusForge and tap <strong>I’ve verified my email</strong> to continue. Your study setup is kept. You can send a new verification email from the app if anything went wrong.</p>
     : <p>Open the verification link from your email to confirm your address. If you have already followed it, return to the app and tap <strong>I’ve verified my email</strong>. You can send a new verification email from the app if needed.</p>) : null}

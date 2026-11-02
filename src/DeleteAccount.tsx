@@ -88,7 +88,7 @@ export default function DeleteAccount() {
   });
  }
  return <section className="account-card" aria-labelledby="account-title" aria-busy={busy}>
-  <span className="eyebrow">{done ? 'ALL DONE' : user ? '02 / CONFIRM YOUR CHOICE' : '01 / YOUR FOCUSFORGE ACCOUNT'}</span>
+  <p className="account-step">{done ? 'All done' : user ? 'Step 2 of 2: confirm your choice' : 'Step 1 of 2: sign in to your FocusForge account'}</p>
   <h2 id="account-title" tabIndex={-1} ref={heading}>{done ? 'Your account has been deleted.' : user ? 'Ready to say goodbye?' : 'Sign in to delete your account.'}</h2>
   {done ? <><p>Your Firebase sign-in account and associated cloud records have been removed. You can close this page.</p><p className="small">This website cannot erase data stored on your phone. Clear FocusForge’s app storage or uninstall it to remove remaining local history. A minimal security record prevents old sessions from recreating deleted data.</p></> : user ? <>
    <p className="account-identity">Signed in as <strong>{user.email || 'your linked account'}</strong></p>

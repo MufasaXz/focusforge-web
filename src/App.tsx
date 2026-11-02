@@ -3,11 +3,6 @@ import DeleteAccount from './DeleteAccount';
 import VerifyEmail from './VerifyEmail';
 import GetOnPlay from './GetOnPlay';
 import './getOnPlay.css';
-import { useLauncherFlip } from './useLauncherFlip';
-import { useMotion } from './useMotion';
-import DistractionStory from './DistractionStory';
-import Community from './Community';
-import HeroClock from './HeroClock';
 import { asset, pageLink } from './paths';
 
 export const DOWNLOAD = 'https://github.com/MufasaXz/focusforge/releases/latest';
@@ -15,60 +10,161 @@ export const EMAIL = 'sudeepyadav7272@gmail.com';
 export const ROUTES = ['/', '/privacy', '/terms', '/support', '/delete-account', '/get-on-play', '/verify-email'];
 const source = 'https://github.com/MufasaXz/focusforge';
 export const pageTitles: Record<string, string> = { '/': 'FocusForge — Make room for what matters.', '/privacy': 'Privacy policy — FocusForge', '/terms': 'Terms of use — FocusForge', '/support': 'Support — FocusForge', '/delete-account': 'Delete your account — FocusForge', '/get-on-play': 'Join the Play Store test — FocusForge', '/verify-email': 'Verify your email — FocusForge' };
-const Arrow = () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14m-6-6 6 6-6 6" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>;
-export const Burst = () => <svg className="glyph" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 1.6v20.8M1.6 12h20.8M4.65 4.65l14.7 14.7M19.35 4.65l-14.7 14.7"/></svg>;
-function Mark() { return <img className="mark" src={asset("images/focusforge-icon.png")} alt="" width="40" height="40" aria-hidden="true"/>; }
-function Download({ light = false, children = 'Get FocusForge' }: { light?: boolean; children?: React.ReactNode }) { return <a className={`button ${light ? 'light' : ''}`} href={DOWNLOAD}>{children}<Arrow/></a>; }
-function Header({ path }: { path: string }) {
+
+function Mark() { return <img className="mark" src={asset('images/focusforge-icon.png')} alt="" width="32" height="32" aria-hidden="true"/>; }
+function Download({ tone = 'ink', children = 'Download for Android' }: { tone?: 'ink' | 'light' | 'outline'; children?: React.ReactNode }) {
+  return <a className={`button button-${tone}`} href={DOWNLOAD}>{children}</a>;
+}
+
+/**
+ * A OnePlus 15, front on: flat display, an even hairline bezel, the centred
+ * punch-hole camera, a Sand Storm frame, the Plus Key on the left and the
+ * volume rocker above power on the right. Proportions are the handset's own
+ * 76.7 × 161.4 mm; every inner measure is in container-width units, so the
+ * phone keeps its shape at any size it is drawn.
+ */
+function Phone({ src, alt, dark = false, className = '', eager = false }: { src: string; alt: string; dark?: boolean; className?: string; eager?: boolean }) {
+  return <figure className={`op15${dark ? ' op15-dark' : ''}${className ? ' ' + className : ''}`}><div className="op15-body">
+    <span className="op15-key op15-plus" aria-hidden="true"/>
+    <span className="op15-key op15-volume" aria-hidden="true"/>
+    <span className="op15-key op15-power" aria-hidden="true"/>
+    <div className="op15-bezel">
+      <div className="op15-screen">
+        <div className="op15-status" aria-hidden="true">
+          <span>10:30</span>
+          <svg viewBox="0 0 54 12"><path d="M1 11h2.4V8H1zM5 11h2.4V6H5zm4 0h2.4V3.6H9zm4 0h2.4V1H13z"/><path d="M27.5 3.2a9 9 0 0 1 6.4 2.6l1.3-1.3a10.8 10.8 0 0 0-15.4 0l1.3 1.3a9 9 0 0 1 6.4-2.6Zm0 3.6a5.4 5.4 0 0 1 3.8 1.6l1.3-1.3a7.2 7.2 0 0 0-10.2 0l1.3 1.3a5.4 5.4 0 0 1 3.8-1.6Zm0 3.6-1.8 1.6 1.8 1.6 1.8-1.6z"/><rect x="39.5" y="2" width="12" height="8" rx="2.2" fill="none" stroke="currentColor" strokeWidth="1.2"/><rect x="41.2" y="3.7" width="7.6" height="4.6" rx="1"/><rect x="52.2" y="4.6" width="1.4" height="2.8" rx=".7"/></svg>
+        </div>
+        <img src={asset(src)} alt={alt} width="780" height="1688" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async"/>
+        <span className="op15-camera" aria-hidden="true"/>
+        <span className="op15-gesture" aria-hidden="true"/>
+      </div>
+    </div>
+  </div></figure>;
+}
+
+function Header() {
   const [open, setOpen] = useState(false);
+  // Without JavaScript the links stay visible and the toggle stays hidden;
+  // the collapsible menu only appears once it can actually open.
   const [enhanced, setEnhanced] = useState(false);
   useEffect(() => { setEnhanced(true); }, []);
-  useEffect(() => { if (!open) return; const close = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); document.querySelector<HTMLButtonElement>('.menu-toggle')?.focus(); } }; window.addEventListener('keydown', close); return () => window.removeEventListener('keydown', close); }, [open]);
-  return <header className={`site-header${enhanced ? ' enhanced' : ''}`}><a href={pageLink("/")} className="wordmark" aria-label="FocusForge home"><Mark/>FocusForge</a><button className="menu-toggle" aria-expanded={open} aria-controls="navigation" onClick={() => setOpen(!open)}>{open ? 'Close' : 'Menu'}<span>{open ? '−' : '+'}</span></button><nav id="navigation" className={open ? 'open' : ''} aria-label="Main navigation"><a href={pageLink("/#features")} onClick={() => setOpen(false)}>The toolkit</a><a href={pageLink("/#manifesto")} onClick={() => setOpen(false)}>A little space</a><a href={pageLink("/privacy")} aria-current={path === '/privacy' ? 'page' : undefined}>Privacy</a><a href={pageLink("/#faq")} onClick={() => setOpen(false)}>Questions</a><Download/></nav></header>;
+  useEffect(() => {
+    if (!open) return;
+    const close = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); document.querySelector<HTMLButtonElement>('.menu-toggle')?.focus(); } };
+    window.addEventListener('keydown', close);
+    return () => window.removeEventListener('keydown', close);
+  }, [open]);
+  const shut = () => setOpen(false);
+  return <header className={`site-header${enhanced ? ' enhanced' : ''}`}>
+    <a href={pageLink('/')} className="wordmark" aria-label="FocusForge home" translate="no"><Mark/>FocusForge</a>
+    <button className="menu-toggle" aria-expanded={open} aria-controls="navigation" onClick={() => setOpen(!open)}>{open ? 'Close' : 'Menu'}</button>
+    <nav id="navigation" className={open ? 'open' : ''} aria-label="Main navigation">
+      <a href={pageLink('/#features')} onClick={shut}>Features</a>
+      <a href={pageLink('/#privacy')} onClick={shut}>Your data</a>
+      <a href={pageLink('/#faq')} onClick={shut}>Questions</a>
+      <a href={pageLink('/support')} onClick={shut}>Support</a>
+      <Download tone="outline">Download</Download>
+    </nav>
+  </header>;
 }
-function Footer() { return <footer className="footer"><div className="footer-top"><a className="wordmark" href={pageLink("/")}><Mark/>FocusForge</a><p>Less scrolling.<br/>More living on purpose.</p><a href={source} className="text-link">Built in the open <Arrow/></a></div><div className="footer-bottom"><span>© {new Date().getFullYear()} FocusForge · MufasaXz</span><nav aria-label="Legal and support"><a href={pageLink("/privacy")}>Privacy policy</a><a href={pageLink("/terms")}>Terms</a><a href={pageLink("/support")}>Support</a><a href={pageLink("/delete-account")}>Delete account</a></nav><span>Made for a little more focus.</span></div></footer>; }
+
+function Footer() {
+  return <footer className="footer">
+    <div className="footer-brand"><a className="wordmark" href={pageLink('/')} translate="no"><Mark/>FocusForge</a><p>A quieter phone for the hours that matter. Free and open source, made for Android.</p></div>
+    <nav aria-label="Legal and support">
+      <a href={pageLink('/privacy')}>Privacy policy</a>
+      <a href={pageLink('/terms')}>Terms</a>
+      <a href={pageLink('/support')}>Support</a>
+      <a href={pageLink('/delete-account')}>Delete account</a>
+      <a href={source}>Source code</a>
+    </nav>
+    <p className="footer-note">© {new Date().getFullYear()} FocusForge, by MufasaXz.</p>
+  </footer>;
+}
+
 const faq = [
   ['Is FocusForge really free?', 'Yes. FocusForge is free and open source, with no ads and no subscriptions. The Android app is available from our GitHub releases.'],
   ['Can I still watch my lectures?', 'Yes. Supported YouTube feed and Shorts filtering is designed to leave lecture links available. Filtering depends on supported screens and can change when YouTube updates.'],
   ['Do I need an account?', 'The focus timer works without an account. Choose Skip for now to start locally without waiting for Firebase sign-in. Linked accounts use Firebase for private study and badge backups, groups and the optional leaderboard. Using the app without an email account is not a promise of no network activity.'],
-  ['What permissions does shielding need?', 'Normal app shielding uses Usage Access to detect the app in use and Draw over other apps to display a pause screen. Accessibility is requested separately when you enable supported YouTube Shorts or feed filtering. App boundaries run with a foreground notification and a Stop action. All access is optional and can be revoked in Android settings.'],
+  ['What permissions does shielding need?', 'Normal app shielding uses Usage Access to detect the app in use and Draw over other apps to display a pause screen. FocusForge shows a disclosure and asks before it reads your list of installed apps, and that list stays on your phone. Accessibility is requested separately when you enable supported YouTube Shorts or feed filtering. App boundaries run with a foreground notification and a Stop action. All access is optional and can be revoked in Android settings.'],
   ['Does it work on iPhone?', 'FocusForge is currently Android-first, for Android 7.0 and above. We do not currently offer an iOS download.'],
   ['Can I use my own profile photo?', 'Yes. Choose a photo in the app’s profile avatar settings. FocusForge creates a small square thumbnail and removes embedded image metadata before saving it. Guests keep it on their device; linked accounts privately back it up. If leaderboard sharing is on, your photo appears with your name, level and weekly minutes. You can remove the photo or use initials instead.'],
   ['Will updating the app sign me out?', 'An update keeps a confirmed existing login and local study setup. Saved account data syncs in the background. Signing in after signing out or reinstalling can show a recovery screen while your goals, subjects and history are restored. Only data that finished syncing can be recovered on another installation.'],
   ['What happens when I sign out?', 'Your linked account keeps its private study backup, including your name, chosen profile photo, subjects, plans, goals and dated focus sessions, so you can recover them by signing in again. If you opted into the leaderboard, your name, chosen photo, level and weekly minutes can remain visible in that week’s top 100 after sign-out. Turn sharing off in the leaderboard’s Sharing options menu or delete your account to remove published entries.'],
   ['Can I delete my account and data?', 'Yes. Sign in on our Delete account page using the same email/password or Google account as the app, then confirm deletion. Private study and badge backups, saved profile photos, shared progress and leaderboard entries are removed before your login. You can also delete your account in the app. The website cannot erase phone-local history; clear app storage separately. Signing out keeps your data.']
 ];
-function Toolkit() {
-  const { rail, index, navigate: go, target } = useLauncherFlip(3);
-  const content: Record<string, { title: string; description: string; image: string; label: string; features: string[] }> = {
-    shield: { title: 'Close the feed.\nKeep the lecture.', description: 'Your phone is a tool. Keep it that way. Shield distracting apps, give your favorites a daily budget, and filter supported YouTube feeds without giving up your lectures.', image: 'shield', label: 'Distractions, meet boundaries.', features: ['Selected-app shielding', 'Daily time budgets', 'Focus-only blocking'] },
-    focus: { title: 'One thing.\nYour full attention.', description: 'A quiet workspace for your next study session. Choose a Pomodoro preset or make your own plan, pick a subject, and let ambient sounds set the mood.', image: 'focus', label: 'A rhythm that feels like yours.', features: ['Pomodoro & custom plans', 'Ambient sound mixes', 'Full-screen study timer'] },
-    progress: { title: 'Small sessions.\nSomething bigger.', description: 'Make your effort visible with daily goals, subject totals, weekly views and 18 measurable achievements. Linked accounts can restore earned badges when you return. Keep your session or weekly progress in view with home-screen widgets.', image: 'dashboard', label: 'Notice the work you put in.', features: ['Daily study goals', 'Retro & weekly widgets', '18 achievements & private badge backup'] }
-  };
-  const entries = Object.entries(content);
-  const keyboard = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(event.key)) return;
-    event.preventDefault();
-    go(event.key === 'Home' ? 0 : event.key === 'End' ? entries.length - 1 : target.current + (event.key === 'ArrowRight' ? 1 : -1));
-  };
-  return <section className="toolkit section" id="features"><div className="section-heading reveal"><span className="eyebrow">01 / THE TOOLKIT</span><h2>A little structure.<br/><span className="serif">A lot more possibility.</span></h2><p>Everything you need to turn “I should study”<br className="desktop-break"/> into “I’m glad I did.”</p></div>
-    <div className="toolkit-shell"><div className="feature-rail" ref={rail} tabIndex={0} role="region" aria-roledescription="carousel" aria-label="Explore the toolkit. Swipe or use left and right arrow keys." onKeyDown={keyboard}><div className="screen-track">
-      {entries.map(([key, item], position) => <article key={key} className={`feature-slide ${key} ${position === index ? 'current' : ''}`} role="group" aria-roledescription="slide" aria-label={`${position + 1} of ${entries.length}: ${item.label}`} inert={position !== index}>
-        <div className="feature-copy"><span className="eyebrow">0{position + 1} / {item.label}</span><h3>{item.title.split('\n').map((line, i) => <span key={line} className={i ? 'serif' : ''}>{line}<br/></span>)}</h3><p>{item.description}</p></div>
-        <div className="feature-phone"><div className="feature-rings" aria-hidden="true"/><img src={asset(`images/${item.image}-dark.png`)} alt={`FocusForge ${item.image} dark-mode widget-test app preview with fictional demo data`} width="680" height="1416" loading="eager" decoding="async"/></div>
-        <div className="feature-aside"><div className={`feature-glyph glyph-${key}`} aria-hidden="true">{key === 'shield' ? <svg viewBox="0 0 120 140"><path d="M60 9 103 26v41c0 27-27 48-43 58C44 115 17 94 17 67V26Z"/><path className="glyph-line" d="m38 66 16 16 31-36"/></svg> : key === 'focus' ? <><i/><i/><span>One thing<br/><em>at a time.</em></span></> : <><i/><i/><i/><span>Keep showing up.</span></>}</div><ul className="check-list">{item.features.map(feature => <li key={feature}><span aria-hidden="true">↗</span>{feature}</li>)}</ul></div>
-      </article>)}
-    </div></div><div className="feature-controls"><button aria-label="Previous feature" disabled={index === 0} onClick={() => go(target.current - 1)}>←</button><span aria-live="polite" aria-atomic="true">0{index + 1} <span aria-hidden="true">/</span> 03</span><button aria-label="Next feature" disabled={index === entries.length - 1} onClick={() => go(target.current + 1)}>→</button></div></div><p className="preview-caption">Actual app widget-test renders with fictional demo data in stylized frames. Not physical-device screenshots.</p></section>;
 
+/** Two lines, one voice: a heavy upright line and a light italic answer. */
+function Heading({ level = 2, strong, soft, id }: { level?: 1 | 2; strong: string; soft: string; id?: string }) {
+  const Tag = level === 1 ? 'h1' : 'h2';
+  return <Tag className={level === 1 ? 'display' : 'heading'} id={id}><span className="strong">{strong}</span> <span className="soft">{soft}</span></Tag>;
 }
+
+const tools = [
+  { key: 'shield', tone: 'lavender', title: 'Close the feed', body: 'Pick the apps that pull you away. Block them, give them a daily budget, or close them only while you focus. Supported YouTube Shorts and feeds can be filtered while lectures stay open.', image: 'images/app-shield.webp', alt: 'FocusForge Shield tab listing apps with blocking switches' },
+  { key: 'focus', tone: 'white', title: 'One timer, full attention', body: 'Start a Pomodoro preset or a plan of your own, tag the subject you are studying, and let rain or a café hum fill the quiet.', image: 'images/app-focus.webp', alt: 'FocusForge focus timer dial set to 25 minutes' },
+  { key: 'progress', tone: 'sage', title: 'See it add up', body: 'Daily goals, weekly totals by subject, home-screen widgets and eighteen achievements make steady work easy to notice.', image: 'images/app-home.webp', alt: 'FocusForge home screen with weekly progress' }
+];
+
 function Home() {
-  return <><section className="hero"><div className="hero-copy"><div className="pill"><span className="status-dot"/>A STUDY COMPANION, NOT ANOTHER DISTRACTION</div><h1>Make room<br/>for what<br/><span className="serif">matters.</span><svg className="underline" viewBox="0 0 360 25" aria-hidden="true"><path d="M4 15Q160 -5 351 10M35 23Q205 8 326 16" fill="none" stroke="currentColor" strokeWidth="4" strokeLinecap="round"/></svg></h1><p>Less “just one more scroll.”<br/>More time for the person you’re becoming.</p><div className="hero-actions"><Download>Download for Android</Download><a className="hero-secondary" href="#features">Take a closer look <span aria-hidden="true">↓</span></a></div><p className="download-note">Android-first <span>·</span> Free & open source</p></div><div className="hero-art"><div className="orbit orbit-one"/><div className="orbit orbit-two"/><span className="orbit-label" aria-hidden="true">YOUR ATTENTION IS YOURS.</span><div className="sunburst" aria-hidden="true"><Burst/></div><img className="hero-phone phone-back" src={asset("/images/dashboard-dark.png")} alt="FocusForge home preview with fictional study progress" width="680" height="1416" fetchPriority="high"/><HeroClock/><div className="floating-note note-one"><span className="note-icon" aria-hidden="true">↗</span><div>One session at a time.<small>That’s how good things start.</small></div></div><div className="floating-note note-two"><span className="tiny-flower" aria-hidden="true"><Burst/></span> Less noise. More you.</div><span className="art-footnote">App previews · fictional data · animated demo clock</span></div><div className="hero-bottom"><span>DESIGNED FOR INTENTION. BUILT FOR REAL LIFE.</span><a href="#manifesto">A fresh start, down here <span aria-hidden="true">↙</span></a></div></section><DistractionStory/><Toolkit/><Community/><section className="faq section" id="faq"><div><span className="eyebrow">05 / GOOD QUESTIONS</span><h2>A little clarity.<br/><span className="serif">Before you begin.</span></h2><p>Something else on your mind?</p><a href={pageLink("/support")} className="text-link">We’re here to help <Arrow/></a></div><div className="faq-list">{faq.map(([q,a]) => <details key={q}><summary>{q}<span aria-hidden="true">+</span></summary><p>{a}{q.startsWith('Can I delete') && <> <a href={pageLink("/delete-account")}>Delete your account →</a></>}</p></details>)}</div></section><section className="final-cta section"><span className="eyebrow">YOUR NEXT CHAPTER STARTS WITH ONE SESSION.</span><h2>Less scrolling.<br/><span className="serif">More becoming.</span></h2><Download light>Get FocusForge for Android</Download><p>Android 7.0+ · Free forever in the current open-source release.</p><span className="cta-flower" aria-hidden="true"><Burst/></span><div className="cta-orbit" aria-hidden="true"/></section></>;
+  return <>
+    <section className="hero" aria-labelledby="hero-title">
+      <Heading level={1} id="hero-title" strong="Make room" soft="for what matters."/>
+      <Phone className="hero-phone" src="images/app-focus-dark.webp" alt="FocusForge focus timer in dark mode, rendered from the app with fictional demo data" dark eager/>
+      <div className="hero-panel">
+        <p className="hero-lead">FocusForge is a free study companion for Android. A focus timer, a calm home for your goals, and a Shield that keeps distracting apps closed while you work.</p>
+        <div className="hero-actions"><Download/><a className="text-link" href="#features">Take a closer look</a></div>
+        <p className="hero-note">Free and open source, with no ads. Android 7.0 and up.</p>
+      </div>
+    </section>
+
+    <section className="facts" aria-label="FocusForge in numbers">
+      <dl>
+        <div><dt>Ads and trackers</dt><dd>0</dd></div>
+        <div><dt>Languages built in</dt><dd>25</dd></div>
+        <div><dt>Achievements to earn</dt><dd>18</dd></div>
+        <div><dt>Oldest Android it runs on</dt><dd>7.0</dd></div>
+      </dl>
+    </section>
+
+    <section className="tools" id="features" aria-labelledby="tools-title">
+      <div className="section-intro"><Heading id="tools-title" strong="Three tools" soft="for a quieter phone."/><p>Everything you need to turn “I should study” into “I’m glad I did.”</p></div>
+      <div className="tool-grid">
+        {tools.map(tool => <article key={tool.key} className={`tool tool-${tool.tone}`}>
+          <div className="tool-copy"><h3>{tool.title}</h3><p>{tool.body}</p></div>
+          <Phone src={tool.image} alt={tool.alt}/>
+        </article>)}
+      </div>
+      <p className="caption">Phone screens are rendered from the FocusForge app with fictional demo data.</p>
+    </section>
+
+    <section className="trust" id="privacy" aria-labelledby="trust-title">
+      <Heading id="trust-title" strong="Your phone" soft="keeps your data."/>
+      <ul>
+        <li><h3>Your app list stays here</h3><p>FocusForge asks before it reads which apps you have installed. That list and your screen time never leave your phone.</p></li>
+        <li><h3>No ads, no trackers</h3><p>There is no advertising or analytics SDK in the app, and none on this website.</p></li>
+        <li><h3>Leave whenever you like</h3><p>Delete your account and its cloud data from the app, or <a href={pageLink('/delete-account')}>from this website</a>.</p></li>
+      </ul>
+      <a className="button button-light" href={pageLink('/privacy')}>Read the privacy policy</a>
+    </section>
+
+    <section className="faq" id="faq" aria-labelledby="faq-title">
+      <div className="faq-side"><Heading id="faq-title" strong="Good questions" soft="before you begin."/><p>Something else on your mind? <a href={pageLink('/support')}>Ask us directly.</a></p></div>
+      <div className="faq-list">{faq.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}{q.startsWith('Can I delete') && <> <a href={pageLink('/delete-account')}>Delete your account</a>.</>}</p></details>)}</div>
+    </section>
+
+    <section className="closing" aria-labelledby="closing-title">
+      <Heading id="closing-title" strong="Less scrolling." soft="More becoming."/>
+      <div><Download/><p>Android 7.0 and up. Free in the current open-source release.</p></div>
+    </section>
+  </>;
 }
+
 function Section({ title, children }: { title: string; children: React.ReactNode }) { return <section><h2>{title}</h2>{children}</section>; }
-function EmailLink() { return <a className="button" href={"mailto:" + EMAIL + "?subject=FocusForge%20support"}>Email support<Arrow/></a>; }
+function EmailLink() { return <a className="button button-ink" href={"mailto:" + EMAIL + "?subject=FocusForge%20support"}>Email support</a>; }
 function Legal({ path }: { path: string }) {
  const title = path === '/privacy' ? 'Privacy, without the fine-print feeling.' : path === '/terms' ? 'A few ground rules.' : path === '/support' ? 'A little help, whenever you need it.' : 'Your account. Your choice.';
- return <main id="main" className="legal section"><a className="text-link" href={pageLink("/")}>← Back to FocusForge</a><span className="eyebrow">{path === '/delete-account' ? 'FOCUSFORGE ACCOUNT & DATA DELETION' : path.slice(1).replace('-', ' ').toUpperCase()}</span><h1>{title}</h1><p className="legal-intro">{path === '/privacy' ? 'How the FocusForge Android app and this website handle information. Last updated: November 1, 2026.' : path === '/delete-account' ? 'Sign in securely and permanently delete your FocusForge account and cloud data, without reinstalling the app.' : path === '/terms' ? 'Terms of use for the FocusForge website and Android study companion. Last updated: October 16, 2026.' : 'Questions about installation, permissions, privacy, or your next study session? Start here.'}</p><div className="legal-body">{path === '/privacy' ? <>
+ return <main id="main" className="legal"><a className="text-link back-link" href={pageLink("/")}>Back to FocusForge</a><p className="legal-kicker">{path === '/delete-account' ? 'Account and data deletion' : path === '/privacy' ? 'Privacy policy' : path === '/terms' ? 'Terms of use' : 'Support'}</p><h1 className="legal-title">{title}</h1><p className="legal-intro">{path === '/privacy' ? 'How the FocusForge Android app and this website handle information. Last updated: November 1, 2026.' : path === '/delete-account' ? 'Sign in securely and permanently delete your FocusForge account and cloud data, without reinstalling the app.' : path === '/terms' ? 'Terms of use for the FocusForge website and Android study companion. Last updated: October 16, 2026.' : 'Questions about installation, permissions, privacy, or your next study session? Start here.'}</p><div className="legal-body">{path === '/privacy' ? <>
  <Section title="Who we are"><p>FocusForge is an Android study companion maintained by MufasaXz, the developer identity associated with the public project. Contact the developer for privacy questions at <a href={`mailto:${EMAIL}`}>{EMAIL}</a>. This notice covers FocusForge and this website; third-party services have their own policies.</p></Section>
  <Section title="Information on your device"><p>Focus-session history, per-app usage history, subjects, goals and app settings are stored locally using SharedPreferences-backed storage. Linked accounts also back up the study records described below. Screen-time and app-usage history, Shield events and Accessibility screen contents stay on your device. We do not claim local storage is encrypted. Remove app storage through Android settings or uninstall to remove app-local records; device backups may be governed separately by your device settings.</p><p><strong>Clear local analytics</strong> removes local focus history and progress. It does not delete your linked account’s private cloud study backup, so those study records can return when you recover that account. Use Delete account to remove the associated cloud records.</p></Section>
  <Section title="Accounts and Firebase"><p>Choose <strong>Skip for now</strong> to begin with a local guest profile without waiting for Firebase sign-in. Linked email/password and Google accounts use Google Firebase Authentication when the backend is active. Authentication can process account identifiers, email, display name, authentication credentials and service-related technical information. Existing anonymous Firebase sessions may still contact Firebase; using the app without an email account is not a promise of no network activity. A display-name change may update Firebase Authentication.</p><p>Firebase Authentication and Cloud Firestore, provided by Google, process information to authenticate users, recover private study data and power the chosen sharing features below. See <a href="https://firebase.google.com/support/privacy">Firebase privacy information</a> for service practices, infrastructure and international processing.</p></Section>
@@ -105,7 +201,6 @@ function Legal({ path }: { path: string }) {
  </>}</div></main>;
 }
 export default function App({ path = '/' }: { path?: string }) {
- useMotion(path);
  useEffect(() => { document.title = pageTitles[path] || 'Page not found — FocusForge'; }, [path]);
- return <><a className="skip-link" href="#main">Skip to content</a><Header path={path}/>{path === '/' ? <main id="main"><Home/></main> : path === '/verify-email' ? <VerifyEmail/> : path === '/get-on-play' ? <GetOnPlay/> : ROUTES.includes(path) ? <Legal path={path}/> : <main id="main" className="legal section"><span className="eyebrow">404 / A LITTLE OFF TRACK</span><h1>Let’s find your focus.</h1><p>This page doesn’t exist.</p><a href={pageLink("/")} className="button">Back to home <Arrow/></a></main>}<Footer/></>;
+ return <div className="sheet"><a className="skip-link" href="#main">Skip to content</a><Header/>{path === '/' ? <main id="main"><Home/></main> : path === '/verify-email' ? <VerifyEmail/> : path === '/get-on-play' ? <GetOnPlay/> : ROUTES.includes(path) ? <Legal path={path}/> : <main id="main" className="legal"><h1 className="legal-title">Let’s find your focus.</h1><p className="legal-intro">This page doesn’t exist.</p><a href={pageLink("/")} className="button button-ink">Back to home</a></main>}<Footer/></div>;
 }

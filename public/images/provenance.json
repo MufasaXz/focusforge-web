@@ -1,11 +1,12 @@
 {
-  "description": "Actual FocusForge app widget-test renders with fictional local demo data, composed in stylized phone frames. These are not physical-device screenshots or user records.",
+  "description": "Actual FocusForge app widget-test renders with fictional local demo data, drawn inside a CSS OnePlus 15 frame. These are not physical-device screenshots or user records.",
   "sourceRepository": "https://github.com/MufasaXz/focusforge",
+  "renderedFrom": "tool/capture_ui_test.dart at 390x844, device pixel ratio 2, with app-list consent granted and fictional usage, then encoded as WebP (quality 84).",
   "assets": {
-    "dashboard.png": "docs/screenshots/01-dashboard.png",
-    "shield.png": "docs/screenshots/02-shield.png",
-    "focus.png": "docs/screenshots/03-focus.png",
-    "focus-dark.png": "docs/screenshots/dark/03-focus.png",
+    "app-focus-dark.webp": "Focus tab, dark theme",
+    "app-focus.webp": "Focus tab, light theme",
+    "app-shield.webp": "Shield tab, light theme",
+    "app-home.webp": "Home tab, light theme",
     "focusforge-icon.png": "focusforge-premium/web/icons/Icon-512.png (verified app web manifest icon; copied unchanged, also used as public/favicon.png)"
   }
 }
