@@ -7,7 +7,7 @@ const link = path => `${base}${path}.html`;
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 test('assets and verified icon use the configured deployment base', async () => {
  const html = await read('dist/index.html');
- for (const path of ['favicon.png', 'images/focusforge-icon.png', 'images/dashboard-dark.png', 'images/focus-dark.png', 'fonts/Inter-Regular.woff2']) assert.ok(html.includes(`${base}${path}`), path);
+ for (const path of ['favicon.png', 'images/focusforge-icon.png', 'images/app-focus-dark.webp', 'images/app-shield.webp', 'fonts/Figtree-Variable.woff2']) assert.ok(html.includes(`${base}${path}`), path);
  const icon = await readFile(new URL('../public/images/focusforge-icon.png', import.meta.url));
  assert.deepEqual(icon, await readFile(new URL('../public/favicon.png', import.meta.url)));
  for (const match of html.matchAll(/(?:src|href)="([^"#]+)"/g)) {
@@ -71,74 +71,37 @@ test('homepage keeps original download actions without promoting the tester guid
  assert.match(html, /fictional demo data/);
  assert.ok(!html.includes('play.google.com/store/apps'));
 });
-test('redesigned home uses dark captures and distinct honest social illustrations', async () => {
+test('home is one sheet with real app renders in OnePlus 15 frames', async () => {
  const html = await read('dist/index.html');
- for (const text of ['One more video', 'Wait…', 'What time is it?', 'id="leaderboard"', 'id="friends"', 'not actual standings', 'no live users or presence']) assert.ok(html.includes(text), text);
- assert.ok(!html.includes('class="privacy-strip'));
- assert.ok(!html.includes('class="quiet-orb'));
- // SHA-256 of the verified source captures in focusforge-premium/docs/screenshots/dark.
- for (const [name, digest] of [['dashboard', 'eb382d81a73c819c85dd20235f3f45fb3f033fd8d59e39589c56fd68a6d0aaab'], ['shield', 'aa0eb94e878bd78c5136cc3d6da0d1f1843b49f983d9c1ae2d188d2360d71f1b'], ['focus', '914f546b72796ec34a146b540ebb14abe6ddd5a3b993fad888bd77ae06b9d3fe']]) {
-  const capture = await readFile(new URL(`../public/images/${name}-dark.png`, import.meta.url));
-  assert.equal(createHash('sha256').update(capture).digest('hex'), digest);
- }
+ assert.equal((html.match(/class="op15[ "]/g) || []).length, 4, 'one hero phone and three tool phones');
+ assert.equal((html.match(/class="op15-camera"/g) || []).length, 4);
+ for (const text of ['class="sheet"', 'class="hero"', 'id="features"', 'id="privacy"', 'id="faq"', 'class="closing"', 'aria-label="Main navigation"']) assert.ok(html.includes(text), text);
+ for (const image of ['app-focus-dark', 'app-shield', 'app-focus', 'app-home']) assert.ok(html.includes(`images/${image}.webp`), image);
+ assert.match(html, /fetchpriority="high"/i);
+ const provenance = JSON.parse(await read('public/images/provenance.json'));
+ assert.match(provenance.description, /fictional local demo data/);
+ for (const image of ['app-focus-dark.webp', 'app-shield.webp', 'app-focus.webp', 'app-home.webp']) assert.ok(provenance.assets[image], image);
 });
-test('home keeps native story and feature navigation without retired controls', async () => {
+test('the retired animated design is gone', async () => {
  const html = await read('dist/index.html');
- for (const text of ['Make a little space', 'Less setting up', 'class="noise-control', 'class="tabs', 'class="ritual', 'role="tab"']) assert.ok(!html.includes(text), `retired UI: ${text}`);
- for (const text of ['class="story-scroll"', 'class="study-desk"', 'class="writing-hand"', 'class="feature-rail"', 'aria-roledescription="carousel"', 'Next feature', 'Previous feature', 'class="community-pair"', 'aria-label="Main navigation"']) assert.ok(html.includes(text), `redesign structure: ${text}`);
- assert.equal((html.match(/aria-roledescription="slide"/g) || []).length, 3);
-});
-test('pencil story and whole sheet retain motion corrections without cinematic overlays', async () => {
- const html = await read('dist/index.html');
- for (const text of ['class="screen-track"', 'class="podium"', 'class="study-circle"', 'Sharing &amp; privacy', 'hero-demo-clock']) assert.ok(html.includes(text), text);
- for (const text of ['story-pov', 'pov-device', 'story-timer', 'flip-clock', 'toolkit-phone', 'toolkit-flip', 'rank-sculpture']) assert.ok(!html.includes(text), text);
- const story = await read('src/DistractionStory.tsx');
- for (const stage of ['thoughtful', 'dust', 'study']) assert.ok(story.includes(`'${stage}'`), stage);
- assert.match(story, /document.hidden \|\| !active/);
-});
-test('woody background keeps the original charcoal, green and typography', async () => {
+ for (const text of ['story-scroll', 'feature-rail', 'hero-demo-clock', 'podium', 'study-circle', 'sunburst', 'orbit', 'floating-note', 'reveal']) assert.ok(!html.includes(text), text);
  const css = await read('src/styles.css');
- for (const token of ['--paper:#f4ecdf', '--ink:#262923', '--muted:#67695f', '--line:#d7d7c8', '--green:#dce4c7', '--yellow:#e9bc67', '--white:#fffefa', 'font-family:Inter,Arial,sans-serif', 'font-family:InterDisplay,Arial,sans-serif', 'font-weight:700']) assert.ok(css.includes(token), token);
- for (const retired of ['--ink:#382b23', '--muted:#706050', '#594434', '#49382b']) assert.ok(!css.includes(retired), retired);
- const corrections = await read('src/corrections.css');
- for (const retired of ['#705432', '#ead9bb', '#74643e', '#ad8d51']) assert.ok(!corrections.includes(retired), retired);
- assert.match(css, /body\{[^}]*background-image:repeating-linear-gradient/);
- assert.ok(!/\.feature-phone img\{[^}]*filter:[^}]*sepia/.test(css));
+ assert.ok(!/@keyframes/.test(css), 'no keyframe animation');
+ assert.ok(!/\banimation\s*:/.test(css), 'no animation property');
+ assert.ok(!/transition:\s*all/.test(css), 'transitions name their properties');
 });
-test('countdown and sheet motion use bounded, cleanup-safe mechanisms', async () => {
- const clock = await read('src/HeroClock.tsx');
- assert.match(clock, /cancelAnimationFrame/);
- assert.ok(!clock.includes('setTimeout('));
- const ticker = await read('src/useDemoActivity.ts');
- assert.match(ticker, /Math.floor\(\(now - started\) \/ 1000\)/);
- assert.match(ticker, /document.hidden \|\| !clockSubscribers.size/);
- assert.match(ticker, /clockSubscribers.delete\(sync\)/);
- assert.match(ticker, /clearTimeout\(clockTimer\)/);
- const story = await read('src/DistractionStory.tsx');
- assert.match(story, /dust.length < 420/);
- assert.match(story, /if \(document.hidden\) \{ cancelAnimationFrame\(frame\); frame = 0; \}/);
- const corrections = await read('src/corrections.css');
- assert.match(corrections, /\.feature-slide\{[^}]*rotateY\(var\(--screen-angle/);
- assert.match(corrections, /\.feature-rail\{[^}]*scroll-snap-type:x mandatory/);
- assert.ok(!corrections.includes('rotateY(180deg)'));
- assert.ok(!corrections.includes('--sheet-offset'));
- const launcher = await read('src/useLauncherFlip.ts');
- assert.match(launcher, /next !== current/);
- assert.match(launcher, /cancelAnimationFrame\(frame\); observer.disconnect/);
- assert.ok(!(await read('src/styles.css')).includes('story-pov'));
+test('type is one self-hosted family with a heavy and a light italic voice', async () => {
+ const css = await read('src/styles.css');
+ for (const token of ['--desk:#d8dee3', '--sheet:#f5f5f3', '--ink:#1c1a17', '--lavender:#e5e3f5', '--sage:#e2e7d8', 'font-family:Figtree', 'font-weight:800', 'font-style:italic']) assert.ok(css.includes(token), token);
+ assert.match(css, /url\('\/fonts\/Figtree-Variable\.woff2'\)/);
+ assert.match(css, /url\('\/fonts\/Figtree-VariableItalic\.woff2'\)/);
+ assert.ok((await read('public/fonts/Figtree-OFL.txt')).includes('SIL OPEN FONT LICENSE'));
+ for (const retired of ['InterDisplay', 'Instrument Serif', 'InstrumentSerif']) assert.ok(!css.includes(retired), retired);
 });
-test('community uses explicit fictional podium rankings and elapsed group plans', async () => {
+test('home keeps honest, specific claims', async () => {
  const html = await read('dist/index.html');
- for (const text of ['Keshab', 'Sudeep', 'Pranshu', 'Silver', 'Gold', 'Bronze', 'View demo rankings', 'Not focusing', 'Fictional weekly focus minutes']) assert.ok(html.includes(text), text);
- assert.ok(!html.includes('class="rank-list"'));
- const group = await read('src/Community.tsx');
- for (const delay of ['1100, 1000', '2100, 1', '2150, 450']) assert.ok(group.includes(delay), delay);
- assert.match(group, /useDemoElapsed\(active/);
- assert.match(await read('src/useDemoActivity.ts'), /Date.now\(\)/);
- const clock = await read('src/HeroClock.tsx');
- assert.ok(clock.includes("['Retro', 'Flip', 'Minimal']"));
- assert.ok(!clock.includes("'Neon'"));
- assert.ok(clock.includes('const hold = 6000'));
+ for (const text of ['Ads and trackers', 'Languages built in', 'Achievements to earn', 'Oldest Android it runs on', 'Your app list stays here', 'never leave your phone', 'from this website']) assert.ok(html.includes(text), text);
+ for (const text of ['testimonial', 'stars', 'rating', 'users trust']) assert.ok(!html.toLowerCase().includes(text), `no invented proof: ${text}`);
 });
 test('motion respects accessibility settings and deploy headers are present', async () => {
  assert.match(await read('src/styles.css'), /prefers-reduced-motion:reduce/);
