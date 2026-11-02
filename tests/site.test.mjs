@@ -7,7 +7,7 @@ const link = path => `${base}${path}.html`;
 const read = path => readFile(new URL(`../${path}`, import.meta.url), 'utf8');
 test('assets and verified icon use the configured deployment base', async () => {
  const html = await read('dist/index.html');
- for (const path of ['favicon.png', 'images/focusforge-icon.png', 'images/app-focus-dark.webp', 'images/app-shield.webp', 'fonts/Figtree-Variable.woff2']) assert.ok(html.includes(`${base}${path}`), path);
+ for (const path of ['favicon.png', 'images/focusforge-icon.png', 'images/shot-focus-dark.webp', 'images/shot-shield-light.webp', 'fonts/Figtree-Variable.woff2']) assert.ok(html.includes(`${base}${path}`), path);
  const icon = await readFile(new URL('../public/images/focusforge-icon.png', import.meta.url));
  assert.deepEqual(icon, await readFile(new URL('../public/favicon.png', import.meta.url)));
  for (const match of html.matchAll(/(?:src|href)="([^"#]+)"/g)) {
@@ -68,19 +68,20 @@ test('homepage keeps original download actions without promoting the tester guid
  assert.match(html, /Take a closer look/);
  assert.ok(!html.includes('Get on Play Store'));
  assert.ok(!html.includes('Get on GitHub'));
- assert.match(html, /fictional demo data/);
+ assert.match(html, /running on a real Android phone/);
  assert.ok(!html.includes('play.google.com/store/apps'));
 });
-test('home is one sheet with real app renders in OnePlus 15 frames', async () => {
+test('home is one sheet with real screenshots in OnePlus 15 frames', async () => {
  const html = await read('dist/index.html');
- assert.equal((html.match(/class="op15[ "]/g) || []).length, 4, 'one hero phone and three tool phones');
- assert.equal((html.match(/class="op15-camera"/g) || []).length, 4);
- for (const text of ['class="sheet"', 'class="hero"', 'id="features"', 'id="privacy"', 'id="faq"', 'class="closing"', 'aria-label="Main navigation"']) assert.ok(html.includes(text), text);
- for (const image of ['app-focus-dark', 'app-shield', 'app-focus', 'app-home']) assert.ok(html.includes(`images/${image}.webp`), image);
+ assert.equal((html.match(/class="op15[ "]/g) || []).length, 8, 'hero, three tools and four gallery phones');
+ assert.equal((html.match(/class="op15-camera"/g) || []).length, 8);
+ assert.ok(!html.includes('op15-status'), 'no drawn status bar over a real one');
+ for (const text of ['class="sheet"', 'class="hero"', 'class="gallery"', 'class="footer-wordmark"', 'id="features"', 'id="privacy"', 'id="faq"', 'class="closing"', 'aria-label="Main navigation"']) assert.ok(html.includes(text), text);
+ for (const image of ['focus-dark', 'focus-light', 'shield-light', 'shield-dark', 'youtube-light', 'youtube-dark', 'home-light', 'home-dark']) assert.ok(html.includes(`images/shot-${image}.webp`), image);
  assert.match(html, /fetchpriority="high"/i);
  const provenance = JSON.parse(await read('public/images/provenance.json'));
- assert.match(provenance.description, /fictional local demo data/);
- for (const image of ['app-focus-dark.webp', 'app-shield.webp', 'app-focus.webp', 'app-home.webp']) assert.ok(provenance.assets[image], image);
+ assert.match(provenance.description, /real|own Android phone/);
+ for (const image of ['focus-dark', 'focus-light', 'shield-light', 'shield-dark', 'youtube-light', 'youtube-dark', 'home-light', 'home-dark']) assert.ok(provenance.assets[`shot-${image}.webp`], image);
 });
 test('the retired animated design is gone', async () => {
  const html = await read('dist/index.html');

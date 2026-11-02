@@ -3,6 +3,8 @@ import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 const base = (process.env.TEST_URL || 'http://localhost:4173').replace(/\/$/, '') + '/';
 const routeUrl = route => `${base}${route.replace(/^\//, '')}.html`;
+// Vercel serves clean URLs; a local preview keeps .html. Either is the same page.
+const samePage = (actual, route) => actual.replace(/\.html$/, '') === routeUrl(route).replace(/\.html$/, '');
 const shots = '/tmp/focusforge-web-review';
 const browser = await chromium.launch({ args: ['--no-sandbox'] });
 const errors = [];
@@ -33,12 +35,15 @@ try {
    const camera = body.querySelector('.op15-camera').getBoundingClientRect();
    return { ratio: box.width / box.height, centred: Math.abs((camera.left + camera.width / 2) - (box.left + box.width / 2)) };
   }));
-  assert.equal(phones.length, 4);
+  assert.equal(phones.length, 8);
   for (const phone of phones) {
    assert.ok(Math.abs(phone.ratio - 76.7 / 161.4) < .004, `phone proportions ${phone.ratio}`);
    assert.ok(phone.centred < 1.5, 'punch-hole camera is centred');
   }
-  assert.ok(await page.locator('.op15 img').evaluateAll(images => images.every(img => img.naturalWidth === 780)), 'app renders load');
+  assert.ok(await page.locator('.op15 img').evaluateAll(images => images.every(img => img.naturalWidth === 720)), 'screenshots load');
+  // The real screenshot keeps both system bars: at most 1.5% of it is cropped.
+  const crops = await page.locator('.op15 img').evaluateAll(images => images.map(img => { const box = img.getBoundingClientRect(); return 1 - (box.width / box.height) / (img.naturalWidth / img.naturalHeight); }));
+  assert.ok(crops.every(crop => Math.abs(crop) < .015), `screenshot crop ${crops}`);
   // The hero headline and its phone stay on screen together on wide layouts.
   if (width >= 1024) {
    const hero = await page.locator('.hero').evaluate(el => {
@@ -60,6 +65,17 @@ try {
    assert.equal(await toggle.getAttribute('aria-expanded'), 'false');
    assert.equal(await page.locator(':focus').textContent(), 'Menu');
   }
+  // The closing wordmark spans the sheet without spilling past it.
+  const mark = await page.locator('.footer-wordmark').evaluate(el => { const range = document.createRange(); range.selectNodeContents(el); const text = range.getBoundingClientRect(); const box = el.getBoundingClientRect(); return text.width / box.width; });
+  assert.ok(mark > .9 && mark <= 1.001, `wordmark fills ${mark}`);
+  // Questions fill the width on large screens instead of trailing one long
+  // column beside a short heading; tablets and phones read them in one.
+  const columns = await page.locator('.faq-list').evaluateAll(lists => lists.map(list => { const box = list.getBoundingClientRect(); return { left: box.left, top: box.top, height: box.height }; }));
+  assert.equal(columns.length, 2);
+  if (width >= 1024) {
+   assert.ok(columns[1].left > columns[0].left && Math.abs(columns[1].top - columns[0].top) < 2, 'FAQ columns side by side');
+   assert.ok(Math.abs(columns[0].height - columns[1].height) < columns[0].height * .35, 'FAQ columns balanced');
+  } else assert.ok(columns[1].top > columns[0].top, 'FAQ stacks below 1024px');
   const faq = page.locator('.faq details').first();
   await faq.locator('summary').click();
   assert.equal(await faq.getAttribute('open'), '');
@@ -87,14 +103,14 @@ try {
  await page.getByRole('navigation', { name: 'Main navigation' }).waitFor({ state: 'visible' });
  assert.equal(await page.getByRole('button', { name: 'Menu' }).isVisible(), false);
  await page.getByRole('link', { name: 'Privacy policy', exact: true }).last().click();
- assert.equal(page.url(), routeUrl('/privacy'));
+ assert.ok(samePage(page.url(), '/privacy'), page.url());
  const privacyText = await page.locator('main').innerText();
  assert.match(privacyText, /Draw over other apps/);
  assert.match(privacyText, /Normal-app shielding does not require this service/);
  assert.match(privacyText, /Private achievement backup/);
  assert.match(privacyText, /Installed apps and app usage/);
  await page.getByRole('link', { name: 'Delete account', exact: true }).click();
- assert.equal(page.url(), routeUrl('/delete-account'));
+ assert.ok(samePage(page.url(), '/delete-account'), page.url());
  await page.getByRole('heading', { name: 'Sign in to delete your account.', exact: true }).waitFor();
  assert.ok(await page.getByText('Enable JavaScript', { exact: false }).isVisible());
  const email = new URL(await page.getByRole('link', { name: 'Email support', exact: true }).getAttribute('href'));
