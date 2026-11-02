@@ -7,6 +7,9 @@ import { asset, pageLink } from './paths';
 
 export const DOWNLOAD = 'https://github.com/MufasaXz/focusforge/releases/latest';
 export const EMAIL = 'focusforgehelp@gmail.com';
+// Downloads across every channel, as stated by the developer (2 Nov 2026).
+// GitHub releases alone counted 528 that day.
+export const DOWNLOADS = '10K+';
 export const ROUTES = ['/', '/privacy', '/terms', '/support', '/delete-account', '/get-on-play', '/verify-email'];
 const source = 'https://github.com/MufasaXz/focusforge';
 export const pageTitles: Record<string, string> = { '/': 'FocusForge — Make room for what matters.', '/privacy': 'Privacy policy — FocusForge', '/terms': 'Terms of use — FocusForge', '/support': 'Support — FocusForge', '/delete-account': 'Delete your account — FocusForge', '/get-on-play': 'Join the Play Store test — FocusForge', '/verify-email': 'Verify your email — FocusForge' };
@@ -134,6 +137,32 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
   </details>;
 }
 
+/** The site's few hard numbers, each true of the current release. */
+const stats: [string, string][] = [
+  ['Downloads so far', DOWNLOADS],
+  ['Languages built in', '25'],
+  ['Ads and trackers', '0'],
+  ['Oldest Android it runs on', '7.0']
+];
+
+/**
+ * A number drawn as odometer reels. Each digit is a strip of two full turns,
+ * 0–9 twice, and lands on its second turn, so every reel visibly spins —
+ * a 0 included — when the section first comes into view. Letters and
+ * punctuation stay still. Screen readers get the plain value.
+ */
+function Odometer({ value }: { value: string }) {
+  let reel = 0;
+  return <>
+    <span className="sr-only">{value}</span>
+    <span className="odometer" aria-hidden="true">{[...value].map((char, i) => /\d/.test(char)
+      ? <span key={i} className="reel" style={{ '--to': Number(char) + 10, '--reel': reel++ } as React.CSSProperties}>
+          <span className="strip">{'01234567890123456789'.split('').map((digit, n) => <span key={n}>{digit}</span>)}</span>
+        </span>
+      : <span key={i} className="glyph">{char}</span>)}</span>
+  </>;
+}
+
 type Tool = (typeof tools)[number];
 
 /**
@@ -161,13 +190,13 @@ function ToolCard({ tool }: { tool: Tool }) {
 }
 
 /**
- * Plays the session steps once, when they first come into view: each rule
- * draws across in turn and its words settle in behind it. Before this runs —
- * no JavaScript, or a reader who prefers less motion — the steps are simply
- * there, finished.
+ * Plays a section's entrance once, when it first comes into view: the session
+ * rules draw across in turn, and the number reels spin to their values. Before
+ * this runs — no JavaScript, or a reader who prefers less motion — the section
+ * is simply there, finished.
  */
-function useStepsReveal() {
-  const ref = useRef<HTMLElement>(null);
+function useRevealOnce<T extends HTMLElement = HTMLElement>() {
+  const ref = useRef<T>(null);
   useEffect(() => {
     const el = ref.current;
     if (!el || !('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
@@ -184,7 +213,8 @@ function useStepsReveal() {
 }
 
 function Home() {
-  const session = useStepsReveal();
+  const session = useRevealOnce();
+  const facts = useRevealOnce();
   return <>
     <section className="hero" aria-labelledby="hero-title">
       <Heading level={1} id="hero-title" strong="Make room" soft="for what matters."/>
@@ -196,13 +226,8 @@ function Home() {
       </div>
     </section>
 
-    <section className="facts" aria-label="FocusForge in numbers">
-      <dl>
-        <div><dt>Ads and trackers</dt><dd>0</dd></div>
-        <div><dt>Languages built in</dt><dd>25</dd></div>
-        <div><dt>Achievements to earn</dt><dd>18</dd></div>
-        <div><dt>Oldest Android it runs on</dt><dd>7.0</dd></div>
-      </dl>
+    <section className="facts" ref={facts} aria-label="FocusForge in numbers">
+      <dl>{stats.map(([label, value]) => <div key={label}><dt>{label}</dt><dd><Odometer value={value}/></dd></div>)}</dl>
     </section>
 
     <section className="tools" id="features" aria-labelledby="tools-title">

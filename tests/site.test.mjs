@@ -106,7 +106,8 @@ test('type is one self-hosted family with a heavy and a light italic voice', asy
 });
 test('home keeps honest, specific claims', async () => {
  const html = await read('dist/index.html');
- for (const text of ['Ads and trackers', 'Languages built in', 'Achievements to earn', 'Oldest Android it runs on', 'Your app list stays here', 'never leave your phone', 'from this website']) assert.ok(html.includes(text), text);
+ assert.ok(!html.includes('Achievements to earn'));
+ for (const text of ['Downloads so far', 'Ads and trackers', 'Languages built in', 'Oldest Android it runs on', 'Your app list stays here', 'never leave your phone', 'from this website']) assert.ok(html.includes(text), text);
  for (const text of ['testimonial', 'stars', 'rating', 'users trust']) assert.ok(!html.toLowerCase().includes(text), `no invented proof: ${text}`);
 });
 test('motion respects accessibility settings and deploy headers are present', async () => {

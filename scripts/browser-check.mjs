@@ -27,7 +27,8 @@ try {
   assert.match(await page.locator('h1').evaluate(el => getComputedStyle(el).fontFamily), /^Figtree/);
   assert.ok(await page.evaluate(() => document.fonts.check('800 40px Figtree') && document.fonts.check('italic 300 40px Figtree')), 'Figtree upright and italic load');
   // Nothing moves on its own.
-  assert.equal(await page.evaluate(() => document.getAnimations().length), 0, 'no running animations');
+  // Only one-shot transitions may run (the reels, if in view); no keyframes, no loops.
+  assert.ok(await page.evaluate(() => document.getAnimations().every(animation => animation.constructor.name === 'CSSTransition')), 'no keyframe or looping animation');
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `home overflow at ${width}`);
   // Every phone is a OnePlus 15: 76.7 × 161.4 mm, with a centred camera.
   const phones = await page.locator('.op15-body').evaluateAll(bodies => bodies.map(body => {
@@ -84,6 +85,18 @@ try {
    await flip.focus();
    await page.keyboard.press('Enter');
    assert.equal(await flip.getAttribute('aria-pressed'), 'false');
+   // The number reels spin once into view and land on their values.
+   await page.locator('.facts').scrollIntoViewIfNeeded();
+   await page.waitForFunction(() => document.querySelector('.facts').dataset.reveal === 'played');
+   await page.waitForTimeout(2300);
+   const reels = await page.locator('.facts dd').evaluateAll(cells => cells.map(cell => {
+    const window = cell.querySelector('.odometer').getBoundingClientRect();
+    const shown = [...cell.querySelectorAll('.odometer > *')].map(part => part.classList.contains('reel')
+     ? [...part.querySelectorAll('.strip span')].find(digit => Math.abs(digit.getBoundingClientRect().top - window.top) < 2)?.textContent
+     : part.textContent).join('');
+    return { shown, value: cell.querySelector('.sr-only').textContent };
+   }));
+   for (const reel of reels) assert.equal(reel.shown, reel.value, 'reel lands on its value');
    // The session steps play once when they come into view, and finish.
    await page.locator('.session').scrollIntoViewIfNeeded();
    await page.waitForFunction(() => document.querySelector('.session').dataset.reveal === 'played');
