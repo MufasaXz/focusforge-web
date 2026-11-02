@@ -68,6 +68,29 @@ try {
   // The closing wordmark spans the sheet without spilling past it.
   const mark = await page.locator('.footer-wordmark').evaluate(el => { const range = document.createRange(); range.selectNodeContents(el); const text = range.getBoundingClientRect(); const box = el.getBoundingClientRect(); return text.width / box.width; });
   assert.ok(mark > .9 && mark <= 1.001, `wordmark fills ${mark}`);
+  // A tool card turns over to its other theme and back, one card at a time.
+  if (colorScheme === 'light') {
+   const card = page.locator('.tool').first();
+   const flip = card.locator('.tool-flip');
+   await card.scrollIntoViewIfNeeded();
+   await card.click({ position: { x: 40, y: 220 } });
+   assert.equal(await flip.getAttribute('aria-pressed'), 'true');
+   assert.equal(await page.locator('.tool.is-light').count(), 1, 'only the clicked card turns');
+   await page.waitForTimeout(900);
+   assert.equal(await card.locator('.tool-ink').getAttribute('aria-hidden'), 'false');
+   assert.equal(await card.locator('.tool-face').first().getAttribute('aria-hidden'), 'true');
+   assert.match(await card.locator('.tool-ink img').getAttribute('src'), /-light\.webp$/);
+   if (width === 1440) await page.screenshot({ path: `${shots}/flip-1440.png`, clip: await card.boundingBox() });
+   await flip.focus();
+   await page.keyboard.press('Enter');
+   assert.equal(await flip.getAttribute('aria-pressed'), 'false');
+   // The session steps play once when they come into view, and finish.
+   await page.locator('.session').scrollIntoViewIfNeeded();
+   await page.waitForFunction(() => document.querySelector('.session').dataset.reveal === 'played');
+   await page.waitForTimeout(2300);
+   assert.ok(await page.locator('.session li').evaluateAll(items => items.every(item => getComputedStyle(item, '::after').transform.startsWith('matrix(1') && getComputedStyle(item.querySelector('p')).opacity === '1')), 'every step finishes drawn and visible');
+   await page.evaluate(() => window.scrollTo(0, 0));
+  }
   // Questions fill the width on large screens instead of trailing one long
   // column beside a short heading; tablets and phones read them in one.
   const columns = await page.locator('.faq-list').evaluateAll(lists => lists.map(list => { const box = list.getBoundingClientRect(); return { left: box.left, top: box.top, height: box.height }; }));
@@ -79,6 +102,12 @@ try {
   const faq = page.locator('.faq details').first();
   await faq.locator('summary').click();
   assert.equal(await faq.getAttribute('open'), '');
+  // The answer types itself out, then sits complete; assistive tech gets it whole at once.
+  const full = (await faq.locator('.sr-only').textContent()).trim();
+  const typedNow = await faq.locator('.typed').evaluate(el => el.textContent.length - el.querySelector('.untyped').textContent.length);
+  assert.ok(typedNow < full.length, 'answer starts partway typed');
+  await page.waitForFunction(el => !el.querySelector('.caret') && el.querySelector('.untyped').textContent === '', await faq.elementHandle(), { timeout: 3000 });
+  assert.equal((await faq.locator('.typed').textContent()).trim(), full);
   // Walk the page once so lazy phone screens are decoded before the capture.
   for (let y = 0; y < await page.evaluate(() => document.body.scrollHeight); y += 700) { await page.evaluate(top => window.scrollTo(0, top), y); await page.waitForTimeout(60); }
   await page.evaluate(() => Promise.all([...document.images].map(img => img.decode().catch(() => {}))));
@@ -96,6 +125,11 @@ try {
  watch(reduced);
  await reduced.goto(base);
  assert.equal(await reduced.locator('.button').first().evaluate(el => getComputedStyle(el).transitionDuration), '0s');
+ // Reduced motion: the steps are already finished and a card swaps without turning.
+ assert.equal(await reduced.locator('.session').getAttribute('data-reveal'), null);
+ await reduced.locator('.tool').first().click({ position: { x: 40, y: 220 } });
+ assert.equal(await reduced.locator('.tool-turn').first().evaluate(el => getComputedStyle(el).transform), 'none');
+ assert.equal(await reduced.locator('.tool-ink').first().evaluate(el => getComputedStyle(el).visibility), 'visible');
  await reduced.close();
  const page = await browser.newPage({ javaScriptEnabled: false, viewport: { width: 320, height: 900 } });
  watch(page);
@@ -109,13 +143,13 @@ try {
  assert.match(privacyText, /Normal-app shielding does not require this service/);
  assert.match(privacyText, /Private achievement backup/);
  assert.match(privacyText, /Installed apps and app usage/);
- await page.getByRole('link', { name: 'Delete account', exact: true }).click();
+ await page.locator('main a[href*="delete-account"]').first().click();
  assert.ok(samePage(page.url(), '/delete-account'), page.url());
  await page.getByRole('heading', { name: 'Sign in to delete your account.', exact: true }).waitFor();
  assert.ok(await page.getByText('Enable JavaScript', { exact: false }).isVisible());
  const email = new URL(await page.getByRole('link', { name: 'Email support', exact: true }).getAttribute('href'));
  assert.equal(email.protocol, 'mailto:');
- assert.equal(email.pathname, 'sudeepyadav7272@gmail.com');
+ assert.equal(email.pathname, 'focusforgehelp@gmail.com');
  assert.deepEqual(errors, []);
  console.log(`PASS: widths 320/390/768/1024/1440 in light and dark preferences, OnePlus 15 frames, no autonomous motion, menu, FAQ, skip link, reduced motion, every route and the no-JavaScript path. Screenshots in ${shots}.`);
 } finally { await browser.close(); }

@@ -33,7 +33,9 @@ test('every public route has meaningful pre-rendered HTML', async () => {
   assert.match(html, /<h1/);
   assert.match(html, /<main id="main"/);
   assert.ok(html.includes(`href="${link('privacy')}"`));
-  assert.ok(html.includes(`href="${link('delete-account')}"`));
+  // The footer no longer names deletion; the pages whose words point to it still link it.
+  if (['index', 'privacy', 'terms', 'support'].includes(page)) assert.ok(html.includes(`href="${link('delete-account')}"`), page);
+  assert.ok(!/>Delete account<\/a><a href="https:\/\/github.com\/MufasaXz\/focusforge">Source code/.test(html), 'footer drops the deletion link');
   assert.match(html, /<title>[^<]+FocusForge|<title>FocusForge/);
  }
 });
@@ -73,15 +75,18 @@ test('homepage keeps original download actions without promoting the tester guid
 });
 test('home is one sheet with real screenshots in OnePlus 15 frames', async () => {
  const html = await read('dist/index.html');
- assert.equal((html.match(/class="op15[ "]/g) || []).length, 8, 'hero, three tools and four gallery phones');
+ assert.equal((html.match(/class="op15[ "]/g) || []).length, 8, 'hero, two faces on each of three tools, and the closing phone');
+ assert.equal((html.match(/aria-pressed="false"/g) || []).length, 3, 'one flip control per tool card');
+ assert.equal((html.match(/class="tool-face tool-ink" aria-hidden="true" inert=""/g) || []).length, 3, 'light faces start turned away and inert');
  assert.equal((html.match(/class="op15-camera"/g) || []).length, 8);
  assert.ok(!html.includes('op15-status'), 'no drawn status bar over a real one');
- for (const text of ['class="sheet"', 'class="hero"', 'class="gallery"', 'class="footer-wordmark"', 'id="features"', 'id="privacy"', 'id="faq"', 'class="closing"', 'aria-label="Main navigation"']) assert.ok(html.includes(text), text);
- for (const image of ['focus-dark', 'focus-light', 'shield-light', 'shield-dark', 'youtube-light', 'youtube-dark', 'home-light', 'home-dark']) assert.ok(html.includes(`images/shot-${image}.webp`), image);
+ for (const text of ['class="sheet"', 'class="hero"', 'class="session"', 'class="footer-wordmark"', 'id="features"', 'id="privacy"', 'id="faq"', 'class="closing"', 'aria-label="Main navigation"']) assert.ok(html.includes(text), text);
+ assert.ok(!html.includes('class="gallery"'), 'gallery removed');
+ for (const image of ['focus-dark', 'focus-light', 'shield-dark', 'shield-light', 'home-dark', 'home-light']) assert.ok(html.includes(`images/shot-${image}.webp`), image);
  assert.match(html, /fetchpriority="high"/i);
  const provenance = JSON.parse(await read('public/images/provenance.json'));
  assert.match(provenance.description, /real|own Android phone/);
- for (const image of ['focus-dark', 'focus-light', 'shield-light', 'shield-dark', 'youtube-light', 'youtube-dark', 'home-light', 'home-dark']) assert.ok(provenance.assets[`shot-${image}.webp`], image);
+ for (const image of ['focus-dark', 'focus-light', 'shield-dark', 'shield-light', 'home-dark', 'home-light']) assert.ok(provenance.assets[`shot-${image}.webp`], image);
 });
 test('the retired animated design is gone', async () => {
  const html = await read('dist/index.html');
