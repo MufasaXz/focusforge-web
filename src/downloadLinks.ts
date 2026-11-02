@@ -1,2 +1,2 @@
 export const GITHUB_RELEASES = 'https://github.com/MufasaXz/focusforge/releases/latest';
-export const SUPPORT_EMAIL = 'sudeepyadav7272@gmail.com';
+export const SUPPORT_EMAIL = 'focusforgehelp@gmail.com';

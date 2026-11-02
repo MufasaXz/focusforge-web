@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import DeleteAccount from './DeleteAccount';
 import VerifyEmail from './VerifyEmail';
 import GetOnPlay from './GetOnPlay';
@@ -6,7 +6,7 @@ import './getOnPlay.css';
 import { asset, pageLink } from './paths';
 
 export const DOWNLOAD = 'https://github.com/MufasaXz/focusforge/releases/latest';
-export const EMAIL = 'sudeepyadav7272@gmail.com';
+export const EMAIL = 'focusforgehelp@gmail.com';
 export const ROUTES = ['/', '/privacy', '/terms', '/support', '/delete-account', '/get-on-play', '/verify-email'];
 const source = 'https://github.com/MufasaXz/focusforge';
 export const pageTitles: Record<string, string> = { '/': 'FocusForge — Make room for what matters.', '/privacy': 'Privacy policy — FocusForge', '/terms': 'Terms of use — FocusForge', '/support': 'Support — FocusForge', '/delete-account': 'Delete your account — FocusForge', '/get-on-play': 'Join the Play Store test — FocusForge', '/verify-email': 'Verify your email — FocusForge' };
@@ -72,7 +72,6 @@ function Footer() {
       <a href={pageLink('/privacy')}>Privacy policy</a>
       <a href={pageLink('/terms')}>Terms</a>
       <a href={pageLink('/support')}>Support</a>
-      <a href={pageLink('/delete-account')}>Delete account</a>
       <a href={source}>Source code</a>
     </nav>
     <p className="footer-note">© {new Date().getFullYear()} FocusForge, by MufasaXz.</p>
@@ -82,13 +81,9 @@ function Footer() {
 
 const faq = [
   ['Is FocusForge really free?', 'Yes. FocusForge is free and open source, with no ads and no subscriptions. The Android app is available from our GitHub releases.'],
-  ['Can I still watch my lectures?', 'Yes. Supported YouTube feed and Shorts filtering is designed to leave lecture links available. Filtering depends on supported screens and can change when YouTube updates.'],
   ['Do I need an account?', 'The focus timer works without an account. Choose Skip for now to start locally without waiting for Firebase sign-in. Linked accounts use Firebase for private study and badge backups, groups and the optional leaderboard. Using the app without an email account is not a promise of no network activity.'],
   ['What permissions does shielding need?', 'Normal app shielding uses Usage Access to detect the app in use and Draw over other apps to display a pause screen. FocusForge shows a disclosure and asks before it reads your list of installed apps, and that list stays on your phone. Accessibility is requested separately when you enable supported YouTube Shorts or feed filtering. App boundaries run with a foreground notification and a Stop action. All access is optional and can be revoked in Android settings.'],
   ['Does it work on iPhone?', 'FocusForge is currently Android-first, for Android 7.0 and above. We do not currently offer an iOS download.'],
-  ['Can I use my own profile photo?', 'Yes. Choose a photo in the app’s profile avatar settings. FocusForge creates a small square thumbnail and removes embedded image metadata before saving it. Guests keep it on their device; linked accounts privately back it up. If leaderboard sharing is on, your photo appears with your name, level and weekly minutes. You can remove the photo or use initials instead.'],
-  ['Will updating the app sign me out?', 'An update keeps a confirmed existing login and local study setup. Saved account data syncs in the background. Signing in after signing out or reinstalling can show a recovery screen while your goals, subjects and history are restored. Only data that finished syncing can be recovered on another installation.'],
-  ['What happens when I sign out?', 'Your linked account keeps its private study backup, including your name, chosen profile photo, subjects, plans, goals and dated focus sessions, so you can recover them by signing in again. If you opted into the leaderboard, your name, chosen photo, level and weekly minutes can remain visible in that week’s top 100 after sign-out. Turn sharing off in the leaderboard’s Sharing options menu or delete your account to remove published entries.'],
   ['Can I delete my account and data?', 'Yes. Sign in on our Delete account page using the same email/password or Google account as the app, then confirm deletion. Private study and badge backups, saved profile photos, shared progress and leaderboard entries are removed before your login. You can also delete your account in the app. The website cannot erase phone-local history; clear app storage separately. Signing out keeps your data.']
 ];
 
@@ -99,19 +94,97 @@ function Heading({ level = 2, strong, soft, id }: { level?: 1 | 2; strong: strin
 }
 
 const tools = [
-  { key: 'shield', tone: 'lavender', title: 'Close the feed', body: 'Pick the apps that pull you away. Block them, give them a daily budget, or close them only while you focus. Supported YouTube Shorts and feeds can be filtered while lectures stay open.', image: 'images/shot-shield-light.webp', alt: 'FocusForge Shield tab listing installed apps with a switch for each' },
-  { key: 'focus', tone: 'white', title: 'One timer, full attention', body: 'Start a Pomodoro preset or a plan of your own, tag the subject you are studying, and let rain or a café hum fill the quiet.', image: 'images/shot-focus-light.webp', alt: 'FocusForge focus timer running with 44 minutes left' },
-  { key: 'progress', tone: 'sage', title: 'See it add up', body: 'Daily goals, weekly totals by subject, home-screen widgets and eighteen achievements make steady work easy to notice.', image: 'images/shot-home-light.webp', alt: 'FocusForge home screen showing 45 minutes of focus against a daily goal' }
+  { key: 'shield', tone: 'lavender', title: 'Close the feed', body: 'Pick the apps that pull you away. Block them, give them a daily budget, or close them only while you focus. Supported YouTube Shorts and feeds can be filtered while lectures stay open.', image: 'images/shot-shield-dark.webp', alt: 'FocusForge Shield tab in dark mode listing installed apps with a switch for each', lightImage: 'images/shot-shield-light.webp', lightAlt: 'FocusForge Shield tab in light mode listing installed apps with a switch for each' },
+  { key: 'focus', tone: 'white', title: 'One timer, full attention', body: 'Start a Pomodoro preset or a plan of your own, tag the subject you are studying, and let rain or a café hum fill the quiet.', image: 'images/shot-focus-dark.webp', alt: 'FocusForge focus timer in dark mode counting down a 25-minute block', lightImage: 'images/shot-focus-light.webp', lightAlt: 'FocusForge focus timer in light mode with 44 minutes left' },
+  { key: 'progress', tone: 'sage', title: 'See it add up', body: 'Daily goals, weekly totals by subject, home-screen widgets and eighteen achievements make steady work easy to notice.', image: 'images/shot-home-dark.webp', alt: 'FocusForge home screen in dark mode with today’s focus, goal and subject breakdown', lightImage: 'images/shot-home-light.webp', lightAlt: 'FocusForge home screen in light mode with 45 minutes of focus against the daily goal' }
 ];
 
-const gallery = [
-  { name: 'Home', body: 'Today’s goal, sessions and a subject breakdown at a glance.', image: 'images/shot-home-dark.webp', alt: 'FocusForge home screen in dark mode with today’s goal and subject breakdown' },
-  { name: 'Shield', body: 'Your apps, each with its own rule, and nothing read until you agree.', image: 'images/shot-shield-dark.webp', alt: 'FocusForge Shield tab in dark mode listing apps' },
-  { name: 'YouTube filters', body: 'Shorts and the home feed can close while lecture links still open.', image: 'images/shot-youtube-dark.webp', alt: 'FocusForge YouTube filters in dark mode with switches for Shorts and the home feed' },
-  { name: 'The same, in light', body: 'Every screen is designed twice, so neither theme is an afterthought.', image: 'images/shot-youtube-light.webp', alt: 'FocusForge YouTube filters in light mode' }
-];
+/**
+ * A question whose answer types itself out when opened. The full answer is
+ * always in the page for screen readers, and the untyped remainder keeps its
+ * space so nothing below moves. Without JavaScript, or for a reader who prefers
+ * less motion, the answer is simply there.
+ */
+function FaqItem({ question, answer }: { question: string; answer: string }) {
+  const [shown, setShown] = useState(answer.length);
+  const frame = useRef(0);
+  useEffect(() => () => cancelAnimationFrame(frame.current), []);
+  const toggle = (event: React.SyntheticEvent<HTMLDetailsElement>) => {
+    cancelAnimationFrame(frame.current);
+    if (!event.currentTarget.open || matchMedia('(prefers-reduced-motion: reduce)').matches) { setShown(answer.length); return; }
+    // Quick enough to read along with: about a second for the longest answer.
+    const duration = Math.min(1100, 300 + answer.length * 2.4);
+    const start = performance.now();
+    setShown(0);
+    const step = (now: number) => {
+      const next = Math.min(answer.length, Math.ceil(answer.length * (now - start) / duration));
+      setShown(next);
+      if (next < answer.length) frame.current = requestAnimationFrame(step);
+    };
+    frame.current = requestAnimationFrame(step);
+  };
+  const typing = shown < answer.length;
+  return <details onToggle={toggle}>
+    <summary>{question}</summary>
+    <p>
+      <span className="sr-only">{answer}</span>
+      <span className="typed" aria-hidden="true">{answer.slice(0, shown)}{typing && <span className="caret"/>}<span className="untyped">{answer.slice(shown)}</span></span>
+      {question.startsWith('Can I delete') && <span className={typing ? 'after-typing' : undefined}> <a href={pageLink('/delete-account')}>Delete your account</a>.</span>}
+    </p>
+  </details>;
+}
+
+type Tool = (typeof tools)[number];
+
+/**
+ * A tool card with two faces: the pastel card holds the dark-theme screen, and
+ * a turn shows the same screen in light on a black card. One real button,
+ * stretched over the whole card, does the turning, so a click anywhere works
+ * and the keyboard and screen readers get a single labelled, pressed control.
+ * The face turned away is inert, so its copy is never read twice.
+ */
+function ToolCard({ tool }: { tool: Tool }) {
+  const [light, setLight] = useState(false);
+  const face = (side: 'front' | 'back') => {
+    const shown = side === 'front' ? !light : light;
+    return <div className={`tool-face tool-${side === 'front' ? tool.tone : 'ink'}`} aria-hidden={!shown} inert={!shown}>
+      <div className="tool-copy"><h3>{tool.title}</h3><p>{tool.body}</p></div>
+      <Phone src={side === 'front' ? tool.image : tool.lightImage} alt={side === 'front' ? tool.alt : tool.lightAlt}/>
+    </div>;
+  };
+  return <article className={`tool${light ? ' is-light' : ''}`}>
+    <div className="tool-turn">{face('front')}{face('back')}</div>
+    <button type="button" className="tool-flip" aria-pressed={light} aria-label={`${tool.title}: show the ${light ? 'dark' : 'light'} theme`} onClick={() => setLight(value => !value)}>
+      <span aria-hidden="true">{light ? 'See it in dark' : 'See it in light'}</span>
+    </button>
+  </article>;
+}
+
+/**
+ * Plays the session steps once, when they first come into view: each rule
+ * draws across in turn and its words settle in behind it. Before this runs —
+ * no JavaScript, or a reader who prefers less motion — the steps are simply
+ * there, finished.
+ */
+function useStepsReveal() {
+  const ref = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !('IntersectionObserver' in window) || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    el.dataset.reveal = 'waiting';
+    const observer = new IntersectionObserver(entries => {
+      if (!entries.some(entry => entry.isIntersecting)) return;
+      el.dataset.reveal = 'played';
+      observer.disconnect();
+    }, { threshold: .35 });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
+  return ref;
+}
 
 function Home() {
+  const session = useStepsReveal();
   return <>
     <section className="hero" aria-labelledby="hero-title">
       <Heading level={1} id="hero-title" strong="Make room" soft="for what matters."/>
@@ -135,25 +208,12 @@ function Home() {
     <section className="tools" id="features" aria-labelledby="tools-title">
       <div className="section-intro"><Heading id="tools-title" strong="Three tools" soft="for a quieter phone."/><p>Everything you need to turn “I should study” into “I’m glad I did.”</p></div>
       <div className="tool-grid">
-        {tools.map(tool => <article key={tool.key} className={`tool tool-${tool.tone}`}>
-          <div className="tool-copy"><h3>{tool.title}</h3><p>{tool.body}</p></div>
-          <Phone src={tool.image} alt={tool.alt}/>
-        </article>)}
+        {tools.map(tool => <ToolCard key={tool.key} tool={tool}/>)}
       </div>
-    </section>
-
-    <section className="gallery" aria-labelledby="gallery-title">
-      <div className="section-intro"><Heading id="gallery-title" strong="Light by day" soft="dark by night."/><p>FocusForge follows your phone’s theme, so a late session stays easy on the eyes.</p></div>
-      <ul className="gallery-grid">
-        {gallery.map(item => <li key={item.image}>
-          <div className="gallery-tile"><Phone src={item.image} alt={item.alt}/></div>
-          <h3>{item.name}</h3><p>{item.body}</p>
-        </li>)}
-      </ul>
       <p className="caption">Screenshots of FocusForge running on a real Android phone.</p>
     </section>
 
-    <section className="session" aria-labelledby="session-title">
+    <section className="session" ref={session} aria-labelledby="session-title">
       <Heading id="session-title" strong="One session" soft="from start to finish."/>
       <ol>
         <li><h3>Pick a plan</h3><p>Choose a Pomodoro preset or your own rhythm, and tag the subject you are about to study.</p></li>
@@ -176,12 +236,17 @@ function Home() {
       <div className="faq-head"><Heading id="faq-title" strong="Good questions" soft="before you begin."/><p>Something else on your mind? <a href={pageLink('/support')}>Ask us directly.</a></p></div>
       {/* Two independent lists rather than CSS columns, so opening an answer
           lengthens its own column and nothing jumps across. */}
-      <div className="faq-columns">{[faq.slice(0, 5), faq.slice(5)].map((half, column) => <div className="faq-list" key={column}>{half.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}{q.startsWith('Can I delete') && <> <a href={pageLink('/delete-account')}>Delete your account</a>.</>}</p></details>)}</div>)}</div>
+      <div className="faq-columns">{[faq.slice(0, 3), faq.slice(3)].map((half, column) => <div className="faq-list" key={column}>{half.map(([q, a]) => <FaqItem key={q} question={q} answer={a}/>)}</div>)}</div>
     </section>
 
     <section className="closing" aria-labelledby="closing-title">
-      <Heading id="closing-title" strong="Less scrolling." soft="More becoming."/>
-      <div><Download/><p>Android 7.0 and up. Free in the current open-source release.</p></div>
+      <div className="closing-copy">
+        <Heading id="closing-title" strong="Less scrolling." soft="More becoming."/>
+        <p className="closing-lead">Your next good study session is one download away. No account needed to start.</p>
+        <div className="closing-actions"><Download/><a className="text-link" href={source}>View the source</a></div>
+        <p className="closing-note">Android 7.0 and up. Free and open source, with no ads.</p>
+      </div>
+      <Phone className="closing-phone" src="images/shot-focus-light.webp" alt="FocusForge focus timer in light mode with 44 minutes left"/>
     </section>
   </>;
 }

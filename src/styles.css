@@ -76,7 +76,7 @@ a,button,summary{touch-action:manipulation;-webkit-tap-highlight-color:rgba(28,2
 .hero .hero-phone{grid-column:2;grid-row:1/3;align-self:start;z-index:2;margin:clamp(8px,2vw,28px) clamp(28px,4.4vw,72px) clamp(32px,3.4vw,52px) 0}
 .hero-panel{grid-column:1/-1;grid-row:2;margin-top:clamp(24px,3vw,44px);padding:clamp(28px,4vw,52px);padding-right:calc(var(--phone) + clamp(72px,11vw,170px));background:var(--lavender);border-radius:var(--radius);display:flex;flex-direction:column;justify-content:center}
 .hero-lead{max-width:34ch;margin:0;font-size:clamp(1.125rem,1.6vw,1.375rem);line-height:1.5}
-.hero-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px 28px;margin-top:30px}
+.hero-actions,.closing-actions{display:flex;flex-wrap:wrap;align-items:center;gap:14px 28px;margin-top:30px}
 .hero-note{margin:20px 0 0;color:var(--muted);font-size:.9375rem}
 
 /* ---- OnePlus 15, front ------------------------------------------------- */
@@ -105,28 +105,47 @@ a,button,summary{touch-action:manipulation;-webkit-tap-highlight-color:rgba(28,2
 .section-intro{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px 48px;margin-bottom:clamp(32px,4vw,56px)}
 .section-intro p{max-width:30ch;margin:0;font-size:1.125rem;color:var(--muted)}
 .tool-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,1.6vw,22px)}
-.tool{display:flex;flex-direction:column;gap:32px;min-height:clamp(560px,52vw,700px);padding:clamp(24px,2.6vw,36px) clamp(24px,2.6vw,36px) 0;border-radius:var(--radius);overflow:hidden}
+/* Each card turns over to show its screen in the other theme. The two faces
+   share one grid cell, so the card is as tall as its taller face. */
+.tool{position:relative;min-height:clamp(560px,52vw,700px);perspective:1800px}
+.tool-turn{display:grid;min-height:inherit;transform-style:preserve-3d;transition:transform .8s ease-in-out}
+.tool.is-light .tool-turn{transform:rotateY(180deg)}
+.tool-face{grid-area:1/1;display:flex;flex-direction:column;gap:32px;padding:clamp(24px,2.6vw,36px) clamp(24px,2.6vw,36px) 0;border-radius:var(--radius);overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.tool-face.tool-ink{transform:rotateY(180deg)}
 .tool-lavender{background:var(--lavender)}
 .tool-white{background:var(--white)}
 .tool-sage{background:var(--sage)}
-.tool h3{margin:0 0 10px;font-size:clamp(1.5rem,2.2vw,1.875rem);font-weight:700;line-height:1.15;letter-spacing:-.02em}
+.tool-ink{background:var(--ink);color:var(--sheet)}
+.tool h3{margin:0 0 10px;padding-right:clamp(120px,12vw,150px);font-size:clamp(1.5rem,2.2vw,1.875rem);font-weight:700;line-height:1.15;letter-spacing:-.02em}
 .tool p{margin:0;max-width:38ch;color:#3f3c36;line-height:1.55}
+.tool-ink p{color:rgba(245,245,243,.72)}
+/* The button's hit area is the whole card; its visible part is the label. */
+.tool-flip{position:static;margin:0;padding:0;border:0;background:none;font:inherit;color:inherit;cursor:pointer}
+.tool-flip::after{content:'';position:absolute;inset:0;z-index:3;border-radius:var(--radius)}
+.tool-flip:focus-visible{outline:none}
+.tool-flip:focus-visible::after{outline:2px solid var(--ink);outline-offset:4px}
+.tool-flip span{position:absolute;top:clamp(20px,2.2vw,30px);right:clamp(20px,2.2vw,30px);z-index:2;display:inline-flex;align-items:center;min-height:34px;padding:0 14px;border:1px solid rgba(28,26,23,.22);border-radius:999px;background:rgba(255,255,255,.62);color:var(--ink);font-size:.8125rem;font-weight:600;white-space:nowrap;transition:background-color .18s ease,color .18s ease,border-color .18s ease}
+.tool:hover .tool-flip span{background:var(--white)}
+.tool.is-light .tool-flip span{border-color:rgba(245,245,243,.3);background:rgba(245,245,243,.1);color:var(--sheet)}
+.tool.is-light:hover .tool-flip span{background:rgba(245,245,243,.2)}
 .tool .op15{width:min(72%,290px);margin:auto auto -46%}
 .caption{margin:20px 0 0;font-size:.875rem;color:var(--muted)}
-
-/* ---- Gallery ---------------------------------------------------------- */
-.gallery{padding:0 var(--gutter) clamp(72px,10vw,140px)}
-.gallery-grid{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:clamp(14px,1.6vw,22px)}
-.gallery-tile{display:grid;place-items:center;aspect-ratio:4/5.6;padding:clamp(18px,2.4vw,34px);border-radius:var(--radius);background:#e9e7e3}
-.gallery-tile .op15{width:min(64%,230px)}
-.gallery h3{margin:18px 0 6px;font-size:clamp(1.25rem,1.8vw,1.5rem);font-weight:500;font-style:italic;letter-spacing:-.01em}
-.gallery li p{margin:0;max-width:30ch;font-size:.9375rem;color:var(--muted)}
 
 /* ---- One session ------------------------------------------------------ */
 .session{padding:0 var(--gutter) clamp(72px,10vw,140px)}
 .session ol{list-style:none;counter-reset:step;margin:clamp(36px,4vw,56px) 0 0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(24px,3vw,48px)}
-.session li{counter-increment:step;padding-top:22px;border-top:1px solid var(--ink)}
-.session li::before{content:counter(step);display:block;margin-bottom:18px;font-size:clamp(2.6rem,4.4vw,4rem);font-weight:300;font-style:italic;line-height:1;font-variant-numeric:lining-nums}
+.session li{position:relative;counter-increment:step;padding-top:22px}
+.session li::after{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:var(--ink);transform-origin:left center}
+.session li:nth-child(2){--step:1}
+.session li:nth-child(3){--step:2}
+/* Played once on first view (see useStepsReveal); finished without it.
+   Hiding is instant; only the reveal carries a transition. */
+.session[data-reveal] li::after{transform:scaleX(0)}
+.session[data-reveal] li::before,.session[data-reveal] h3,.session[data-reveal] li p{opacity:0;transform:translateY(16px)}
+.session[data-reveal=played] li::after{transform:scaleX(1);transition:transform .9s ease-in-out calc(var(--step,0) * .5s)}
+.session[data-reveal=played] li::before,.session[data-reveal=played] h3,.session[data-reveal=played] li p{opacity:1;transform:none;transition:opacity .6s ease-out,transform .6s ease-out;transition-delay:calc(var(--step,0) * .5s + .35s)}
+.session[data-reveal=played] h3{transition-delay:calc(var(--step,0) * .5s + .45s)}
+.session[data-reveal=played] li p{transition-delay:calc(var(--step,0) * .5s + .55s)}
 .session h3{margin:0 0 8px;font-size:1.375rem;font-weight:700;letter-spacing:-.015em}
 .session p{margin:0;max-width:36ch;color:var(--muted)}
 
@@ -153,12 +172,20 @@ a,button,summary{touch-action:manipulation;-webkit-tap-highlight-color:rgba(28,2
 .faq summary::after{content:'+';flex:none;font-weight:400;font-size:1.5rem;line-height:1;color:var(--muted)}
 .faq details[open] summary::after{content:'–'}
 .faq details p{margin:0 0 24px;max-width:62ch;color:#3f3c36}
+/* Typed answers: the remainder holds its space, the caret marks the edge. */
+.faq .untyped{visibility:hidden}
+.faq .caret{display:inline-block;width:2px;height:1.05em;margin:0 1px -.18em;background:var(--ink)}
+.faq .after-typing{visibility:hidden}
+.sr-only{position:absolute;width:1px;height:1px;margin:-1px;padding:0;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 
 /* ---- Closing ---------------------------------------------------------- */
-.closing{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:32px;margin:0 var(--gutter);padding:clamp(36px,5vw,72px);border-radius:var(--radius);background:var(--white)}
-.closing .heading .strong{font-size:clamp(2.6rem,7vw,6.4rem)}
-.closing .heading .soft{font-size:clamp(2.2rem,5.6vw,5.2rem)}
-.closing p{margin:14px 0 0;color:var(--muted);font-size:.9375rem}
+.closing{display:grid;grid-template-columns:minmax(0,1fr) clamp(210px,21vw,290px);column-gap:clamp(32px,6vw,96px);margin:0 var(--gutter);padding:clamp(36px,5vw,72px) clamp(28px,6vw,96px) 0 clamp(28px,5vw,72px);border-radius:var(--radius);background:var(--lavender);overflow:hidden}
+.closing-copy{align-self:center;padding-bottom:clamp(36px,5vw,72px)}
+.closing-lead{max-width:32ch;margin:28px 0 0;font-size:clamp(1.125rem,1.6vw,1.375rem);line-height:1.5}
+.closing-note{margin:18px 0 0;color:var(--muted);font-size:.9375rem}
+.closing .closing-phone{align-self:end;margin-bottom:-62%}
+.closing .heading .strong{font-size:clamp(2.4rem,5.2vw,5rem)}
+.closing .heading .soft{font-size:clamp(2.1rem,4.4vw,4.2rem)}
 
 /* ---- Footer ----------------------------------------------------------- */
 .footer{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:28px 48px;margin-top:clamp(56px,8vw,112px);padding:clamp(32px,4vw,48px) var(--gutter);border-top:1px solid var(--line)}
@@ -191,11 +218,12 @@ a,button,summary{touch-action:manipulation;-webkit-tap-highlight-color:rgba(28,2
 /* ---- Small screens ---------------------------------------------------- */
 @media (max-width:960px){
   .tool-grid{grid-template-columns:1fr}
-  .gallery-grid{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:32px}
   .session ol{grid-template-columns:1fr}
   .tool{min-height:0}
   .tool .op15{width:min(62%,280px);margin-bottom:-58%}
   .trust ul{grid-template-columns:1fr}
+  .closing{grid-template-columns:1fr;padding-right:clamp(28px,5vw,72px)}
+  .closing .closing-phone{justify-self:center;width:min(60vw,260px);margin:8px 0 -58%}
   .faq-columns{grid-template-columns:1fr}
   .faq-list+.faq-list{border-top:0}
   .facts dl{grid-template-columns:repeat(2,minmax(0,1fr));row-gap:40px}
@@ -217,8 +245,13 @@ a,button,summary{touch-action:manipulation;-webkit-tap-highlight-color:rgba(28,2
   .footer nav{justify-content:flex-start}
 }
 @media (max-width:420px){
-  .hero-actions .button{width:100%}
-  .closing .button{width:100%}
+  .hero-actions .button,.closing-actions .button{width:100%}
   .facts dl{gap:28px 20px}
 }
-@media (prefers-reduced-motion:reduce){*,*::before,*::after{transition:none!important}}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition:none!important}
+  /* No turn: the faces swap in place. */
+  .tool.is-light .tool-turn{transform:none}
+  .tool-face.tool-ink{transform:none}
+  .tool-face[aria-hidden=true]{visibility:hidden}
+}
