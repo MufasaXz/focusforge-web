@@ -1,12 +1,16 @@
 {
-  "description": "Actual FocusForge app widget-test renders with fictional local demo data, drawn inside a CSS OnePlus 15 frame. These are not physical-device screenshots or user records.",
+  "description": "Screenshots of FocusForge running on the developer's own Android phone (1220 x 2712), shown inside a CSS OnePlus 15 frame. Status and gesture bars are the phone's own.",
   "sourceRepository": "https://github.com/MufasaXz/focusforge",
-  "renderedFrom": "tool/capture_ui_test.dart at 390x844, device pixel ratio 2, with app-list consent granted and fictional usage, then encoded as WebP (quality 84).",
+  "processing": "Resized to 720 px wide and encoded as WebP (quality 86). No other edits.",
   "assets": {
-    "app-focus-dark.webp": "Focus tab, dark theme",
-    "app-focus.webp": "Focus tab, light theme",
-    "app-shield.webp": "Shield tab, light theme",
-    "app-home.webp": "Home tab, light theme",
+    "shot-focus-dark.webp": "Focus tab, dark theme, timer running",
+    "shot-focus-light.webp": "Focus tab, light theme, timer running",
+    "shot-shield-light.webp": "Shield tab, Apps, light theme",
+    "shot-shield-dark.webp": "Shield tab, Apps, dark theme",
+    "shot-youtube-light.webp": "Shield tab, YouTube filters, light theme",
+    "shot-youtube-dark.webp": "Shield tab, YouTube filters, dark theme",
+    "shot-home-light.webp": "Home tab, light theme",
+    "shot-home-dark.webp": "Home tab, dark theme",
     "focusforge-icon.png": "focusforge-premium/web/icons/Icon-512.png (verified app web manifest icon; copied unchanged, also used as public/favicon.png)"
   }
 }

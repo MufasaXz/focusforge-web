@@ -17,26 +17,23 @@ function Download({ tone = 'ink', children = 'Download for Android' }: { tone?: 
 }
 
 /**
- * A OnePlus 15, front on: flat display, an even hairline bezel, the centred
+ * A OnePlus 15, front on: flat display, a hairline bezel, the centred
  * punch-hole camera, a Sand Storm frame, the Plus Key on the left and the
  * volume rocker above power on the right. Proportions are the handset's own
  * 76.7 × 161.4 mm; every inner measure is in container-width units, so the
- * phone keeps its shape at any size it is drawn.
+ * phone keeps its shape at any size it is drawn. The screens are real
+ * screenshots, status bar and gesture bar included, so nothing is drawn over
+ * them but the camera.
  */
-function Phone({ src, alt, dark = false, className = '', eager = false }: { src: string; alt: string; dark?: boolean; className?: string; eager?: boolean }) {
-  return <figure className={`op15${dark ? ' op15-dark' : ''}${className ? ' ' + className : ''}`}><div className="op15-body">
+function Phone({ src, alt, className = '', eager = false }: { src: string; alt: string; className?: string; eager?: boolean }) {
+  return <figure className={`op15${className ? ' ' + className : ''}`}><div className="op15-body">
     <span className="op15-key op15-plus" aria-hidden="true"/>
     <span className="op15-key op15-volume" aria-hidden="true"/>
     <span className="op15-key op15-power" aria-hidden="true"/>
     <div className="op15-bezel">
       <div className="op15-screen">
-        <div className="op15-status" aria-hidden="true">
-          <span>10:30</span>
-          <svg viewBox="0 0 54 12"><path d="M1 11h2.4V8H1zM5 11h2.4V6H5zm4 0h2.4V3.6H9zm4 0h2.4V1H13z"/><path d="M27.5 3.2a9 9 0 0 1 6.4 2.6l1.3-1.3a10.8 10.8 0 0 0-15.4 0l1.3 1.3a9 9 0 0 1 6.4-2.6Zm0 3.6a5.4 5.4 0 0 1 3.8 1.6l1.3-1.3a7.2 7.2 0 0 0-10.2 0l1.3 1.3a5.4 5.4 0 0 1 3.8-1.6Zm0 3.6-1.8 1.6 1.8 1.6 1.8-1.6z"/><rect x="39.5" y="2" width="12" height="8" rx="2.2" fill="none" stroke="currentColor" strokeWidth="1.2"/><rect x="41.2" y="3.7" width="7.6" height="4.6" rx="1"/><rect x="52.2" y="4.6" width="1.4" height="2.8" rx=".7"/></svg>
-        </div>
-        <img src={asset(src)} alt={alt} width="780" height="1688" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async"/>
+        <img src={asset(src)} alt={alt} width="720" height="1601" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async"/>
         <span className="op15-camera" aria-hidden="true"/>
-        <span className="op15-gesture" aria-hidden="true"/>
       </div>
     </div>
   </div></figure>;
@@ -79,6 +76,7 @@ function Footer() {
       <a href={source}>Source code</a>
     </nav>
     <p className="footer-note">© {new Date().getFullYear()} FocusForge, by MufasaXz.</p>
+    <p className="footer-wordmark" aria-hidden="true" translate="no">FocusForge</p>
   </footer>;
 }
 
@@ -101,16 +99,23 @@ function Heading({ level = 2, strong, soft, id }: { level?: 1 | 2; strong: strin
 }
 
 const tools = [
-  { key: 'shield', tone: 'lavender', title: 'Close the feed', body: 'Pick the apps that pull you away. Block them, give them a daily budget, or close them only while you focus. Supported YouTube Shorts and feeds can be filtered while lectures stay open.', image: 'images/app-shield.webp', alt: 'FocusForge Shield tab listing apps with blocking switches' },
-  { key: 'focus', tone: 'white', title: 'One timer, full attention', body: 'Start a Pomodoro preset or a plan of your own, tag the subject you are studying, and let rain or a café hum fill the quiet.', image: 'images/app-focus.webp', alt: 'FocusForge focus timer dial set to 25 minutes' },
-  { key: 'progress', tone: 'sage', title: 'See it add up', body: 'Daily goals, weekly totals by subject, home-screen widgets and eighteen achievements make steady work easy to notice.', image: 'images/app-home.webp', alt: 'FocusForge home screen with weekly progress' }
+  { key: 'shield', tone: 'lavender', title: 'Close the feed', body: 'Pick the apps that pull you away. Block them, give them a daily budget, or close them only while you focus. Supported YouTube Shorts and feeds can be filtered while lectures stay open.', image: 'images/shot-shield-light.webp', alt: 'FocusForge Shield tab listing installed apps with a switch for each' },
+  { key: 'focus', tone: 'white', title: 'One timer, full attention', body: 'Start a Pomodoro preset or a plan of your own, tag the subject you are studying, and let rain or a café hum fill the quiet.', image: 'images/shot-focus-light.webp', alt: 'FocusForge focus timer running with 44 minutes left' },
+  { key: 'progress', tone: 'sage', title: 'See it add up', body: 'Daily goals, weekly totals by subject, home-screen widgets and eighteen achievements make steady work easy to notice.', image: 'images/shot-home-light.webp', alt: 'FocusForge home screen showing 45 minutes of focus against a daily goal' }
+];
+
+const gallery = [
+  { name: 'Home', body: 'Today’s goal, sessions and a subject breakdown at a glance.', image: 'images/shot-home-dark.webp', alt: 'FocusForge home screen in dark mode with today’s goal and subject breakdown' },
+  { name: 'Shield', body: 'Your apps, each with its own rule, and nothing read until you agree.', image: 'images/shot-shield-dark.webp', alt: 'FocusForge Shield tab in dark mode listing apps' },
+  { name: 'YouTube filters', body: 'Shorts and the home feed can close while lecture links still open.', image: 'images/shot-youtube-dark.webp', alt: 'FocusForge YouTube filters in dark mode with switches for Shorts and the home feed' },
+  { name: 'The same, in light', body: 'Every screen is designed twice, so neither theme is an afterthought.', image: 'images/shot-youtube-light.webp', alt: 'FocusForge YouTube filters in light mode' }
 ];
 
 function Home() {
   return <>
     <section className="hero" aria-labelledby="hero-title">
       <Heading level={1} id="hero-title" strong="Make room" soft="for what matters."/>
-      <Phone className="hero-phone" src="images/app-focus-dark.webp" alt="FocusForge focus timer in dark mode, rendered from the app with fictional demo data" dark eager/>
+      <Phone className="hero-phone" src="images/shot-focus-dark.webp" alt="FocusForge focus timer counting down a 25-minute block in dark mode" eager/>
       <div className="hero-panel">
         <p className="hero-lead">FocusForge is a free study companion for Android. A focus timer, a calm home for your goals, and a Shield that keeps distracting apps closed while you work.</p>
         <div className="hero-actions"><Download/><a className="text-link" href="#features">Take a closer look</a></div>
@@ -135,7 +140,26 @@ function Home() {
           <Phone src={tool.image} alt={tool.alt}/>
         </article>)}
       </div>
-      <p className="caption">Phone screens are rendered from the FocusForge app with fictional demo data.</p>
+    </section>
+
+    <section className="gallery" aria-labelledby="gallery-title">
+      <div className="section-intro"><Heading id="gallery-title" strong="Light by day" soft="dark by night."/><p>FocusForge follows your phone’s theme, so a late session stays easy on the eyes.</p></div>
+      <ul className="gallery-grid">
+        {gallery.map(item => <li key={item.image}>
+          <div className="gallery-tile"><Phone src={item.image} alt={item.alt}/></div>
+          <h3>{item.name}</h3><p>{item.body}</p>
+        </li>)}
+      </ul>
+      <p className="caption">Screenshots of FocusForge running on a real Android phone.</p>
+    </section>
+
+    <section className="session" aria-labelledby="session-title">
+      <Heading id="session-title" strong="One session" soft="from start to finish."/>
+      <ol>
+        <li><h3>Pick a plan</h3><p>Choose a Pomodoro preset or your own rhythm, and tag the subject you are about to study.</p></li>
+        <li><h3>Shield takes over</h3><p>The apps you chose close for the length of the block. Lecture links on YouTube still open.</p></li>
+        <li><h3>The minutes are kept</h3><p>When the block ends, the session lands on today’s goal, your week and your subject totals.</p></li>
+      </ol>
     </section>
 
     <section className="trust" id="privacy" aria-labelledby="trust-title">
@@ -149,8 +173,10 @@ function Home() {
     </section>
 
     <section className="faq" id="faq" aria-labelledby="faq-title">
-      <div className="faq-side"><Heading id="faq-title" strong="Good questions" soft="before you begin."/><p>Something else on your mind? <a href={pageLink('/support')}>Ask us directly.</a></p></div>
-      <div className="faq-list">{faq.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}{q.startsWith('Can I delete') && <> <a href={pageLink('/delete-account')}>Delete your account</a>.</>}</p></details>)}</div>
+      <div className="faq-head"><Heading id="faq-title" strong="Good questions" soft="before you begin."/><p>Something else on your mind? <a href={pageLink('/support')}>Ask us directly.</a></p></div>
+      {/* Two independent lists rather than CSS columns, so opening an answer
+          lengthens its own column and nothing jumps across. */}
+      <div className="faq-columns">{[faq.slice(0, 5), faq.slice(5)].map((half, column) => <div className="faq-list" key={column}>{half.map(([q, a]) => <details key={q}><summary>{q}</summary><p>{a}{q.startsWith('Can I delete') && <> <a href={pageLink('/delete-account')}>Delete your account</a>.</>}</p></details>)}</div>)}</div>
     </section>
 
     <section className="closing" aria-labelledby="closing-title">
