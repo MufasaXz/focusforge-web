@@ -5,7 +5,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 // Ship real HTML for every public route, including legal text with JS disabled.
 const vite = await createServer({ server: { middlewareMode: true }, appType: 'custom' });
 try {
- const { default: App, ROUTES, pageTitles } = await vite.ssrLoadModule('/src/App.tsx');
+ const { default: App, ROUTES, pageTitles, pageDescriptions } = await vite.ssrLoadModule('/src/App.tsx');
  const { pageLink } = await vite.ssrLoadModule('/src/paths.ts');
  const template = await readFile('dist/index.html', 'utf8');
  const base = vite.config.base;
@@ -24,7 +24,7 @@ try {
   let html = template.replace('<div id="root"></div>', `<div id="root">${renderToString(createElement(App, { path }))}</div>`).replace(/<title>.*?<\/title>/, `<title>${title}</title>`).replace(/<meta property="og:title" content="[^"]*"\/>/, `<meta property="og:title" content="${title}"/>`);
   if (path !== '/') {
    const descriptions = { '/get-on-play': 'Help bring FocusForge to Google Play. Join the Google Group, become a tester, install the app and share honest feedback during the 14-day closed test.', '/privacy': 'Read the FocusForge privacy policy: Android permissions, local data, Firebase accounts, optional sharing, retention and deletion.', '/terms': 'Terms of use for the FocusForge Android app and website.', '/support': 'Contact FocusForge support for installation, permissions, account and privacy help.', '/delete-account': 'Sign in with email or Google to permanently delete your FocusForge account and associated cloud data, without reinstalling the app.' };
-   const description = descriptions[path] || 'This FocusForge page could not be found.';
+   const description = descriptions[path] || pageDescriptions[path] || 'This FocusForge page could not be found.';
    html = html.replace(/<meta name="description" content="[^"]*"\/>/, `<meta name="description" content="${description}"/>`).replace(/<meta property="og:description" content="[^"]*"\/>/, `<meta property="og:description" content="${description}"/>`);
   }
   if (origin) {

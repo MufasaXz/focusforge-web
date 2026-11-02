@@ -4,15 +4,39 @@ import VerifyEmail from './VerifyEmail';
 import GetOnPlay from './GetOnPlay';
 import './getOnPlay.css';
 import { asset, pageLink } from './paths';
+import { guides, guideFor, type Guide } from './guides';
 
 export const DOWNLOAD = 'https://github.com/MufasaXz/focusforge/releases/latest';
 export const EMAIL = 'focusforgehelp@gmail.com';
 // Downloads across every channel, as stated by the developer (2 Nov 2026).
 // GitHub releases alone counted 528 that day.
 export const DOWNLOADS = '10K+';
-export const ROUTES = ['/', '/privacy', '/terms', '/support', '/delete-account', '/get-on-play', '/verify-email'];
+export const ROUTES = ['/', '/guides', ...guides.map(guide => guide.slug), '/privacy', '/terms', '/support', '/delete-account', '/get-on-play', '/verify-email'];
+export const SITE = 'https://focusforgeorg.vercel.app';
 const source = 'https://github.com/MufasaXz/focusforge';
-export const pageTitles: Record<string, string> = { '/': 'FocusForge — Make room for what matters.', '/privacy': 'Privacy policy — FocusForge', '/terms': 'Terms of use — FocusForge', '/support': 'Support — FocusForge', '/delete-account': 'Delete your account — FocusForge', '/get-on-play': 'Join the Play Store test — FocusForge', '/verify-email': 'Verify your email — FocusForge' };
+export const pageTitles: Record<string, string> = { '/': 'FocusForge — Make room for what matters.', '/guides': 'Study guides — FocusForge', ...Object.fromEntries(guides.map(guide => [guide.slug, `${guide.title} — FocusForge`])), '/privacy': 'Privacy policy — FocusForge', '/terms': 'Terms of use — FocusForge', '/support': 'Support — FocusForge', '/delete-account': 'Delete your account — FocusForge', '/get-on-play': 'Join the Play Store test — FocusForge', '/verify-email': 'Verify your email — FocusForge' };
+
+/** Descriptions for routes the prerender cannot name on its own. */
+export const pageDescriptions: Record<string, string> = {
+  '/guides': 'Practical study guides from FocusForge: the Pomodoro technique, blocking distracting apps on Android, and building a habit that lasts through exams.',
+  ...Object.fromEntries(guides.map(guide => [guide.slug, guide.description]))
+};
+
+/** Structured data, escaped so no value can close the script element. */
+function JsonLd({ data }: { data: object }) {
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, '\\u003c') }}/>;
+}
+const organization = {
+  '@type': 'Organization',
+  '@id': `${SITE}/#organization`,
+  name: 'FocusForge',
+  url: `${SITE}/`,
+  logo: `${SITE}/images/focusforge-icon.png`,
+  email: 'focusforgehelp@gmail.com',
+  description: 'FocusForge makes a free, open-source study companion for Android.',
+  founder: { '@type': 'Person', name: 'MufasaXz', url: 'https://github.com/MufasaXz' },
+  sameAs: ['https://github.com/MufasaXz/focusforge']
+};
 
 function Mark() { return <img className="mark" src={asset('images/focusforge-icon.png')} alt="" width="32" height="32" aria-hidden="true"/>; }
 function Download({ tone = 'ink', children = 'Download for Android' }: { tone?: 'ink' | 'light' | 'outline'; children?: React.ReactNode }) {
@@ -61,8 +85,8 @@ function Header() {
     <nav id="navigation" className={open ? 'open' : ''} aria-label="Main navigation">
       <a href={pageLink('/#features')} onClick={shut}>Features</a>
       <a href={pageLink('/#privacy')} onClick={shut}>Your data</a>
+      <a href={pageLink('/guides')} onClick={shut}>Guides</a>
       <a href={pageLink('/#faq')} onClick={shut}>Questions</a>
-      <a href={pageLink('/support')} onClick={shut}>Support</a>
       <Download tone="outline">Download</Download>
     </nav>
   </header>;
@@ -70,8 +94,9 @@ function Header() {
 
 function Footer() {
   return <footer className="footer">
-    <div className="footer-brand"><a className="wordmark" href={pageLink('/')} translate="no"><Mark/>FocusForge</a><p>A quieter phone for the hours that matter. Free and open source, made for Android.</p></div>
+    <div className="footer-brand"><a className="wordmark" href={pageLink('/')} translate="no"><Mark/>FocusForge</a><p>A quieter phone for the hours that matter, made for Android and published in the open.</p></div>
     <nav aria-label="Legal and support">
+      <a href={pageLink('/guides')}>Guides</a>
       <a href={pageLink('/privacy')}>Privacy policy</a>
       <a href={pageLink('/terms')}>Terms</a>
       <a href={pageLink('/support')}>Support</a>
@@ -97,9 +122,9 @@ function Heading({ level = 2, strong, soft, id }: { level?: 1 | 2; strong: strin
 }
 
 const tools = [
-  { key: 'shield', tone: 'lavender', title: 'Close the feed', body: 'Pick the apps that pull you away. Block them, give them a daily budget, or close them only while you focus. Supported YouTube Shorts and feeds can be filtered while lectures stay open.', image: 'images/shot-shield-dark.webp', alt: 'FocusForge Shield tab in dark mode listing installed apps with a switch for each', lightImage: 'images/shot-shield-light.webp', lightAlt: 'FocusForge Shield tab in light mode listing installed apps with a switch for each' },
-  { key: 'focus', tone: 'white', title: 'One timer, full attention', body: 'Start a Pomodoro preset or a plan of your own, tag the subject you are studying, and let rain or a café hum fill the quiet.', image: 'images/shot-focus-dark.webp', alt: 'FocusForge focus timer in dark mode counting down a 25-minute block', lightImage: 'images/shot-focus-light.webp', lightAlt: 'FocusForge focus timer in light mode with 44 minutes left' },
-  { key: 'progress', tone: 'sage', title: 'See it add up', body: 'Daily goals, weekly totals by subject, home-screen widgets and eighteen achievements make steady work easy to notice.', image: 'images/shot-home-dark.webp', alt: 'FocusForge home screen in dark mode with today’s focus, goal and subject breakdown', lightImage: 'images/shot-home-light.webp', lightAlt: 'FocusForge home screen in light mode with 45 minutes of focus against the daily goal' }
+  { key: 'shield', tone: 'lavender', title: 'Close the feed', body: 'Pick the apps that pull you away, then shut them outright, cap them with a daily budget, or silence them only during study blocks. YouTube’s Shorts player and home feed can vanish while lecture links keep working.', image: 'images/shot-shield-dark.webp', alt: 'FocusForge Shield tab in dark mode listing installed apps with a switch for each', lightImage: 'images/shot-shield-light.webp', lightAlt: 'FocusForge Shield tab in light mode listing installed apps with a switch for each' },
+  { key: 'focus', tone: 'white', title: 'A timer that respects the work', body: 'Choose a Pomodoro preset or design your own rhythm, label what is open on the desk, and let rain, forest or café ambience cover the silence.', image: 'images/shot-focus-dark.webp', alt: 'FocusForge focus timer in dark mode counting down a 25-minute block', lightImage: 'images/shot-focus-light.webp', lightAlt: 'FocusForge focus timer in light mode with 44 minutes left' },
+  { key: 'progress', tone: 'sage', title: 'Proof that it adds up', body: 'Daily targets, weekly totals for every course and home-screen widgets turn scattered sessions into a record you can actually see.', image: 'images/shot-home-dark.webp', alt: 'FocusForge home screen in dark mode with today’s focus, goal and subject breakdown', lightImage: 'images/shot-home-light.webp', lightAlt: 'FocusForge home screen in light mode with 45 minutes of focus against the daily goal' }
 ];
 
 /**
@@ -173,28 +198,41 @@ function Odometer({ value }: { value: string }) {
 type Tool = (typeof tools)[number];
 
 /**
- * A tool card with two faces: the pastel card holds the dark-theme screen, and
- * a turn shows the same screen in light on a black card. One real button,
- * stretched over the whole card, does the turning, so a click anywhere works
- * and the keyboard and screen readers get a single labelled, pressed control.
- * The face turned away is inert, so its copy is never read twice.
+ * A tool card that turns over to show its screen in the other theme. The card
+ * keeps its colour on both sides and only the phone changes; the theme label is
+ * printed on each face, so it turns with the card. The title and text exist
+ * once, above the turning layers, and fade out only while the card is edge-on,
+ * so nothing is duplicated for crawlers or screen readers. One real button,
+ * stretched over the card, does the turning: a click anywhere works, and the
+ * keyboard and assistive tech get a single labelled, pressed control.
  */
 function ToolCard({ tool }: { tool: Tool }) {
   const [light, setLight] = useState(false);
+  const [turning, setTurning] = useState(false);
+  const timer = useRef(0);
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  const turn = () => {
+    setLight(value => !value);
+    if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+    setTurning(true);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setTurning(false), 560);
+  };
   const face = (side: 'front' | 'back') => {
     const shown = side === 'front' ? !light : light;
-    return <div className={`tool-face tool-${side === 'front' ? tool.tone : 'ink'}`} aria-hidden={!shown} inert={!shown}>
-      <div className="tool-copy"><h3>{tool.title}</h3><p>{tool.body}</p></div>
+    return <div className={`tool-face tool-${tool.tone}${side === 'back' ? ' tool-back' : ''}`} aria-hidden={!shown} inert={!shown}>
+      <span className="tool-label" aria-hidden="true">{side === 'front' ? <><Sun/>Light</> : <><Moon/>Dark</>}</span>
       <Phone src={side === 'front' ? tool.image : tool.lightImage} alt={side === 'front' ? tool.alt : tool.lightAlt}/>
     </div>;
   };
-  return <article className={`tool${light ? ' is-light' : ''}`}>
+  return <article className={`tool${light ? ' is-light' : ''}${turning ? ' is-turning' : ''}`}>
     <div className="tool-turn">{face('front')}{face('back')}</div>
-    <button type="button" className="tool-flip" aria-pressed={light} aria-label={`${tool.title}: show the ${light ? 'dark' : 'light'} theme`} onClick={() => setLight(value => !value)}>
-      <span aria-hidden="true">{light ? 'See it in dark' : 'See it in light'}</span>
-    </button>
+    <div className="tool-copy"><h3>{tool.title}</h3><p>{tool.body}</p></div>
+    <button type="button" className="tool-flip" aria-pressed={light} aria-label={`${tool.title}: show the ${light ? 'dark' : 'light'} theme`} onClick={turn}/>
   </article>;
 }
+const Sun = () => <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" strokeWidth="1.5"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3 3l1.1 1.1M11.9 11.9 13 13M3 13l1.1-1.1M11.9 4.1 13 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>;
+const Moon = () => <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 9.6A5.6 5.6 0 0 1 6.4 2.5a5.6 5.6 0 1 0 7.1 7.1Z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>;
 
 /**
  * Plays a section's entrance once, when it first comes into view: the session
@@ -219,17 +257,46 @@ function useRevealOnce<T extends HTMLElement = HTMLElement>() {
   return ref;
 }
 
+/** A plain section heading: one weight, sentence case, no second voice. */
+function Title({ id, children }: { id: string; children: React.ReactNode }) {
+  return <h2 className="title" id={id}>{children}</h2>;
+}
+
 function Home() {
   const session = useRevealOnce();
   const facts = useRevealOnce();
+  const graph = {
+    '@context': 'https://schema.org',
+    '@graph': [
+      organization,
+      { '@type': 'WebSite', '@id': `${SITE}/#website`, url: `${SITE}/`, name: 'FocusForge', publisher: { '@id': `${SITE}/#organization` }, inLanguage: 'en' },
+      {
+        '@type': 'MobileApplication',
+        '@id': `${SITE}/#app`,
+        name: 'FocusForge',
+        description: 'A free study companion for Android with a focus timer, Shield app blocking, YouTube Shorts filters and progress tracking.',
+        applicationCategory: 'EducationalApplication',
+        operatingSystem: 'Android 7.0 or later',
+        isAccessibleForFree: true,
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+        downloadUrl: DOWNLOAD,
+        image: `${SITE}/images/focusforge-icon.png`,
+        screenshot: ['shot-focus-dark', 'shot-shield-dark', 'shot-home-dark'].map(name => `${SITE}/images/${name}.webp`),
+        publisher: { '@id': `${SITE}/#organization` },
+        author: { '@id': `${SITE}/#organization` }
+      },
+      { '@type': 'FAQPage', '@id': `${SITE}/#faq`, mainEntity: faq.map(([question, answer]) => ({ '@type': 'Question', name: question, acceptedAnswer: { '@type': 'Answer', text: answer } })) }
+    ]
+  };
   return <>
+    <JsonLd data={graph}/>
     <section className="hero" aria-labelledby="hero-title">
       <Heading level={1} id="hero-title" strong="Make room" soft="for what matters."/>
       <Phone className="hero-phone" src="images/shot-focus-dark.webp" alt="FocusForge focus timer counting down a 25-minute block in dark mode" eager/>
       <div className="hero-panel">
-        <p className="hero-lead">FocusForge is a free study companion for Android. A focus timer, a calm home for your goals, and a Shield that keeps distracting apps closed while you work.</p>
+        <p className="hero-lead">FocusForge pairs a calm study timer with Shield, a gentle lock on whatever quietly swallows your evenings.</p>
         <div className="hero-actions"><Download/><a className="text-link" href="#features">Take a closer look</a></div>
-        <p className="hero-note">Free and open source, with no ads. Android 7.0 and up.</p>
+        <p className="hero-note">Costs nothing, shows no ads, and runs on Android 7.0 or newer.</p>
       </div>
     </section>
 
@@ -238,34 +305,43 @@ function Home() {
     </section>
 
     <section className="tools" id="features" aria-labelledby="tools-title">
-      <div className="section-intro"><Heading id="tools-title" strong="Three tools" soft="for a quieter phone."/><p>Everything you need to turn “I should study” into “I’m glad I did.”</p></div>
+      <div className="section-intro"><Title id="tools-title">Three tools that work as one</Title><p>Shield guards the hour, the timer paces it, and your log remembers it.</p></div>
       <div className="tool-grid">
         {tools.map(tool => <ToolCard key={tool.key} tool={tool}/>)}
       </div>
-      <p className="caption">Screenshots of FocusForge running on a real Android phone.</p>
+      <p className="caption">Screenshots of FocusForge running on a real Android phone. Tap a card to see the other theme.</p>
     </section>
 
     <section className="session" ref={session} aria-labelledby="session-title">
-      <Heading id="session-title" strong="One session" soft="from start to finish."/>
+      <Title id="session-title">How a session unfolds</Title>
       <ol>
-        <li><h3>Pick a plan</h3><p>Choose a Pomodoro preset or your own rhythm, and tag the subject you are about to study.</p></li>
-        <li><h3>Shield takes over</h3><p>The apps you chose close for the length of the block. Lecture links on YouTube still open.</p></li>
-        <li><h3>The minutes are kept</h3><p>When the block ends, the session lands on today’s goal, your week and your subject totals.</p></li>
+        <li><h3>Choose a rhythm</h3><p>Fifteen minutes, ninety, or anything between. Tag the subject so the time lands where it belongs.</p></li>
+        <li><h3>Shield steps in</h3><p>Whatever you marked off-limits stays shut until the block ends. Lecture videos still play.</p></li>
+        <li><h3>The work is counted</h3><p>Finished blocks feed today’s goal, the weekly chart and each subject’s total.</p></li>
       </ol>
     </section>
 
     <section className="trust" id="privacy" aria-labelledby="trust-title">
-      <Heading id="trust-title" strong="Your phone" soft="keeps your data."/>
-      <ul>
-        <li><h3>Your app list stays here</h3><p>FocusForge asks before it reads which apps you have installed. That list and your screen time never leave your phone.</p></li>
-        <li><h3>No ads, no trackers</h3><p>There is no advertising or analytics SDK in the app, and none on this website.</p></li>
-        <li><h3>Leave whenever you like</h3><p>Delete your account and its cloud data from the app, or <a href={pageLink('/delete-account')}>from this website</a>.</p></li>
-      </ul>
-      <a className="button button-light" href={pageLink('/privacy')}>Read the privacy policy</a>
+      <div className="trust-intro">
+        <Title id="trust-title">What never leaves your phone</Title>
+        <p>Shield has to know which apps you open. That knowledge stays on the device, by design rather than by promise.</p>
+        <a className="button button-light" href={pageLink('/privacy')}>Read the privacy policy</a>
+      </div>
+      <dl>
+        <div><dt>Your app list</dt><dd>Read only after you agree to an in-app disclosure, and never uploaded.</dd></div>
+        <div><dt>Your screen time</dt><dd>Usage minutes drive budgets and the Home chart without being sent anywhere.</dd></div>
+        <div><dt>Ads and trackers</dt><dd>Neither the app nor this site carries an advertising or analytics SDK.</dd></div>
+        <div><dt>Your account</dt><dd>Delete it, along with its cloud backup, inside the app or <a href={pageLink('/delete-account')}>here on the web</a>.</dd></div>
+      </dl>
+    </section>
+
+    <section className="reading" aria-labelledby="reading-title">
+      <div className="section-intro"><Title id="reading-title">Read before your next exam</Title><p><a className="text-link" href={pageLink('/guides')}>All guides</a></p></div>
+      <ul className="reading-list">{guides.map(guide => <li key={guide.slug}><a href={pageLink(guide.slug)}><span className="reading-time">{guide.minutes} min read</span><h3>{guide.title}</h3><p>{guide.description}</p></a></li>)}</ul>
     </section>
 
     <section className="faq" id="faq" aria-labelledby="faq-title">
-      <div className="faq-head"><Heading id="faq-title" strong="Good questions" soft="before you begin."/><p>Something else on your mind? <a href={pageLink('/support')}>Ask us directly.</a></p></div>
+      <div className="faq-head"><Title id="faq-title">Questions worth asking</Title><p>Not covered here? <a href={pageLink('/support')}>Write to us.</a></p></div>
       {/* Two independent lists rather than CSS columns, so opening an answer
           lengthens its own column and nothing jumps across. */}
       <div className="faq-columns">{[faq.slice(0, 3), faq.slice(3)].map((half, column) => <div className="faq-list" key={column}>{half.map(([q, a]) => <FaqItem key={q} question={q} answer={a}/>)}</div>)}</div>
@@ -274,13 +350,52 @@ function Home() {
     <section className="closing" aria-labelledby="closing-title">
       <div className="closing-copy">
         <Heading id="closing-title" strong="Less scrolling." soft="More becoming."/>
-        <p className="closing-lead">Your next good study session is one download away. No account needed to start.</p>
+        <p className="closing-lead">Install it tonight and start your first block tomorrow morning. No account required.</p>
         <div className="closing-actions"><Download/><a className="text-link" href={source}>View the source</a></div>
-        <p className="closing-note">Android 7.0 and up. Free and open source, with no ads.</p>
       </div>
       <Phone className="closing-phone" src="images/shot-focus-light.webp" alt="FocusForge focus timer in light mode with 44 minutes left"/>
     </section>
   </>;
+}
+
+function GuidesIndex() {
+  return <main id="main" className="legal guides">
+    <JsonLd data={{ '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Study guides', url: `${SITE}/guides`, publisher: organization, hasPart: guides.map(guide => ({ '@type': 'Article', headline: guide.title, url: `${SITE}${guide.slug}` })) }}/>
+    <a className="text-link back-link" href={pageLink('/')}>Back to FocusForge</a>
+    <p className="legal-kicker">Guides</p>
+    <h1 className="legal-title">Study better, scroll less.</h1>
+    <p className="legal-intro">Short, practical reading on focus, phone habits and exam preparation, written alongside the app.</p>
+    <ul className="reading-list reading-index">{guides.map(guide => <li key={guide.slug}><a href={pageLink(guide.slug)}><span className="reading-time">{guide.minutes} min read</span><h2>{guide.title}</h2><p>{guide.description}</p></a></li>)}</ul>
+  </main>;
+}
+
+function GuidePage({ guide }: { guide: Guide }) {
+  const others = guides.filter(other => other.slug !== guide.slug);
+  return <main id="main" className="legal article">
+    <JsonLd data={{
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      headline: guide.title,
+      description: guide.description,
+      datePublished: guide.published,
+      dateModified: guide.published,
+      mainEntityOfPage: `${SITE}${guide.slug}`,
+      image: `${SITE}/images/focusforge-icon.png`,
+      author: organization,
+      publisher: organization,
+      inLanguage: 'en'
+    }}/>
+    <a className="text-link back-link" href={pageLink('/guides')}>All guides</a>
+    <p className="legal-kicker">A {guide.minutes}-minute read, published <time dateTime={guide.published}>{new Date(guide.published + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}</time></p>
+    <h1 className="legal-title">{guide.title}</h1>
+    <p className="legal-intro">{guide.description}</p>
+    <div className="legal-body article-body">{guide.sections.map((section, i) => <section key={i}>{section.heading && <h2>{section.heading}</h2>}{section.paragraphs.map((paragraph, j) => <p key={j}>{paragraph}</p>)}</section>)}</div>
+    <aside className="article-next" aria-labelledby="next-title">
+      <h2 id="next-title">Keep reading</h2>
+      <ul className="reading-list">{others.map(other => <li key={other.slug}><a href={pageLink(other.slug)}><span className="reading-time">{other.minutes} min read</span><h3>{other.title}</h3></a></li>)}</ul>
+      <p>Ready to try it? <a href={DOWNLOAD}>Download FocusForge for Android</a>.</p>
+    </aside>
+  </main>;
 }
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) { return <section><h2>{title}</h2>{children}</section>; }
@@ -325,5 +440,5 @@ function Legal({ path }: { path: string }) {
 }
 export default function App({ path = '/' }: { path?: string }) {
  useEffect(() => { document.title = pageTitles[path] || 'Page not found — FocusForge'; }, [path]);
- return <div className="sheet"><a className="skip-link" href="#main">Skip to content</a><Header/>{path === '/' ? <main id="main"><Home/></main> : path === '/verify-email' ? <VerifyEmail/> : path === '/get-on-play' ? <GetOnPlay/> : ROUTES.includes(path) ? <Legal path={path}/> : <main id="main" className="legal"><h1 className="legal-title">Let’s find your focus.</h1><p className="legal-intro">This page doesn’t exist.</p><a href={pageLink("/")} className="button button-ink">Back to home</a></main>}<Footer/></div>;
+ return <div className="sheet"><a className="skip-link" href="#main">Skip to content</a><Header/>{path === '/' ? <main id="main"><Home/></main> : path === '/guides' ? <GuidesIndex/> : guideFor(path) ? <GuidePage guide={guideFor(path)!}/> : path === '/verify-email' ? <VerifyEmail/> : path === '/get-on-play' ? <GetOnPlay/> : ROUTES.includes(path) ? <Legal path={path}/> : <main id="main" className="legal"><h1 className="legal-title">Let’s find your focus.</h1><p className="legal-intro">This page doesn’t exist.</p><a href={pageLink("/")} className="button button-ink">Back to home</a></main>}<Footer/></div>;
 }

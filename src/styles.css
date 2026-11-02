@@ -69,6 +69,9 @@ a,button,summary{touch-action:manipulation;-webkit-tap-highlight-color:rgba(28,2
 .display .soft{font-size:clamp(2.6rem,8.2vw,7.6rem);line-height:1;margin-top:.04em}
 .heading .strong{font-size:clamp(2.4rem,5.6vw,5rem);line-height:.92}
 .heading .soft{font-size:clamp(2rem,4.6vw,4.2rem);line-height:1.04}
+/* Every other section speaks in one plain voice; the two-line display is
+   kept for the opening and the closing only. */
+.title{max-width:18ch;margin:0;font-size:clamp(2rem,4.2vw,3.4rem);font-weight:700;line-height:1.05;letter-spacing:-.03em}
 
 /* ---- Hero ------------------------------------------------------------- */
 .hero{--phone:clamp(230px,22vw,320px);display:grid;grid-template-columns:minmax(0,1fr) var(--phone);grid-template-rows:auto 1fr;column-gap:clamp(24px,5vw,80px);padding:clamp(20px,3vw,40px) var(--gutter) var(--gutter)}
@@ -114,30 +117,31 @@ a,button,summary{touch-action:manipulation;-webkit-tap-highlight-color:rgba(28,2
 .section-intro{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:20px 48px;margin-bottom:clamp(32px,4vw,56px)}
 .section-intro p{max-width:30ch;margin:0;font-size:1.125rem;color:var(--muted)}
 .tool-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,1.6vw,22px)}
-/* Each card turns over to show its screen in the other theme. The two faces
-   share one grid cell, so the card is as tall as its taller face. */
-.tool{position:relative;min-height:clamp(560px,52vw,700px);perspective:1800px}
-.tool-turn{display:grid;min-height:inherit;transform-style:preserve-3d;transition:transform .8s ease-in-out}
+/* Each card turns over to show its phone in the other theme. The copy sits
+   once, above the turning faces, in the first row of the card's grid; the
+   faces share those rows through subgrid, so each phone always starts below
+   the copy at any width. */
+.tool{position:relative;display:grid;grid-template-rows:auto 1fr;min-height:clamp(560px,52vw,700px);perspective:1800px}
+.tool-turn{grid-row:1/3;grid-column:1;display:grid;grid-template-rows:subgrid;transform-style:preserve-3d;transition:transform .8s ease-in-out}
 .tool.is-light .tool-turn{transform:rotateY(180deg)}
-.tool-face{grid-area:1/1;display:flex;flex-direction:column;gap:32px;padding:clamp(24px,2.6vw,36px) clamp(24px,2.6vw,36px) 0;border-radius:var(--radius);overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
-.tool-face.tool-ink{transform:rotateY(180deg)}
+.tool-face{position:relative;grid-row:1/3;grid-column:1;display:grid;grid-template-rows:subgrid;padding:0 clamp(24px,2.6vw,36px);border-radius:var(--radius);overflow:hidden;backface-visibility:hidden;-webkit-backface-visibility:hidden}
+.tool-face.tool-back{transform:rotateY(180deg)}
+.tool-face .op15{grid-row:2}
 .tool-lavender{background:var(--lavender)}
 .tool-white{background:var(--white)}
 .tool-sage{background:var(--sage)}
-.tool-ink{background:var(--ink);color:var(--sheet)}
-.tool h3{margin:0 0 10px;padding-right:clamp(120px,12vw,150px);font-size:clamp(1.5rem,2.2vw,1.875rem);font-weight:700;line-height:1.15;letter-spacing:-.02em}
+.tool-copy{grid-row:1;grid-column:1;position:relative;z-index:2;padding:clamp(24px,2.6vw,36px) clamp(24px,2.6vw,36px) 32px;pointer-events:none;transition:opacity .2s ease}
+.tool.is-turning .tool-copy{opacity:0}
+.tool h3{margin:0 0 10px;padding-right:clamp(84px,8vw,104px);font-size:clamp(1.5rem,2.2vw,1.875rem);font-weight:700;line-height:1.15;letter-spacing:-.02em}
 .tool p{margin:0;max-width:38ch;color:#3f3c36;line-height:1.55}
-.tool-ink p{color:rgba(245,245,243,.72)}
-/* The button's hit area is the whole card; its visible part is the label. */
-.tool-flip{position:static;margin:0;padding:0;border:0;background:none;font:inherit;color:inherit;cursor:pointer}
-.tool-flip::after{content:'';position:absolute;inset:0;z-index:3;border-radius:var(--radius)}
-.tool-flip:focus-visible{outline:none}
-.tool-flip:focus-visible::after{outline:2px solid var(--ink);outline-offset:4px}
-.tool-flip span{position:absolute;top:clamp(20px,2.2vw,30px);right:clamp(20px,2.2vw,30px);z-index:2;display:inline-flex;align-items:center;min-height:34px;padding:0 14px;border:1px solid rgba(28,26,23,.22);border-radius:999px;background:rgba(255,255,255,.62);color:var(--ink);font-size:.8125rem;font-weight:600;white-space:nowrap;transition:background-color .18s ease,color .18s ease,border-color .18s ease}
-.tool:hover .tool-flip span{background:var(--white)}
-.tool.is-light .tool-flip span{border-color:rgba(245,245,243,.3);background:rgba(245,245,243,.1);color:var(--sheet)}
-.tool.is-light:hover .tool-flip span{background:rgba(245,245,243,.2)}
-.tool .op15{width:min(72%,290px);margin:auto auto -46%}
+/* The button is invisible and covers the card; the label lives on each face,
+   so it turns over with the card. */
+.tool-flip{position:absolute;inset:0;z-index:3;margin:0;padding:0;border:0;border-radius:var(--radius);background:none;cursor:pointer}
+.tool-flip:focus-visible{outline:2px solid var(--ink);outline-offset:4px}
+.tool-label{position:absolute;top:clamp(20px,2.2vw,30px);right:clamp(20px,2.2vw,30px);display:inline-flex;align-items:center;gap:6px;min-height:34px;padding:0 13px 0 11px;border:1px solid rgba(28,26,23,.22);border-radius:999px;background:rgba(255,255,255,.62);font-size:.8125rem;font-weight:600;white-space:nowrap;transition:background-color .18s ease}
+.tool-label svg{width:15px;height:15px}
+.tool:hover .tool-label{background:var(--white)}
+.tool .op15{width:min(72%,290px);margin:0 auto -46%;align-self:end}
 .caption{margin:20px 0 0;font-size:.875rem;color:var(--muted)}
 
 /* ---- One session ------------------------------------------------------ */
@@ -155,18 +159,36 @@ a,button,summary{touch-action:manipulation;-webkit-tap-highlight-color:rgba(28,2
 .session[data-reveal=played] li::before,.session[data-reveal=played] h3,.session[data-reveal=played] li p{opacity:1;transform:none;transition:opacity .6s ease-out,transform .6s ease-out;transition-delay:calc(var(--step,0) * .5s + .35s)}
 .session[data-reveal=played] h3{transition-delay:calc(var(--step,0) * .5s + .45s)}
 .session[data-reveal=played] li p{transition-delay:calc(var(--step,0) * .5s + .55s)}
+.session li::before{content:counter(step);display:block;margin-bottom:18px;font-size:clamp(2.6rem,4.4vw,4rem);font-weight:300;font-style:italic;line-height:1;font-variant-numeric:lining-nums}
 .session h3{margin:0 0 8px;font-size:1.375rem;font-weight:700;letter-spacing:-.015em}
 .session p{margin:0;max-width:36ch;color:var(--muted)}
 
 /* ---- Trust (dark) ----------------------------------------------------- */
-.trust{margin:0 var(--gutter);padding:clamp(40px,6vw,88px);border-radius:var(--radius);background:var(--ink);color:var(--sheet)}
-.trust .heading .soft{color:#cfcbef}
-.trust ul{list-style:none;margin:clamp(40px,5vw,64px) 0 clamp(36px,4vw,52px);padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(24px,3vw,48px)}
-.trust li{padding-top:20px;border-top:1px solid rgba(245,245,243,.18)}
-.trust h3{margin:0 0 10px;font-size:1.25rem;font-weight:700;letter-spacing:-.01em}
-.trust p{margin:0;color:rgba(245,245,243,.72)}
+.trust{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:clamp(36px,6vw,104px);margin:0 var(--gutter);padding:clamp(40px,6vw,88px);border-radius:var(--radius);background:var(--ink);color:var(--sheet)}
+.trust-intro p{max-width:34ch;margin:22px 0 32px;font-size:1.125rem;color:rgba(245,245,243,.74)}
+.trust dl{margin:0;display:grid;gap:0}
+.trust dl>div{display:grid;grid-template-columns:minmax(9rem,.42fr) minmax(0,1fr);gap:16px 28px;padding:22px 0;border-bottom:1px solid rgba(245,245,243,.16)}
+.trust dl>div:first-child{padding-top:4px}
+.trust dt{font-size:1.125rem;font-weight:700;letter-spacing:-.01em}
+.trust dd{margin:0;color:rgba(245,245,243,.74)}
 .trust a:not(.button){color:var(--sheet)}
 .trust :focus-visible{outline-color:var(--sheet)}
+
+/* ---- Reading ---------------------------------------------------------- */
+.reading{padding:clamp(72px,10vw,140px) var(--gutter) 0}
+.reading-list{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:clamp(14px,1.6vw,22px)}
+.reading-list a{display:flex;flex-direction:column;height:100%;padding:clamp(22px,2.4vw,32px);border:1px solid var(--line);border-radius:var(--radius);background:var(--white);text-decoration:none;transition:border-color .18s ease}
+.reading-list a:hover{border-color:var(--ink)}
+.reading-time{font-size:.875rem;font-weight:600;color:var(--gold)}
+.reading-list h3,.reading-list h2{margin:14px 0 10px;font-size:clamp(1.25rem,1.8vw,1.5rem);font-weight:700;line-height:1.2;letter-spacing:-.015em}
+.reading-list p{margin:0;color:var(--muted);font-size:.9375rem}
+.reading-index{grid-template-columns:1fr;margin-top:clamp(36px,5vw,56px)}
+.article-body section{border-top:0;padding-top:0}
+.article-body p{font-size:1.125rem;line-height:1.7}
+.article-next{margin-top:clamp(48px,7vw,88px);padding-top:clamp(28px,3.4vw,40px);border-top:1px solid var(--line)}
+.article-next h2{margin:0 0 20px;font-size:1.5rem;font-weight:700}
+.article-next .reading-list{grid-template-columns:repeat(2,minmax(0,1fr))}
+.article-next>p{margin:28px 0 0}
 
 /* ---- FAQ -------------------------------------------------------------- */
 .faq{padding:clamp(72px,10vw,140px) var(--gutter)}
@@ -230,7 +252,9 @@ a,button,summary{touch-action:manipulation;-webkit-tap-highlight-color:rgba(28,2
   .session ol{grid-template-columns:1fr}
   .tool{min-height:0}
   .tool .op15{width:min(62%,280px);margin-bottom:-58%}
-  .trust ul{grid-template-columns:1fr}
+  .trust{grid-template-columns:1fr}
+  .reading-list{grid-template-columns:1fr}
+  .article-next .reading-list{grid-template-columns:1fr}
   .closing{grid-template-columns:1fr;padding-right:clamp(28px,5vw,72px)}
   .closing .closing-phone{justify-self:center;width:min(60vw,260px);margin:8px 0 -58%}
   .faq-columns{grid-template-columns:1fr}
@@ -261,6 +285,6 @@ a,button,summary{touch-action:manipulation;-webkit-tap-highlight-color:rgba(28,2
   *,*::before,*::after{transition:none!important}
   /* No turn: the faces swap in place. */
   .tool.is-light .tool-turn{transform:none}
-  .tool-face.tool-ink{transform:none}
+  .tool-face.tool-back{transform:none}
   .tool-face[aria-hidden=true]{visibility:hidden}
 }
