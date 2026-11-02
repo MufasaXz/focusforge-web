@@ -43,6 +43,10 @@ try {
    assert.ok(Math.abs(phone.ratio - 76.7 / 161.4) < .004, `phone proportions ${phone.ratio}`);
    assert.ok(phone.centred < 1.5, 'punch-hole camera is centred');
   }
+  // Lazy screenshots load as they near the viewport; walk the page so they all do.
+  for (let y = 0; y < await page.evaluate(() => document.body.scrollHeight); y += 700) { await page.evaluate(top => window.scrollTo(0, top), y); await page.waitForTimeout(60); }
+  await page.evaluate(() => Promise.all([...document.images].map(img => img.decode().catch(() => {}))));
+  await page.evaluate(() => window.scrollTo(0, 0));
   assert.ok(await page.locator('.op15 img').evaluateAll(images => images.every(img => img.naturalWidth === 720)), 'screenshots load');
   // The real screenshot keeps both system bars: at most 1.5% of it is cropped.
   const crops = await page.locator('.op15 img').evaluateAll(images => images.map(img => { const box = img.getBoundingClientRect(); return 1 - (box.width / box.height) / (img.naturalWidth / img.naturalHeight); }));
