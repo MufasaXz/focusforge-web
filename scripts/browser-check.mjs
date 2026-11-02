@@ -19,6 +19,8 @@ try {
   watch(page);
   await page.goto(base);
   await page.evaluate(() => document.fonts.ready);
+  // Interact only once React has taken over; before that the page is plain HTML.
+  await page.waitForSelector('.site-header.enhanced');
   await page.keyboard.press('Tab');
   assert.equal(await page.locator(':focus').textContent(), 'Skip to content');
   // One light sheet on a cool desk, whatever the browser prefers.

@@ -126,9 +126,16 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
     };
     frame.current = requestAnimationFrame(step);
   };
+  // The browser opens a question before it fires `toggle`, so blanking the
+  // answer there would flash the whole text for a frame. The click comes
+  // first, keyboard included, so the answer is emptied before it is shown.
+  const opening = (event: React.MouseEvent<HTMLElement>) => {
+    const details = event.currentTarget.parentElement as HTMLDetailsElement;
+    if (!details.open && !matchMedia('(prefers-reduced-motion: reduce)').matches) setShown(0);
+  };
   const typing = shown < answer.length;
   return <details onToggle={toggle}>
-    <summary>{question}</summary>
+    <summary onClick={opening}>{question}</summary>
     <p>
       <span className="sr-only">{answer}</span>
       <span className="typed" aria-hidden="true">{answer.slice(0, shown)}{typing && <span className="caret"/>}<span className="untyped">{answer.slice(shown)}</span></span>
