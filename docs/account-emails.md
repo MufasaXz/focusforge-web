@@ -43,3 +43,26 @@ Do these in order. The page must be live before Firebase points at it.
 The action URL is shared by every template, which is why the page handles or
 forwards every mode. Firebase does not allow the email verification message to
 be edited; that email keeps Firebase's wording.
+
+## Reset emails sent by FocusForge
+
+Firebase refuses changes to this project's email subject, message and action
+URL (`EMAIL_TEMPLATE_UPDATE_NOT_ALLOWED`), so reset emails are sent by
+`api/password-reset.ts` instead:
+
+1. The app posts `{ "email": "…" }` to `/api/password-reset`.
+2. The function looks the address up with the Admin SDK. An unknown address
+   gets the same `200 { ok: true }` and no email.
+3. `generatePasswordResetLink` makes the one-time code; the email's button
+   opens `/account-action?mode=resetPassword&oobCode=…`.
+4. The email (`api/_resetEmail.ts`) goes out through Gmail SMTP from
+   focusforgehelp@gmail.com.
+
+Each address may ask 3 times an hour and each network 10 times; extra requests
+get `429`. Counts live in Firestore `_resetLimits` under SHA-256 keys, so no raw
+address or IP is stored, and the security rules give clients no access there.
+Any failure returns `500`, and the app then falls back to Firebase's own email.
+
+Production environment variables, all marked sensitive in Vercel:
+`FIREBASE_SERVICE_ACCOUNT` (the service account JSON), `SMTP_USER` and
+`SMTP_PASS` (a Gmail app password, never the account password).
