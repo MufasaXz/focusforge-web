@@ -18,7 +18,7 @@ them to open a link they have just followed. Because the page cannot confirm
 someone else's result, the copy is conditional rather than a claim. Incoming API keys and continue
 URLs are ignored; codes are removed from the browser URL after reading. This
 page is excluded from the sitemap, marked noindex, and served with no-store and
-no-referrer headers. Password reset starts in the Android app and uses Firebase’s built-in email link and hosted reset page. No custom reset backend or website page is needed.
+no-referrer headers. Password reset starts in the Android app. The email's Reset password button opens `/account-action`, described in `docs/account-emails.md`.
 
 Deployment configuration:
 
@@ -27,9 +27,10 @@ Deployment configuration:
 - Deploy the website before changing email templates.
 - Firebase Authentication → Settings → Authorized domains must include
   `focusforgeorg.vercel.app`.
-- Keep Firebase's default action handler. The official admin configuration's
-  `notification.sendEmail.callbackUri` is shared by email templates, so pointing
-  it at a verification-only page would break other Firebase account actions.
+- The action URL (`notification.sendEmail.callbackUri`) is shared by every
+  email template, so it may point only at `/account-action`, which handles or
+  forwards every mode (see `docs/account-emails.md`), never at this
+  verification-only page.
   After the site is deployed, set the Android verification continue URL to
   `https://focusforgeorg.vercel.app/verify-email?flow=complete`, with
   `handleCodeInApp: false`. Continue URL and action handler are distinct.

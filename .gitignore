@@ -10,3 +10,4 @@ test-results/
 *.tsbuildinfo
 
 .firebase-web-config.json
+.aislop/history.jsonl
