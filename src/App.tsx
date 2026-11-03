@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import DeleteAccount from './DeleteAccount';
 import VerifyEmail from './VerifyEmail';
+import AccountAction from './AccountAction';
+import { useHydrated } from './useHydrated';
 import GetOnPlay from './GetOnPlay';
 import './getOnPlay.css';
 import { asset, pageLink } from './paths';
@@ -12,11 +14,11 @@ const EMAIL = 'focusforgehelp@gmail.com';
 // GitHub releases alone counted 528 that day.
 const DOWNLOADS = '10K+';
 /** Every prerendered path. @public Read by scripts/prerender.mjs through Vite. */
-export const ROUTES = ['/', '/guides', ...guides.map(guide => guide.slug), '/privacy', '/terms', '/support', '/delete-account', '/get-on-play', '/verify-email'];
+export const ROUTES = ['/', '/guides', ...guides.map(guide => guide.slug), '/privacy', '/terms', '/support', '/delete-account', '/get-on-play', '/verify-email', '/account-action'];
 const SITE = 'https://focusforgeorg.vercel.app';
 const source = 'https://github.com/MufasaXz/focusforge';
 /** @public Read by scripts/prerender.mjs through Vite. */
-export const pageTitles: Record<string, string> = { '/': 'FocusForge — Make room for what matters.', '/guides': 'Study guides — FocusForge', ...Object.fromEntries(guides.map(guide => [guide.slug, `${guide.title} — FocusForge`])), '/privacy': 'Privacy policy — FocusForge', '/terms': 'Terms of use — FocusForge', '/support': 'Support — FocusForge', '/delete-account': 'Delete your account — FocusForge', '/get-on-play': 'Join the Play Store test — FocusForge', '/verify-email': 'Verify your email — FocusForge' };
+export const pageTitles: Record<string, string> = { '/': 'FocusForge — Make room for what matters.', '/guides': 'Study guides — FocusForge', ...Object.fromEntries(guides.map(guide => [guide.slug, `${guide.title} — FocusForge`])), '/privacy': 'Privacy policy — FocusForge', '/terms': 'Terms of use — FocusForge', '/support': 'Support — FocusForge', '/delete-account': 'Delete your account — FocusForge', '/get-on-play': 'Join the Play Store test — FocusForge', '/verify-email': 'Verify your email — FocusForge', '/account-action': 'Your FocusForge account — FocusForge' };
 
 /**
  * Descriptions for routes the prerender cannot name on its own.
@@ -24,6 +26,7 @@ export const pageTitles: Record<string, string> = { '/': 'FocusForge — Make ro
  */
 export const pageDescriptions: Record<string, string> = {
   '/guides': 'Practical study guides from FocusForge: the Pomodoro technique, blocking distracting apps on Android, and building a habit that lasts through exams.',
+  '/account-action': 'Choose a new FocusForge password or confirm your email address from a link in a FocusForge account email.',
   ...Object.fromEntries(guides.map(guide => [guide.slug, guide.description]))
 };
 
@@ -72,15 +75,6 @@ function Phone({ src, alt, className = '', eager = false }: { src: string; alt: 
       </div>
     </div>
   </div></figure>;
-}
-
-// Being in the browser never changes after load, so there is nothing to
-// subscribe to and nothing to clean up.
-const noSubscription = () => () => undefined;
-
-/** False in the prerendered page and while hydrating, true once React runs in the browser. */
-function useHydrated() {
-  return useSyncExternalStore(noSubscription, () => true, () => false);
 }
 
 function Header() {
@@ -504,5 +498,5 @@ function Legal({ path }: { path: string }) {
 }
 export default function App({ path = '/' }: { path?: string }) {
  useEffect(() => { document.title = pageTitles[path] || 'Page not found — FocusForge'; }, [path]);
- return <div className="sheet"><a className="skip-link" href="#main">Skip to content</a><Header/>{path === '/' ? <main id="main"><Home/></main> : path === '/guides' ? <GuidesIndex/> : guideFor(path) ? <GuidePage guide={guideFor(path)!}/> : path === '/verify-email' ? <VerifyEmail/> : path === '/get-on-play' ? <GetOnPlay/> : ROUTES.includes(path) ? <Legal path={path}/> : <main id="main" className="legal"><h1 className="legal-title">Let’s find your focus.</h1><p className="legal-intro">This page doesn’t exist.</p><a href={pageLink("/")} className="button button-ink">Back to home</a></main>}<Footer/></div>;
+ return <div className="sheet"><a className="skip-link" href="#main">Skip to content</a><Header/>{path === '/' ? <main id="main"><Home/></main> : path === '/guides' ? <GuidesIndex/> : guideFor(path) ? <GuidePage guide={guideFor(path)!}/> : path === '/verify-email' ? <VerifyEmail/> : path === '/account-action' ? <AccountAction/> : path === '/get-on-play' ? <GetOnPlay/> : ROUTES.includes(path) ? <Legal path={path}/> : <main id="main" className="legal"><h1 className="legal-title">Let’s find your focus.</h1><p className="legal-intro">This page doesn’t exist.</p><a href={pageLink("/")} className="button button-ink">Back to home</a></main>}<Footer/></div>;
 }

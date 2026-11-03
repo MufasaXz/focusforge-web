@@ -71,7 +71,7 @@ export default function VerifyEmail() {
     : <p>Open the verification link from your email to confirm your address. If you have already followed it, return to the app and tap <strong>I’ve verified my email</strong>. You can send a new verification email from the app if needed.</p>) : null}
    {error && <p className="account-error" role="alert">{error}</p>}
    <noscript><p>Enable JavaScript to confirm your email address here, then open this link again.</p></noscript>
-   <p className="small">To reset your password, open the email sign-in form in FocusForge and choose Forgot password. The email link opens Firebase’s secure reset page.</p>
+   <p className="small">To reset your password, open the email sign-in form in FocusForge and choose Forgot password, then use the Reset password button in the email.</p>
   </section></div>
  </main>;
 }

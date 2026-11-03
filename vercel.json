@@ -46,6 +46,19 @@
           "value": "no-referrer"
         }
       ]
+    },
+    {
+      "source": "/account-action",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "no-referrer"
+        }
+      ]
     }
   ]
 }
