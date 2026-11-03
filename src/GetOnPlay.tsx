@@ -41,7 +41,7 @@ export default function GetOnPlay() {
       <p>Please stay opted into the test, keep FocusForge installed on your phone for at least <strong>14 consecutive days</strong>, and use it for <strong>1–5 minutes daily</strong>. Try a timer, explore Shield, and tell me what feels good or could be improved. Your help supports our application for production access; Google makes the final approval decision.</p>
       <h3>Tell us what you think.</h3>
       <p>Please leave honest feedback through the Play Store testing listing. What did you like? What could work better? Closed-test feedback is private to the developer. If you don’t see a feedback option, <a href={"mailto:" + SUPPORT_EMAIL + "?subject=FocusForge%20testing%20feedback"}>email me</a> instead.</p>
-      <p className="play-test-thanks">Thanks for helping FocusForge grow! <span role="img" aria-label="Thank you">🙏</span></p>
+      <p className="play-test-thanks">Thanks for helping FocusForge grow! <span aria-hidden="true">🙏</span></p>
     </section>
     <aside className="play-test-help">
       <h2>Can’t open the listing?</h2>

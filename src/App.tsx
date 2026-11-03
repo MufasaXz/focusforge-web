@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react';
 import DeleteAccount from './DeleteAccount';
 import VerifyEmail from './VerifyEmail';
 import GetOnPlay from './GetOnPlay';
@@ -6,25 +6,33 @@ import './getOnPlay.css';
 import { asset, pageLink } from './paths';
 import { guides, guideFor, type Guide } from './guides';
 
-export const DOWNLOAD = 'https://github.com/MufasaXz/focusforge/releases/latest';
-export const EMAIL = 'focusforgehelp@gmail.com';
+const DOWNLOAD = 'https://github.com/MufasaXz/focusforge/releases/latest';
+const EMAIL = 'focusforgehelp@gmail.com';
 // Downloads across every channel, as stated by the developer (2 Nov 2026).
 // GitHub releases alone counted 528 that day.
-export const DOWNLOADS = '10K+';
+const DOWNLOADS = '10K+';
+/** Every prerendered path. @public Read by scripts/prerender.mjs through Vite. */
 export const ROUTES = ['/', '/guides', ...guides.map(guide => guide.slug), '/privacy', '/terms', '/support', '/delete-account', '/get-on-play', '/verify-email'];
-export const SITE = 'https://focusforgeorg.vercel.app';
+const SITE = 'https://focusforgeorg.vercel.app';
 const source = 'https://github.com/MufasaXz/focusforge';
+/** @public Read by scripts/prerender.mjs through Vite. */
 export const pageTitles: Record<string, string> = { '/': 'FocusForge — Make room for what matters.', '/guides': 'Study guides — FocusForge', ...Object.fromEntries(guides.map(guide => [guide.slug, `${guide.title} — FocusForge`])), '/privacy': 'Privacy policy — FocusForge', '/terms': 'Terms of use — FocusForge', '/support': 'Support — FocusForge', '/delete-account': 'Delete your account — FocusForge', '/get-on-play': 'Join the Play Store test — FocusForge', '/verify-email': 'Verify your email — FocusForge' };
 
-/** Descriptions for routes the prerender cannot name on its own. */
+/**
+ * Descriptions for routes the prerender cannot name on its own.
+ * @public Read by scripts/prerender.mjs through Vite.
+ */
 export const pageDescriptions: Record<string, string> = {
   '/guides': 'Practical study guides from FocusForge: the Pomodoro technique, blocking distracting apps on Android, and building a habit that lasts through exams.',
   ...Object.fromEntries(guides.map(guide => [guide.slug, guide.description]))
 };
 
+const SCHEMA_VOCABULARY = 'https://schema.org';
+
 /** Structured data, escaped so no value can close the script element. */
 function JsonLd({ data }: { data: object }) {
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, '\\u003c') }}/>;
+  const json = JSON.stringify({ '@context': SCHEMA_VOCABULARY, ...data }).replace(/</g, '\\u003c');
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }}/>;
 }
 const organization = {
   '@type': 'Organization',
@@ -66,12 +74,20 @@ function Phone({ src, alt, className = '', eager = false }: { src: string; alt: 
   </div></figure>;
 }
 
+// Being in the browser never changes after load, so there is nothing to
+// subscribe to and nothing to clean up.
+const noSubscription = () => () => undefined;
+
+/** False in the prerendered page and while hydrating, true once React runs in the browser. */
+function useHydrated() {
+  return useSyncExternalStore(noSubscription, () => true, () => false);
+}
+
 function Header() {
   const [open, setOpen] = useState(false);
   // Without JavaScript the links stay visible and the toggle stays hidden;
   // the collapsible menu only appears once it can actually open.
-  const [enhanced, setEnhanced] = useState(false);
-  useEffect(() => { setEnhanced(true); }, []);
+  const enhanced = useHydrated();
   useEffect(() => {
     if (!open) return;
     const close = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); document.querySelector<HTMLButtonElement>('.menu-toggle')?.focus(); } };
@@ -102,7 +118,7 @@ function Footer() {
       <a href={pageLink('/support')}>Support</a>
       <a href={source}>Source code</a>
     </nav>
-    <p className="footer-note">© {new Date().getFullYear()} FocusForge, by MufasaXz.</p>
+    <p className="footer-note">© {__BUILD_YEAR__} FocusForge, by MufasaXz.</p>
     <p className="footer-wordmark" aria-hidden="true" translate="no">FocusForge</p>
   </footer>;
 }
@@ -169,6 +185,11 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
   </details>;
 }
 
+function FaqList({ items }: { items: string[][] }) {
+  const questions = items.map(([q, a]) => <FaqItem key={q} question={q} answer={a}/>);
+  return <div className="faq-list">{questions}</div>;
+}
+
 /** The site's few hard numbers, each true of the current release. */
 const stats: [string, string][] = [
   ['Downloads so far', DOWNLOADS],
@@ -185,14 +206,24 @@ const stats: [string, string][] = [
  */
 function Odometer({ value }: { value: string }) {
   let reel = 0;
+  const glyphs = [...value].map((char, i) => /\d/.test(char)
+    ? <Reel key={i} digit={Number(char)} order={reel++}/>
+    : <span key={i} className="glyph">{char}</span>);
   return <>
     <span className="sr-only">{value}</span>
-    <span className="odometer" aria-hidden="true">{[...value].map((char, i) => /\d/.test(char)
-      ? <span key={i} className="reel" style={{ '--to': Number(char) + 10, '--reel': reel++ } as React.CSSProperties}>
-          <span className="strip">{'01234567890123456789'.split('').map((digit, n) => <span key={n}>{digit}</span>)}</span>
-        </span>
-      : <span key={i} className="glyph">{char}</span>)}</span>
+    <span className="odometer" aria-hidden="true">{glyphs}</span>
   </>;
+}
+
+const REEL_DIGITS = [...'01234567890123456789'];
+
+/** One digit's strip of two turns; `order` staggers its spin after the reels before it. */
+function Reel({ digit, order }: { digit: number; order: number }) {
+  const style = { '--to': digit + 10, '--reel': order } as React.CSSProperties;
+  const strip = REEL_DIGITS.map((shown, n) => <span key={n}>{shown}</span>);
+  return <span className="reel" style={style}>
+    <span className="strip">{strip}</span>
+  </span>;
 }
 
 type Tool = (typeof tools)[number];
@@ -218,19 +249,29 @@ function ToolCard({ tool }: { tool: Tool }) {
     window.clearTimeout(timer.current);
     timer.current = window.setTimeout(() => setTurning(false), 560);
   };
-  const face = (side: 'front' | 'back') => {
-    const shown = side === 'front' ? !light : light;
-    return <div className={`tool-face tool-${tool.tone}${side === 'back' ? ' tool-back' : ''}`} aria-hidden={!shown} inert={!shown}>
-      <span className="tool-label" aria-hidden="true">{side === 'front' ? <><Sun/>Light</> : <><Moon/>Dark</>}</span>
-      <Phone src={side === 'front' ? tool.image : tool.lightImage} alt={side === 'front' ? tool.alt : tool.lightAlt}/>
-    </div>;
-  };
   return <article className={`tool${light ? ' is-light' : ''}${turning ? ' is-turning' : ''}`}>
-    <div className="tool-turn">{face('front')}{face('back')}</div>
+    <div className="tool-turn">
+      <ToolFace tool={tool} side="front" shown={!light}/>
+      <ToolFace tool={tool} side="back" shown={light}/>
+    </div>
     <div className="tool-copy"><h3>{tool.title}</h3><p>{tool.body}</p></div>
     <button type="button" className="tool-flip" aria-pressed={light} aria-label={`${tool.title}: show the ${light ? 'dark' : 'light'} theme`} onClick={turn}/>
   </article>;
 }
+/**
+ * One side of a tool card. The front carries the dark screenshot and the back
+ * the light one; each face prints the theme a tap turns to, so the label turns
+ * with the card. The face turned away is hidden from focus and assistive tech.
+ */
+function ToolFace({ tool, side, shown }: { tool: Tool; side: 'front' | 'back'; shown: boolean }) {
+  const front = side === 'front';
+  const label = front ? <><Sun/>Light</> : <><Moon/>Dark</>;
+  return <div className={`tool-face tool-${tool.tone}${front ? '' : ' tool-back'}`} aria-hidden={!shown} inert={!shown}>
+    <span className="tool-label" aria-hidden="true">{label}</span>
+    <Phone src={front ? tool.image : tool.lightImage} alt={front ? tool.alt : tool.lightAlt}/>
+  </div>;
+}
+
 const Sun = () => <svg viewBox="0 0 16 16" aria-hidden="true"><circle cx="8" cy="8" r="3" fill="none" stroke="currentColor" strokeWidth="1.5"/><path d="M8 1v1.6M8 13.4V15M1 8h1.6M13.4 8H15M3 3l1.1 1.1M11.9 11.9 13 13M3 13l1.1-1.1M11.9 4.1 13 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>;
 const Moon = () => <svg viewBox="0 0 16 16" aria-hidden="true"><path d="M13.5 9.6A5.6 5.6 0 0 1 6.4 2.5a5.6 5.6 0 1 0 7.1 7.1Z" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg>;
 
@@ -266,7 +307,6 @@ function Home() {
   const session = useRevealOnce();
   const facts = useRevealOnce();
   const graph = {
-    '@context': 'https://schema.org',
     '@graph': [
       organization,
       { '@type': 'WebSite', '@id': `${SITE}/#website`, url: `${SITE}/`, name: 'FocusForge', publisher: { '@id': `${SITE}/#organization` }, inLanguage: 'en' },
@@ -337,14 +377,17 @@ function Home() {
 
     <section className="reading" aria-labelledby="reading-title">
       <div className="section-intro"><Title id="reading-title">Read before your next exam</Title><p><a className="text-link" href={pageLink('/guides')}>All guides</a></p></div>
-      <ul className="reading-list">{guides.map(guide => <li key={guide.slug}><a href={pageLink(guide.slug)}><span className="reading-time">{guide.minutes} min read</span><h3>{guide.title}</h3><p>{guide.description}</p></a></li>)}</ul>
+      <GuideList heading="h3"/>
     </section>
 
     <section className="faq" id="faq" aria-labelledby="faq-title">
       <div className="faq-head"><Title id="faq-title">Questions worth asking</Title><p>Not covered here? <a href={pageLink('/support')}>Write to us.</a></p></div>
       {/* Two independent lists rather than CSS columns, so opening an answer
           lengthens its own column and nothing jumps across. */}
-      <div className="faq-columns">{[faq.slice(0, 3), faq.slice(3)].map((half, column) => <div className="faq-list" key={column}>{half.map(([q, a]) => <FaqItem key={q} question={q} answer={a}/>)}</div>)}</div>
+      <div className="faq-columns">
+        <FaqList items={faq.slice(0, 3)}/>
+        <FaqList items={faq.slice(3)}/>
+      </div>
     </section>
 
     <section className="closing" aria-labelledby="closing-title">
@@ -358,14 +401,34 @@ function Home() {
   </>;
 }
 
+/** Every guide as a linked card; `heading` keeps the outline right on each page. */
+function GuideList({ heading: Heading, className }: { heading: 'h2' | 'h3'; className?: string }) {
+  const items = guides.map(guide => <li key={guide.slug}>
+    <a href={pageLink(guide.slug)}>
+      <span className="reading-time">{guide.minutes} min read</span>
+      <Heading>{guide.title}</Heading>
+      <p>{guide.description}</p>
+    </a>
+  </li>);
+  return <ul className={className ? `reading-list ${className}` : 'reading-list'}>{items}</ul>;
+}
+
+function GuideSection({ section }: { section: Guide['sections'][number] }) {
+  const paragraphs = section.paragraphs.map((paragraph, j) => <p key={j}>{paragraph}</p>);
+  return <section>
+    {section.heading && <h2>{section.heading}</h2>}
+    {paragraphs}
+  </section>;
+}
+
 function GuidesIndex() {
   return <main id="main" className="legal guides">
-    <JsonLd data={{ '@context': 'https://schema.org', '@type': 'CollectionPage', name: 'Study guides', url: `${SITE}/guides`, publisher: organization, hasPart: guides.map(guide => ({ '@type': 'Article', headline: guide.title, url: `${SITE}${guide.slug}` })) }}/>
+    <JsonLd data={{ '@type': 'CollectionPage', name: 'Study guides', url: `${SITE}/guides`, publisher: organization, hasPart: guides.map(guide => ({ '@type': 'Article', headline: guide.title, url: `${SITE}${guide.slug}` })) }}/>
     <a className="text-link back-link" href={pageLink('/')}>Back to FocusForge</a>
     <p className="legal-kicker">Guides</p>
     <h1 className="legal-title">Study better, scroll less.</h1>
     <p className="legal-intro">Short, practical reading on focus, phone habits and exam preparation, written alongside the app.</p>
-    <ul className="reading-list reading-index">{guides.map(guide => <li key={guide.slug}><a href={pageLink(guide.slug)}><span className="reading-time">{guide.minutes} min read</span><h2>{guide.title}</h2><p>{guide.description}</p></a></li>)}</ul>
+    <GuideList heading="h2" className="reading-index"/>
   </main>;
 }
 
@@ -373,7 +436,6 @@ function GuidePage({ guide }: { guide: Guide }) {
   const others = guides.filter(other => other.slug !== guide.slug);
   return <main id="main" className="legal article">
     <JsonLd data={{
-      '@context': 'https://schema.org',
       '@type': 'Article',
       headline: guide.title,
       description: guide.description,
@@ -389,7 +451,9 @@ function GuidePage({ guide }: { guide: Guide }) {
     <p className="legal-kicker">A {guide.minutes}-minute read, published <time dateTime={guide.published}>{new Date(guide.published + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })}</time></p>
     <h1 className="legal-title">{guide.title}</h1>
     <p className="legal-intro">{guide.description}</p>
-    <div className="legal-body article-body">{guide.sections.map((section, i) => <section key={i}>{section.heading && <h2>{section.heading}</h2>}{section.paragraphs.map((paragraph, j) => <p key={j}>{paragraph}</p>)}</section>)}</div>
+    <div className="legal-body article-body">
+      {guide.sections.map((section, i) => <GuideSection key={i} section={section}/>)}
+    </div>
     <aside className="article-next" aria-labelledby="next-title">
       <h2 id="next-title">Keep reading</h2>
       <ul className="reading-list">{others.map(other => <li key={other.slug}><a href={pageLink(other.slug)}><span className="reading-time">{other.minutes} min read</span><h3>{other.title}</h3></a></li>)}</ul>

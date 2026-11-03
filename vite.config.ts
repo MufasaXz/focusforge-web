@@ -7,6 +7,7 @@ if (!/^\/(?:[a-zA-Z0-9_-]+\/)*$/.test(requestedBase)) {
 export default defineConfig({
   base: requestedBase,
   plugins: [react()],
+  define: { __BUILD_YEAR__: JSON.stringify(new Date().getFullYear()) },
   build: {
     manifest: true,
     rollupOptions: {

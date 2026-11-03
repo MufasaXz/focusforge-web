@@ -9,7 +9,8 @@
     "preview": "vite preview --host 0.0.0.0",
     "test:browser": "node scripts/browser-check.mjs && node scripts/play-test-check.mjs",
     "test": "npm run build && node --test tests/site.test.mjs",
-    "test:cleanup": "node --test tests/account-cleanup.test.mjs"
+    "test:cleanup": "node --test tests/account-cleanup.test.mjs",
+    "slop": "AISLOP_NO_TELEMETRY=1 npx --yes aislop@0.20.0 scan ."
   },
   "dependencies": {
     "firebase": "^13.0.0",

@@ -1,0 +1,11 @@
+version: 1
+
+telemetry:
+  enabled: false
+
+overrides:
+  # Guide articles are prose held in arrays. Paragraph lists with the same
+  # shape are content, not copied logic.
+  - files: ["src/guides.tsx"]
+    rules:
+      code-quality/duplicate-block: off

@@ -1,4 +1,4 @@
-import { chromium } from 'playwright';
+import { chromium } from '@playwright/test';
 import assert from 'node:assert/strict';
 import { mkdir } from 'node:fs/promises';
 const base = (process.env.TEST_URL || 'http://localhost:4173').replace(/\/$/, '') + '/';

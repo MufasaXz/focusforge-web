@@ -2,6 +2,11 @@ import { useEffect, useRef, useState } from 'react';
 import { pageLink } from './paths';
 import './deleteAccount.css';
 
+/** True when Firebase's own handler already confirmed the address and sent the reader back. */
+function returnedFromFirebase() {
+ return typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('flow') === 'complete';
+}
+
 function messageFor(error: unknown) {
  const code = typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : '';
  if (['auth/expired-action-code', 'auth/invalid-action-code', 'auth/user-disabled', 'auth/user-not-found'].includes(code)) return 'This verification link has expired or has already been used. Return to FocusForge and check your email status, or send a new verification email.';
@@ -19,8 +24,9 @@ export default function VerifyEmail() {
  // Firebase's own handler confirms the address and then offers a continue link
  // back here, carrying flow=complete and no code of its own. Read it before the
  // query is scrubbed, so the page can speak to someone who has already finished
- // rather than telling them to open a link they just followed.
- const returning = useRef(false);
+ // rather than telling them to open a link they just followed. It only shows
+ // once checking ends, so the prerendered page and the first render agree.
+ const [returning] = useState(returnedFromFirebase);
  const locked = useRef(false);
  const heading = useRef<HTMLHeadingElement>(null);
  useEffect(() => {
@@ -28,7 +34,6 @@ export default function VerifyEmail() {
   if (code.current === null) {
    const params = new URLSearchParams(window.location.search);
    code.current = params.get('mode') === 'verifyEmail' ? params.get('oobCode') || '' : '';
-   returning.current = params.get('flow') === 'complete';
    // Keep the one-time action code out of subsequent history entries and links.
    window.history.replaceState(null, '', window.location.pathname);
   }
@@ -56,12 +61,12 @@ export default function VerifyEmail() {
   <h1 className="legal-title">One step closer to your next session.</h1>
   <p className="legal-intro">Confirm your email address for your FocusForge account.</p>
   <div className="legal-body"><section className="account-card" aria-busy={checking || busy}>
-   <h2 tabIndex={-1} ref={heading}>{done ? 'Your email is verified.' : checking ? 'Checking your verification link…' : email ? 'Confirm your email address.' : returning.current ? 'Back to FocusForge.' : 'Continue in FocusForge.'}</h2>
-   {checking && <p role="status">Checking the link securely. This will only take a moment.</p>}
+   <h2 tabIndex={-1} ref={heading}>{done ? 'Your email is verified.' : checking ? 'Checking your verification link…' : email ? 'Confirm your email address.' : returning ? 'Back to FocusForge.' : 'Continue in FocusForge.'}</h2>
+   {checking && <output>Checking the link securely. This will only take a moment.</output>}
    {done ? <p>Return to the FocusForge app and tap <strong>I’ve verified my email</strong> to continue. Your study setup is kept.</p> : email ? <>
     <p>Verify <strong>{email}</strong> for your FocusForge account.</p>
     <div className="account-actions"><button type="button" className="button button-ink" onClick={verify} disabled={busy}>{busy ? 'Verifying…' : 'Verify email address'}</button></div>
-   </> : !checking && !error ? (returning.current
+   </> : !checking && !error ? (returning
     ? <p>If the previous page confirmed your address, return to FocusForge and tap <strong>I’ve verified my email</strong> to continue. Your study setup is kept. You can send a new verification email from the app if anything went wrong.</p>
     : <p>Open the verification link from your email to confirm your address. If you have already followed it, return to the app and tap <strong>I’ve verified my email</strong>. You can send a new verification email from the app if needed.</p>) : null}
    {error && <p className="account-error" role="alert">{error}</p>}
