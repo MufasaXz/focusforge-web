@@ -32,21 +32,20 @@ try {
   // Only one-shot transitions may run (the reels, if in view); no keyframes, no loops.
   assert.ok(await page.evaluate(() => document.getAnimations().every(animation => animation.constructor.name === 'CSSTransition')), 'no keyframe or looping animation');
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth), `home overflow at ${width}`);
-  // Every phone is a OnePlus 15: 76.7 × 161.4 mm, with a centred camera and
-  // its keys standing proud of the rail on both sides. A card's back face is
-  // mirrored until it turns, so the sides are checked either way round.
+  // Every phone keeps the reference body: 844 × 1787.5, with a centred camera
+  // and its two keys standing proud of one side of the rail. A card's back
+  // face is mirrored until it turns, so either side counts.
   const phones = await page.locator('.op15-body').evaluateAll(bodies => bodies.map(body => {
    const box = body.getBoundingClientRect();
    const camera = body.querySelector('.op15-camera').getBoundingClientRect();
-   const plus = body.querySelector('.op15-plus').getBoundingClientRect();
-   const power = body.querySelector('.op15-power').getBoundingClientRect();
-   return { ratio: box.width / box.height, centred: Math.abs((camera.left + camera.width / 2) - (box.left + box.width / 2)), keys: Math.min(plus.left, power.left) < box.left && Math.max(plus.right, power.right) > box.right };
+   const keys = [...body.querySelectorAll('.op15-key')].map(key => key.getBoundingClientRect());
+   return { ratio: box.width / box.height, centred: Math.abs((camera.left + camera.width / 2) - (box.left + box.width / 2)), keys: keys.length === 2 && keys.every(key => key.right > box.right || key.left < box.left) };
   }));
   assert.equal(phones.length, 8);
   for (const phone of phones) {
-   assert.ok(Math.abs(phone.ratio - 76.7 / 161.4) < .004, `phone proportions ${phone.ratio}`);
+   assert.ok(Math.abs(phone.ratio - 844 / 1787.5) < .004, `phone proportions ${phone.ratio}`);
    assert.ok(phone.centred < 1.5, 'punch-hole camera is centred');
-   assert.ok(phone.keys, 'keys stand out from the rail');
+   assert.ok(phone.keys, 'both keys stand out from the rail');
   }
   // Lazy screenshots load as they near the viewport; walk the page so they all do.
   for (let y = 0; y < await page.evaluate(() => document.body.scrollHeight); y += 700) { await page.evaluate(top => window.scrollTo(0, top), y); await page.waitForTimeout(60); }
@@ -193,5 +192,5 @@ try {
  assert.equal(email.protocol, 'mailto:');
  assert.equal(email.pathname, 'focusforgehelp@gmail.com');
  assert.deepEqual(errors, []);
- console.log(`PASS: widths 320/390/768/1024/1440 in light and dark preferences, OnePlus 15 frames, no autonomous motion, the pinned phone header and its menu, FAQ, skip link, reduced motion, every route and the no-JavaScript path. Screenshots in ${shots}.`);
+ console.log(`PASS: widths 320/390/768/1024/1440 in light and dark preferences, phone frames, no autonomous motion, the pinned phone header and its menu, FAQ, skip link, reduced motion, every route and the no-JavaScript path. Screenshots in ${shots}.`);
 } finally { await browser.close(); }

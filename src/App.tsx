@@ -55,20 +55,19 @@ function Download({ tone = 'ink', children = 'Download for Android' }: { tone?: 
 }
 
 /**
- * A OnePlus 15, front on, drawn like a product render: a Sand Storm rail with
- * a lit crest and a dark seam where it meets the glass, a black border under
- * the glass, the centred punch-hole lens, antenna breaks in the rail, the Plus
- * Key on the left and the volume rocker above power on the right, standing
- * proud of the rail. Proportions are the handset's own 76.7 × 161.4 mm; every
- * inner measure is in container-width units, so the phone keeps its shape at
- * any size it is drawn. The screens are real screenshots, status bar and
- * gesture bar included, so nothing is drawn over them but the camera.
+ * A phone, front on, measured from the reference handset render and finished
+ * in OnePlus 15 Sand Storm: a rounded rail with a lit crest and a dark seam
+ * where it meets the glass, a fine glass edge, a black border, the centred
+ * punch-hole lens, matte antenna breaks, and power above the volume rocker on
+ * the right, standing proud of the rail. The body is 844 × 1787.5; every inner
+ * measure is in container-width units, so the phone keeps its shape at any
+ * size it is drawn. The screens are real screenshots, status bar and gesture
+ * bar included, so nothing is drawn over them but the camera.
  */
 function Phone({ src, alt, className = '', eager = false }: { src: string; alt: string; className?: string; eager?: boolean }) {
   return <figure className={`op15${className ? ' ' + className : ''}`}><div className="op15-body">
-    <span className="op15-key op15-plus" aria-hidden="true"/>
-    <span className="op15-key op15-volume" aria-hidden="true"/>
     <span className="op15-key op15-power" aria-hidden="true"/>
+    <span className="op15-key op15-volume" aria-hidden="true"/>
     <div className="op15-bezel">
       <div className="op15-screen">
         <img src={asset(src)} alt={alt} width="720" height="1601" loading={eager ? 'eager' : 'lazy'} fetchPriority={eager ? 'high' : 'auto'} decoding="async"/>

@@ -73,7 +73,7 @@ test('homepage keeps original download actions without promoting the tester guid
  assert.match(html, /running on a real Android phone/);
  assert.ok(!html.includes('play.google.com/store/apps'));
 });
-test('home is one sheet with real screenshots in OnePlus 15 frames', async () => {
+test('home is one sheet with real screenshots in phone frames', async () => {
  const html = await read('dist/index.html');
  assert.equal((html.match(/class="op15[ "]/g) || []).length, 8, 'hero, two faces on each of three tools, and the closing phone');
  assert.equal((html.match(/aria-pressed="false"/g) || []).length, 3, 'one flip control per tool card');
@@ -81,7 +81,7 @@ test('home is one sheet with real screenshots in OnePlus 15 frames', async () =>
  assert.equal((html.match(/class="tool-label"/g) || []).length, 6, 'the label is printed on both faces so it turns with the card');
  for (const title of ['Close the feed', 'A timer that respects the work', 'Proof that it adds up']) assert.equal(html.split(`<h3>${title}</h3>`).length - 1, 1, `${title} appears once, not once per face`);
  assert.equal((html.match(/class="op15-camera"/g) || []).length, 8);
- assert.equal((html.match(/class="op15-key op15-(?:plus|volume|power)"/g) || []).length, 24, 'Plus Key, volume and power on every phone');
+ assert.equal((html.match(/class="op15-key op15-(?:power|volume)"/g) || []).length, 16, 'power and volume on every phone');
  assert.ok(!html.includes('op15-status'), 'no drawn status bar over a real one');
  for (const text of ['class="sheet"', 'class="hero"', 'class="session"', 'class="footer-wordmark"', 'id="features"', 'id="privacy"', 'id="faq"', 'class="closing"', 'aria-label="Main navigation"']) assert.ok(html.includes(text), text);
  assert.ok(!html.includes('class="gallery"'), 'gallery removed');
