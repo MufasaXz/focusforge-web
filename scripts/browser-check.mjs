@@ -76,6 +76,20 @@ try {
    await page.keyboard.press('Escape');
    assert.equal(await toggle.getAttribute('aria-expanded'), 'false');
    assert.equal(await page.locator(':focus').textContent(), 'Menu');
+   // On phones the header is one floating pill, wordmark, download and menu
+   // on a single row, and the download never hides behind the menu.
+   const bar = page.locator('.site-header');
+   assert.ok((await bar.boundingBox()).height < 72, 'the phone header is one row');
+   assert.ok(await bar.locator('.header-download').isVisible(), 'download stays in the bar');
+   // A tap outside the bar and its open menu puts the menu away.
+   await page.getByRole('button', { name: 'Menu' }).click();
+   await page.mouse.click(4, 990);
+   assert.equal(await toggle.getAttribute('aria-expanded'), 'false', 'a tap outside closes the menu');
+   // The pill stays pinned near the top while the page scrolls under it.
+   await page.evaluate(() => window.scrollTo(0, 1600));
+   const pinned = await bar.evaluate(el => el.getBoundingClientRect().top);
+   assert.ok(pinned >= 0 && pinned <= 12, `header pinned at ${pinned}`);
+   await page.evaluate(() => window.scrollTo(0, 0));
   }
   // The closing wordmark spans the sheet without spilling past it.
   const mark = await page.locator('.footer-wordmark').evaluate(el => { const range = document.createRange(); range.selectNodeContents(el); const text = range.getBoundingClientRect(); const box = el.getBoundingClientRect(); return text.width / box.width; });
@@ -179,5 +193,5 @@ try {
  assert.equal(email.protocol, 'mailto:');
  assert.equal(email.pathname, 'focusforgehelp@gmail.com');
  assert.deepEqual(errors, []);
- console.log(`PASS: widths 320/390/768/1024/1440 in light and dark preferences, OnePlus 15 frames, no autonomous motion, menu, FAQ, skip link, reduced motion, every route and the no-JavaScript path. Screenshots in ${shots}.`);
+ console.log(`PASS: widths 320/390/768/1024/1440 in light and dark preferences, OnePlus 15 frames, no autonomous motion, the pinned phone header and its menu, FAQ, skip link, reduced motion, every route and the no-JavaScript path. Screenshots in ${shots}.`);
 } finally { await browser.close(); }

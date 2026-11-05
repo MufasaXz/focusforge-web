@@ -78,28 +78,39 @@ function Phone({ src, alt, className = '', eager = false }: { src: string; alt: 
   </div></figure>;
 }
 
+/** The arrow on links that leave for GitHub. */
+const Arrow = () => <svg className="arrow" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.25 8.75 8.5 3.5M4.25 3.5H8.5v4.25" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+
+/**
+ * On phones the header is a floating pill that stays in reach while the page
+ * scrolls: the wordmark, the download, and a two-line menu button whose links
+ * open in a card below it. Without JavaScript the links stay visible and the
+ * button stays hidden; the menu only collapses once it can actually open.
+ */
 function Header() {
   const [open, setOpen] = useState(false);
-  // Without JavaScript the links stay visible and the toggle stays hidden;
-  // the collapsible menu only appears once it can actually open.
   const enhanced = useHydrated();
+  const bar = useRef<HTMLElement>(null);
   useEffect(() => {
     if (!open) return;
-    const close = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); document.querySelector<HTMLButtonElement>('.menu-toggle')?.focus(); } };
+    const close = (e: KeyboardEvent) => { if (e.key === 'Escape') { setOpen(false); bar.current?.querySelector<HTMLButtonElement>('.menu-toggle')?.focus(); } };
+    // A tap anywhere outside the bar and its menu puts the menu away.
+    const away = (e: PointerEvent) => { if (!bar.current?.contains(e.target as Node)) setOpen(false); };
     window.addEventListener('keydown', close);
-    return () => window.removeEventListener('keydown', close);
+    document.addEventListener('pointerdown', away);
+    return () => { window.removeEventListener('keydown', close); document.removeEventListener('pointerdown', away); };
   }, [open]);
   const shut = () => setOpen(false);
-  return <header className={`site-header${enhanced ? ' enhanced' : ''}`}>
-    <a href={pageLink('/')} className="wordmark" aria-label="FocusForge home" translate="no"><Mark/>FocusForge</a>
-    <button className="menu-toggle" aria-expanded={open} aria-controls="navigation" onClick={() => setOpen(!open)}>{open ? 'Close' : 'Menu'}</button>
+  return <header ref={bar} className={`site-header${enhanced ? ' enhanced' : ''}`}>
+    <a href={pageLink('/')} className="wordmark" aria-label="FocusForge home" translate="no"><Mark/><span className="wordmark-name">FocusForge</span></a>
     <nav id="navigation" className={open ? 'open' : ''} aria-label="Main navigation">
       <a href={pageLink('/#features')} onClick={shut}>Features</a>
       <a href={pageLink('/#privacy')} onClick={shut}>Your data</a>
       <a href={pageLink('/guides')} onClick={shut}>Guides</a>
       <a href={pageLink('/#faq')} onClick={shut}>Questions</a>
-      <Download tone="outline">Download</Download>
     </nav>
+    <a className="button button-outline header-download" href={DOWNLOAD}>Download<Arrow/></a>
+    <button className="menu-toggle" aria-expanded={open} aria-controls="navigation" onClick={() => setOpen(!open)}><span className="menu-lines" aria-hidden="true"/><span className="sr-only">Menu</span></button>
   </header>;
 }
 

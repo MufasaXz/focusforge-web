@@ -91,6 +91,14 @@ test('home is one sheet with real screenshots in OnePlus 15 frames', async () =>
  assert.match(provenance.description, /real|own Android phone/);
  for (const image of ['focus-dark', 'focus-light', 'shield-dark', 'shield-light', 'home-dark', 'home-light']) assert.ok(provenance.assets[`shot-${image}.webp`], image);
 });
+test('the phone header keeps the download beside a two-line menu button', async () => {
+ const html = await read('dist/index.html');
+ const header = html.slice(html.indexOf('<header'), html.indexOf('</header>'));
+ const download = header.indexOf('class="button button-outline header-download" href="https://github.com/MufasaXz/focusforge/releases/latest"');
+ assert.ok(download > header.indexOf('</nav>'), 'the download sits in the bar, outside the links that collapse');
+ assert.match(header, /<button class="menu-toggle" aria-expanded="false" aria-controls="navigation"><span class="menu-lines" aria-hidden="true"><\/span><span class="sr-only">Menu<\/span><\/button>/);
+ assert.match(header, /aria-label="FocusForge home"/, 'the wordmark keeps its name when the narrowest phones hide the text');
+});
 test('the retired animated design is gone', async () => {
  const html = await read('dist/index.html');
  for (const text of ['story-scroll', 'feature-rail', 'hero-demo-clock', 'podium', 'study-circle', 'sunburst', 'orbit', 'floating-note', 'reveal']) assert.ok(!html.includes(text), text);
