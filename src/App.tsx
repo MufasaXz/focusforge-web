@@ -55,13 +55,14 @@ function Download({ tone = 'ink', children = 'Download for Android' }: { tone?: 
 }
 
 /**
- * A OnePlus 15, front on: flat display, a hairline bezel, the centred
- * punch-hole camera, a Sand Storm frame, the Plus Key on the left and the
- * volume rocker above power on the right. Proportions are the handset's own
- * 76.7 × 161.4 mm; every inner measure is in container-width units, so the
- * phone keeps its shape at any size it is drawn. The screens are real
- * screenshots, status bar and gesture bar included, so nothing is drawn over
- * them but the camera.
+ * A OnePlus 15, front on, drawn like a product render: a Sand Storm rail with
+ * a lit crest and a dark seam where it meets the glass, a black border under
+ * the glass, the centred punch-hole lens, antenna breaks in the rail, the Plus
+ * Key on the left and the volume rocker above power on the right, standing
+ * proud of the rail. Proportions are the handset's own 76.7 × 161.4 mm; every
+ * inner measure is in container-width units, so the phone keeps its shape at
+ * any size it is drawn. The screens are real screenshots, status bar and
+ * gesture bar included, so nothing is drawn over them but the camera.
  */
 function Phone({ src, alt, className = '', eager = false }: { src: string; alt: string; className?: string; eager?: boolean }) {
   return <figure className={`op15${className ? ' ' + className : ''}`}><div className="op15-body">

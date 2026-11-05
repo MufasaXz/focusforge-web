@@ -83,18 +83,31 @@ a,button,summary{touch-action:manipulation;-webkit-tap-highlight-color:rgba(28,2
 .hero-note{margin:20px 0 0;color:var(--muted);font-size:1rem}
 
 /* ---- OnePlus 15, front ------------------------------------------------- */
-.op15{margin:0;container-type:inline-size;width:100%}
-.op15-body{position:relative;aspect-ratio:76.7/161.4;padding:.85cqw;border-radius:13.4cqw;background:linear-gradient(150deg,#e6dcc9 0%,#bcae95 34%,#94866f 58%,#cdc0a8 82%,#e9e0cf 100%);box-shadow:inset 0 0 0 .3cqw rgba(255,255,255,.45),0 3cqw 6cqw -2cqw rgba(28,26,23,.32),0 14cqw 22cqw -12cqw rgba(28,26,23,.5)}
-.op15-key{position:absolute;width:1cqw;border-radius:.6cqw;background:linear-gradient(90deg,#8d806a,#d9cdb6)}
-.op15-plus{left:-.6cqw;top:21%;height:6.2%}
-.op15-volume{right:-.6cqw;top:23%;height:12.5%}
-.op15-power{right:-.6cqw;top:38.5%;height:7%}
-/* A touch wider at the sides than top and bottom, so a 1220 × 2712 screenshot
-   fills the display with about 1% cropped and both system bars kept. */
-.op15-bezel{height:100%;padding:1.55cqw 2.5cqw;border-radius:12.6cqw;background:#080807}
-.op15-screen{position:relative;height:100%;overflow:hidden;border-radius:10.6cqw;background:#131110}
+/* Built up like a product render, outside in: a rounded Sand Storm rail whose
+   crest catches the light, a dark seam where it rolls under the glass, the
+   glass edge, a black border, then the screen. Rail plus border is 4.88% of
+   the width on every side, which leaves the display exactly the shape of the
+   1220 × 2712 screenshots: nothing is cropped and both system bars stay. */
+.op15{--rail:2cqw;--border:2.88cqw;--corner:13.4cqw;--metal:#ccb894;--metal-light:#f8f1e3;--metal-shade:#977f58;--metal-edge:#4a3b24;margin:0;container-type:inline-size;width:100%}
+/* The rail's profile, outside in: a dark edge, the bright crest, the sand
+   body, then a shaded fall into the seam drawn by the border. */
+.op15-body{position:relative;aspect-ratio:76.7/161.4;padding:var(--rail);border-radius:var(--corner);background:var(--metal-shade);box-shadow:inset 0 0 0 .26cqw var(--metal-edge),inset 0 0 .3cqw .72cqw var(--metal-light),inset 0 0 .45cqw 1.45cqw var(--metal),0 3cqw 6cqw -2cqw rgba(28,26,23,.32),0 14cqw 22cqw -12cqw rgba(28,26,23,.5)}
+/* Light falling across the rail, and the antenna breaks: thin bands across it
+   near each corner. The border and screen sit above, so only the rail shows. */
+.op15-body::before{content:'';position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(transparent 8.6%,rgba(74,59,36,.55) 8.6% 8.95%,transparent 8.95% 91.05%,rgba(74,59,36,.55) 91.05% 91.4%,transparent 91.4%),linear-gradient(90deg,transparent 23%,rgba(74,59,36,.55) 23% 23.7%,transparent 23.7% 76.3%,rgba(74,59,36,.55) 76.3% 77%,transparent 77%),linear-gradient(152deg,rgba(255,252,245,.32) 0%,transparent 26%,rgba(60,44,20,.14) 52%,transparent 74%,rgba(255,252,245,.24) 100%)}
+/* The keys sit behind the body and stand proud of the rail, lit on their
+   outer face like the crest. */
+.op15-key{position:absolute;z-index:-1;width:2.8cqw;border-radius:1.1cqw;box-shadow:inset 0 0 0 .2cqw var(--metal-edge)}
+.op15-plus{left:-1cqw;top:21%;height:6.2%;background:linear-gradient(90deg,var(--metal-edge) 0 .22cqw,var(--metal-light) .5cqw,var(--metal) .85cqw,var(--metal-shade) 1.2cqw)}
+.op15-volume,.op15-power{right:-1cqw;background:linear-gradient(270deg,var(--metal-edge) 0 .22cqw,var(--metal-light) .5cqw,var(--metal) .85cqw,var(--metal-shade) 1.2cqw)}
+.op15-volume{top:23%;height:12.5%}
+.op15-power{top:38.5%;height:7%}
+.op15-bezel{position:relative;z-index:1;height:100%;padding:var(--border);border-radius:calc(var(--corner) - var(--rail));background:#040404;box-shadow:0 0 0 .16cqw var(--metal-edge),0 0 .7cqw .25cqw rgba(52,40,24,.45),inset 0 0 0 .14cqw #57544f,inset 0 0 0 .3cqw #1d1c1a}
+.op15-screen{position:relative;height:100%;overflow:hidden;border-radius:calc(var(--corner) - var(--rail) - var(--border));background:#131110}
 .op15-screen img{width:100%;height:100%;object-fit:cover;object-position:50% 40%}
-.op15-camera{position:absolute;top:2.6cqw;left:50%;width:3.7cqw;aspect-ratio:1;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle at 36% 34%,#34404d 0 16%,#060708 46%);box-shadow:0 0 0 .55cqw #000}
+/* The punch-hole: a black well around a ringed lens with a blue glint, centred
+   on the status bar's own gap. */
+.op15-camera{position:absolute;top:2.1cqw;left:50%;width:4.3cqw;aspect-ratio:1;transform:translateX(-50%);border-radius:50%;background:radial-gradient(circle at 41% 39%,rgba(182,194,255,.95) 0 5%,rgba(112,126,255,.4) 11%,transparent 17%),radial-gradient(circle closest-side,#25327c 0 20%,#0a0c1a 34%,#4d5057 46%,#2a2b30 55%,#0b0b0c 64%,#000 100%)}
 
 /* ---- Facts ------------------------------------------------------------ */
 .facts{padding:clamp(56px,8vw,112px) var(--gutter) clamp(24px,3vw,40px)}
