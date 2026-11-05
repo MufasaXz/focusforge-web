@@ -237,24 +237,37 @@ type Tool = (typeof tools)[number];
  * A tool card that turns over to show its screen in the other theme. The card
  * keeps its colour on both sides and only the phone changes; the theme label is
  * printed on each face, so it turns with the card. The title and text exist
- * once, above the turning layers, and fade out only while the card is edge-on,
- * so nothing is duplicated for crawlers or screen readers. One real button,
+ * once, above the turning layers, and step aside while the card turns, so
+ * nothing is duplicated for crawlers or screen readers. One real button,
  * stretched over the card, does the turning: a click anywhere works, and the
  * keyboard and assistive tech get a single labelled, pressed control.
+ *
+ * A turn takes TURN_MS (the transform transition on .tool-turn). The card lifts
+ * a little until it is edge-on, about 40% of the way through that curve, and
+ * settles as it lands; the copy returns only once the face is within a few
+ * degrees of flat, so text never sits over a card that is still turning.
  */
+const TURN_MS = 660;
 function ToolCard({ tool }: { tool: Tool }) {
   const [light, setLight] = useState(false);
-  const [turning, setTurning] = useState(false);
+  const [phase, setPhase] = useState<'still' | 'lift' | 'settle'>('still');
   const timer = useRef(0);
+  const card = useRef<HTMLElement>(null);
   useEffect(() => () => window.clearTimeout(timer.current), []);
+  // Decode both screenshots up front, so the hidden one is ready the moment
+  // it comes round instead of drawing in halfway through the turn.
+  useEffect(() => { card.current?.querySelectorAll('img').forEach(img => { img.decode().catch(() => undefined); }); }, []);
   const turn = () => {
     setLight(value => !value);
     if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-    setTurning(true);
     window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setTurning(false), 560);
+    setPhase('lift');
+    timer.current = window.setTimeout(() => {
+      setPhase('settle');
+      timer.current = window.setTimeout(() => setPhase('still'), TURN_MS * .4);
+    }, TURN_MS * .42);
   };
-  return <article className={`tool${light ? ' is-light' : ''}${turning ? ' is-turning' : ''}`}>
+  return <article ref={card} className={`tool${light ? ' is-light' : ''}${phase === 'still' ? '' : ' is-turning'}${phase === 'lift' ? ' is-lifted' : ''}`}>
     <div className="tool-turn">
       <ToolFace tool={tool} side="front" shown={!light}/>
       <ToolFace tool={tool} side="back" shown={light}/>
