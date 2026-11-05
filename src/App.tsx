@@ -51,7 +51,7 @@ const organization = {
 
 function Mark() { return <img className="mark" src={asset('images/focusforge-icon.png')} alt="" width="32" height="32" aria-hidden="true"/>; }
 function Download({ tone = 'ink', children = 'Download for Android' }: { tone?: 'ink' | 'light' | 'outline'; children?: React.ReactNode }) {
-  return <a className={`button button-${tone}`} href={DOWNLOAD}>{children}</a>;
+  return <a className={`button button-${tone}`} href={DOWNLOAD}>{children}<Arrow/></a>;
 }
 
 /**
@@ -77,8 +77,38 @@ function Phone({ src, alt, className = '', eager = false }: { src: string; alt: 
   </div></figure>;
 }
 
-/** The arrow on links that leave for GitHub. */
-const Arrow = () => <svg className="arrow" viewBox="0 0 12 12" aria-hidden="true"><path d="M3.25 8.75 8.5 3.5M4.25 3.5H8.5v4.25" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+const ARROWS = {
+  out: 'M3.25 8.75 8.5 3.5M4.25 3.5H8.5v4.25',
+  right: 'M2 6h7.5M6.5 2.75 9.75 6 6.5 9.25',
+  down: 'M6 2v7.5M2.75 6.5 6 9.75l3.25-3.25',
+  up: 'M6 10V2.5M2.75 5.5 6 2.25l3.25 3.25'
+};
+/**
+ * A small arrow that says where a link goes: out of the site (the default),
+ * on to the next page, or along this one. It nudges that way on hover.
+ */
+const Arrow = ({ to = 'out' }: { to?: keyof typeof ARROWS }) => <svg className={`arrow arrow-${to}`} viewBox="0 0 12 12" aria-hidden="true"><path d={ARROWS[to]} fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/></svg>;
+
+/**
+ * Copies the support address, for readers whose phone has no mail app set up.
+ * It only appears once it can work; the address beside it is always a link.
+ */
+function CopyEmail() {
+  const [copied, setCopied] = useState(false);
+  const timer = useRef(0);
+  const enhanced = useHydrated();
+  useEffect(() => () => window.clearTimeout(timer.current), []);
+  if (!enhanced || !navigator.clipboard) return null;
+  const copy = () => navigator.clipboard.writeText(EMAIL).then(() => {
+    setCopied(true);
+    window.clearTimeout(timer.current);
+    timer.current = window.setTimeout(() => setCopied(false), 2000);
+  }, () => setCopied(false));
+  return <>
+    <button type="button" className={`copy-email${copied ? ' is-copied' : ''}`} onClick={copy}>{copied ? 'Copied' : 'Copy'}</button>
+    <output className="sr-only">{copied ? 'Email address copied' : ''}</output>
+  </>;
+}
 
 /**
  * On phones the header is a floating pill that stays in reach while the page
@@ -115,15 +145,20 @@ function Header() {
 
 function Footer() {
   return <footer className="footer">
-    <div className="footer-brand"><a className="wordmark" href={pageLink('/')} translate="no"><Mark/>FocusForge</a><p>A quieter phone for the hours that matter, made for Android and published in the open.</p></div>
+    <div className="footer-brand">
+      <a className="wordmark" href={pageLink('/')} translate="no"><Mark/>FocusForge</a>
+      <p>A quieter phone for the hours that matter, made for Android and published in the open.</p>
+      <p className="mail-line"><a href={`mailto:${EMAIL}`}>{EMAIL}</a><CopyEmail/></p>
+    </div>
     <nav aria-label="Legal and support">
       <a href={pageLink('/guides')}>Guides</a>
       <a href={pageLink('/privacy')}>Privacy policy</a>
       <a href={pageLink('/terms')}>Terms</a>
       <a href={pageLink('/support')}>Support</a>
-      <a href={source}>Source code</a>
+      <a href={source}>Source code<Arrow/></a>
     </nav>
-    <p className="footer-note">© {__BUILD_YEAR__} FocusForge, by MufasaXz.</p>
+    <p className="footer-note">© {__BUILD_YEAR__} FocusForge, by MufasaXz. Made for quieter evenings.</p>
+    <a className="footer-top" href="#top">Back to top<Arrow to="up"/></a>
     <p className="footer-wordmark" aria-hidden="true" translate="no">FocusForge</p>
   </footer>;
 }
@@ -349,11 +384,12 @@ function Home() {
   return <>
     <JsonLd data={graph}/>
     <section className="hero" aria-labelledby="hero-title">
+      <p className="hero-status"><span className="status-dot" aria-hidden="true"/>Free on Android · Open source</p>
       <Heading level={1} id="hero-title" strong="Make room" soft="for what matters."/>
       <Phone className="hero-phone" src="images/shot-focus-dark.webp" alt="FocusForge focus timer counting down a 25-minute block in dark mode" eager/>
       <div className="hero-panel">
         <p className="hero-lead">FocusForge pairs a calm study timer with Shield, a gentle lock on whatever quietly swallows your evenings.</p>
-        <div className="hero-actions"><Download/><a className="text-link" href="#features">Take a closer look</a></div>
+        <div className="hero-actions"><Download/><a className="text-link" href="#features">Take a closer look<Arrow to="down"/></a></div>
         <p className="hero-note">Costs nothing, shows no ads, and runs on Android 7.0 or newer.</p>
       </div>
     </section>
@@ -394,7 +430,7 @@ function Home() {
     </section>
 
     <section className="reading" aria-labelledby="reading-title">
-      <div className="section-intro"><Title id="reading-title">Read before your next exam</Title><p><a className="text-link" href={pageLink('/guides')}>All guides</a></p></div>
+      <div className="section-intro"><Title id="reading-title">Read before your next exam</Title><p><a className="text-link" href={pageLink('/guides')}>All guides<Arrow to="right"/></a></p></div>
       <GuideList heading="h3"/>
     </section>
 
@@ -412,7 +448,7 @@ function Home() {
       <div className="closing-copy">
         <Heading id="closing-title" strong="Less scrolling." soft="More becoming."/>
         <p className="closing-lead">Install it tonight and start your first block tomorrow morning. No account required.</p>
-        <div className="closing-actions"><Download/><a className="text-link" href={source}>View the source</a></div>
+        <div className="closing-actions"><Download/><a className="text-link" href={source}>View the source<Arrow/></a></div>
       </div>
       <Phone className="closing-phone" src="images/shot-focus-light.webp" alt="FocusForge focus timer in light mode with 44 minutes left"/>
     </section>
@@ -423,7 +459,7 @@ function Home() {
 function GuideList({ heading: Heading, className }: { heading: 'h2' | 'h3'; className?: string }) {
   const items = guides.map(guide => <li key={guide.slug}>
     <a href={pageLink(guide.slug)}>
-      <span className="reading-time">{guide.minutes} min read</span>
+      <span className="reading-top"><span className="reading-time">{guide.minutes} min read</span><Arrow to="right"/></span>
       <Heading>{guide.title}</Heading>
       <p>{guide.description}</p>
     </a>
@@ -474,7 +510,7 @@ function GuidePage({ guide }: { guide: Guide }) {
     </div>
     <aside className="article-next" aria-labelledby="next-title">
       <h2 id="next-title">Keep reading</h2>
-      <ul className="reading-list">{others.map(other => <li key={other.slug}><a href={pageLink(other.slug)}><span className="reading-time">{other.minutes} min read</span><h3>{other.title}</h3></a></li>)}</ul>
+      <ul className="reading-list">{others.map(other => <li key={other.slug}><a href={pageLink(other.slug)}><span className="reading-top"><span className="reading-time">{other.minutes} min read</span><Arrow to="right"/></span><h3>{other.title}</h3></a></li>)}</ul>
       <p>Ready to try it? <a href={DOWNLOAD}>Download FocusForge for Android</a>.</p>
     </aside>
   </main>;
@@ -506,7 +542,7 @@ function Legal({ path }: { path: string }) {
  <Section title="No guarantees"><p>To the extent allowed by applicable law, the website and software are provided “as is” without warranties of availability, accuracy or fitness for a particular purpose. Nothing here excludes non-waivable consumer rights or liability that cannot legally be limited. No specific governing law or jurisdiction is asserted by this page.</p></Section>
  <Section title="Privacy, deletion and contact"><p>Read the <a href={pageLink("/privacy")}>privacy policy</a> for data practices and <a href={pageLink("/delete-account")}>request account deletion</a> if you wish to leave. For questions about these terms contact developer MufasaXz at <a href={`mailto:${EMAIL}`}>{EMAIL}</a>.</p></Section>
  </> : path === '/support' ? <>
- <Section title="Talk to the developer"><p>Email is the right place for account questions, deletion requests and private information. Do not send passwords, recovery codes or sensitive screenshots.</p><EmailLink/><p className="small">Prefer to copy the address? <a href={`mailto:${EMAIL}`}>{EMAIL}</a></p></Section>
+ <Section title="Talk to the developer"><p>Email is the right place for account questions, deletion requests and private information. Do not send passwords, recovery codes or sensitive screenshots.</p><EmailLink/><p className="small mail-line">Prefer to copy the address? <a href={`mailto:${EMAIL}`}>{EMAIL}</a><CopyEmail/></p></Section>
  <Section title="Download and installation"><p>Get the Android APK from the <a href={DOWNLOAD}>official GitHub release page</a>. FocusForge supports Android 7.0 and above. Android may ask you to allow installation from your browser or file manager; review the source before approving. We do not currently provide an iOS version or a Google Play download link.</p></Section>
  <Section title="Shielding not working?"><p>For normal apps, use <strong>Allow app usage</strong> on Home below Start session, review the disclosure and grant Usage Access. Allow <strong>Draw over other apps</strong> when configuring a boundary, then enable your chosen rule. Accessibility is only needed when you enable supported YouTube Shorts or feed filters. If you tapped <strong>Stop</strong> in the app-boundaries notification, enable an app rule again from FocusForge. Revoked access or device battery settings can interrupt background operation, and supported YouTube screens can change after updates. Review the <a href={pageLink("/privacy")}>access disclosure</a> before granting permissions.</p></Section>
  <Section title="Profile and shared-content help"><p>To change or remove your photo, open your profile avatar in the app. Linked accounts back up the thumbnail privately; leaderboard sharing makes it visible with your weekly entry. Turn sharing off from the leaderboard’s Sharing options menu to withdraw your entries. For concerns about a shared name or photo, email <a href={`mailto:${EMAIL}`}>{EMAIL}</a> with the displayed name, leaderboard week or group, and reason. Do not include passwords or sensitive personal information. Group report and hide controls are available inside groups.</p></Section>
@@ -522,5 +558,5 @@ function Legal({ path }: { path: string }) {
 }
 export default function App({ path = '/' }: { path?: string }) {
  useEffect(() => { document.title = pageTitles[path] || 'Page not found — FocusForge'; }, [path]);
- return <div className="sheet"><a className="skip-link" href="#main">Skip to content</a><Header/>{path === '/' ? <main id="main"><Home/></main> : path === '/guides' ? <GuidesIndex/> : guideFor(path) ? <GuidePage guide={guideFor(path)!}/> : path === '/verify-email' ? <VerifyEmail/> : path === '/account-action' ? <AccountAction/> : path === '/get-on-play' ? <GetOnPlay/> : ROUTES.includes(path) ? <Legal path={path}/> : <main id="main" className="legal"><h1 className="legal-title">Let’s find your focus.</h1><p className="legal-intro">This page doesn’t exist.</p><a href={pageLink("/")} className="button button-ink">Back to home</a></main>}<Footer/></div>;
+ return <div className="sheet" id="top"><a className="skip-link" href="#main">Skip to content</a><Header/>{path === '/' ? <main id="main"><Home/></main> : path === '/guides' ? <GuidesIndex/> : guideFor(path) ? <GuidePage guide={guideFor(path)!}/> : path === '/verify-email' ? <VerifyEmail/> : path === '/account-action' ? <AccountAction/> : path === '/get-on-play' ? <GetOnPlay/> : ROUTES.includes(path) ? <Legal path={path}/> : <main id="main" className="legal"><h1 className="legal-title">Let’s find your focus.</h1><p className="legal-intro">This page doesn’t exist.</p><a href={pageLink("/")} className="button button-ink">Back to home</a></main>}<Footer/></div>;
 }

@@ -99,6 +99,13 @@ test('the phone header keeps the download beside a two-line menu button', async 
  assert.match(header, /<button class="menu-toggle" aria-expanded="false" aria-controls="navigation"><span class="menu-lines" aria-hidden="true"><\/span><span class="sr-only">Menu<\/span><\/button>/);
  assert.match(header, /aria-label="FocusForge home"/, 'the wordmark keeps its name when the narrowest phones hide the text');
 });
+test('home opens with its status and the footer offers the address and a way back up', async () => {
+ const html = await read('dist/index.html');
+ assert.match(html, /<p class="hero-status"><span class="status-dot" aria-hidden="true"><\/span>Free on Android · Open source<\/p>/);
+ const footer = html.slice(html.indexOf('<footer'), html.indexOf('</footer>'));
+ assert.match(footer, /<p class="mail-line"><a href="mailto:focusforgehelp@gmail\.com">focusforgehelp@gmail\.com<\/a><\/p>/, 'the address is a plain link before the copy button exists');
+ assert.ok(footer.includes('href="#top"') && html.includes('class="sheet" id="top"'), 'back to top lands on the sheet');
+});
 test('the retired animated design is gone', async () => {
  const html = await read('dist/index.html');
  for (const text of ['story-scroll', 'feature-rail', 'hero-demo-clock', 'podium', 'study-circle', 'sunburst', 'orbit', 'floating-note', 'reveal']) assert.ok(!html.includes(text), text);
