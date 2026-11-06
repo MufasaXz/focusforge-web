@@ -62,16 +62,15 @@ test('privacy covers actual sensitive access and optional cloud features', async
  assert.ok(!html.includes('does not declare SYSTEM_ALERT_WINDOW'));
  assert.ok(!html.includes('we collect nothing'));
 });
-test('homepage keeps original download actions without promoting the tester guide', async () => {
+test('homepage leads with Google Play and keeps the APK as a second choice', async () => {
  const html = await read('dist/index.html');
  assert.match(html, /https:\/\/github.com\/MufasaXz\/focusforge\/releases\/latest/);
  assert.ok(!html.includes('get-on-play'));
- assert.match(html, /Download for Android/);
- assert.match(html, /Take a closer look/);
+ assert.match(html, /class="play-badge" href="https:\/\/play.google.com\/store\/apps\/details\?id=dev.focusforge.focusforge" aria-label="Get it on Google Play"/);
+ assert.match(html, /Or download the APK/);
  assert.ok(!html.includes('Get on Play Store'));
  assert.ok(!html.includes('Get on GitHub'));
  assert.match(html, /running on a real Android phone/);
- assert.ok(!html.includes('play.google.com/store/apps'));
 });
 test('home is one sheet with real screenshots in phone frames', async () => {
  const html = await read('dist/index.html');
@@ -94,14 +93,14 @@ test('home is one sheet with real screenshots in phone frames', async () => {
 test('the phone header keeps the download beside a two-line menu button', async () => {
  const html = await read('dist/index.html');
  const header = html.slice(html.indexOf('<header'), html.indexOf('</header>'));
- const download = header.indexOf('class="button button-outline header-download" href="https://github.com/MufasaXz/focusforge/releases/latest"');
+ const download = header.indexOf('class="button button-outline header-download" href="https://play.google.com/store/apps/details?id=dev.focusforge.focusforge"');
  assert.ok(download > header.indexOf('</nav>'), 'the download sits in the bar, outside the links that collapse');
  assert.match(header, /<button class="menu-toggle" aria-expanded="false" aria-controls="navigation"><span class="menu-lines" aria-hidden="true"><\/span><span class="sr-only">Menu<\/span><\/button>/);
  assert.match(header, /aria-label="FocusForge home"/, 'the wordmark keeps its name when the narrowest phones hide the text');
 });
 test('home opens with its status and the footer offers the address and a way back up', async () => {
  const html = await read('dist/index.html');
- assert.match(html, /<p class="hero-status"><span class="status-dot" aria-hidden="true"><\/span>Free on Android · Open source<\/p>/);
+ assert.match(html, /<p class="hero-status"><span class="status-dot" aria-hidden="true"><\/span>Now on Google Play · Free and open source<\/p>/);
  const footer = html.slice(html.indexOf('<footer'), html.indexOf('</footer>'));
  assert.match(footer, /<p class="mail-line"><a href="mailto:focusforgehelp@gmail\.com">focusforgehelp@gmail\.com<\/a><\/p>/, 'the address is a plain link before the copy button exists');
  assert.ok(footer.includes('href="#top"') && html.includes('class="sheet" id="top"'), 'back to top lands on the sheet');
@@ -135,20 +134,14 @@ test('motion respects accessibility settings and deploy headers are present', as
  assert.ok(config.headers[0].headers.some(header => header.key === 'Content-Security-Policy'));
 });
 
-test('closed-test guide preserves ordered links and useful no-JavaScript instructions', async () => {
+test('the old closed-test address announces the launch and links to Google Play', async () => {
  const html = await read('dist/get-on-play.html');
- const destinations = ['https://groups.google.com/g/focusforge', 'https://play.google.com/apps/testing/dev.focusforge.focusforge', 'https://play.google.com/store/apps/details?id=dev.focusforge.focusforge'];
- let position = -1;
- for (const destination of destinations) {
-  const next = html.indexOf('href="' + destination + '"');
-  assert.ok(next > position, destination);
-  position = next;
- }
- for (const text of ['50+ testers', 'same Gmail', '14 consecutive days', '1–5 minutes daily', 'honest feedback', 'private to the developer', 'Google makes the final approval decision']) assert.ok(html.includes(text), text);
+ assert.ok(html.includes('FocusForge is on'));
+ assert.ok(html.includes('href="https://play.google.com/store/apps/details?id=dev.focusforge.focusforge"'));
+ assert.ok(!html.includes('apps/testing'), 'no tester sign-up links remain');
  assert.ok(!(await read('dist/sitemap.xml')).includes('get-on-play'));
  assert.ok(html.includes('name="robots" content="noindex"'));
  for (const page of ['index','privacy','support','terms','delete-account']) assert.ok(!(await read('dist/'+page+'.html')).includes('href="'+link('get-on-play')+'"'));
-
 });
 
 test('email verification is private, accessible and points resets at the email button', async () => {

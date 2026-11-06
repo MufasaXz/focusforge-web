@@ -64,7 +64,7 @@ try {
    });
    assert.ok(hero.leadRight < hero.phoneLeft, 'hero copy never runs under the phone');
   }
-  const downloads = await page.locator('a[href*="releases/latest"]').count();
+  const downloads = await page.locator('a[href*="releases/latest"], a[href*="play.google.com/store/apps"]').count();
   assert.ok(downloads >= 2);
   if (width <= 820) {
    const toggle = page.locator('.menu-toggle');

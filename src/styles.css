@@ -363,3 +363,9 @@ a:is(:hover,:focus-visible)>.arrow-up{transform:translateY(-2px)}
   .tool-face.tool-back{transform:none}
   .tool-face[aria-hidden=true]{visibility:hidden}
 }
+.play-badge{display:inline-flex;align-items:center;gap:12px;min-height:56px;padding:0 22px 0 18px;border:1px solid #a6a6a6;border-radius:12px;background:#000;color:#fff;text-decoration:none;transition:background-color .18s ease}
+.play-badge:hover{background:#1f1f1f}
+.play-badge:focus-visible{outline:3px solid var(--ink);outline-offset:3px}
+.play-badge span{display:flex;flex-direction:column;font:600 1.375rem/1 var(--font);letter-spacing:-.01em}
+.play-badge small{font-size:.6875rem;font-weight:500;letter-spacing:.02em;margin-bottom:4px}
+.play-badge svg{flex:none}

@@ -4,6 +4,8 @@ import VerifyEmail from './VerifyEmail';
 import AccountAction from './AccountAction';
 import { useHydrated } from './useHydrated';
 import GetOnPlay from './GetOnPlay';
+import PlayBadge from './PlayBadge';
+import { PLAY_STORE } from './downloadLinks';
 import './getOnPlay.css';
 import { asset, pageLink } from './paths';
 import { guides, guideFor, type Guide } from './guides';
@@ -50,9 +52,6 @@ const organization = {
 };
 
 function Mark() { return <img className="mark" src={asset('images/focusforge-icon.png')} alt="" width="32" height="32" aria-hidden="true"/>; }
-function Download({ tone = 'ink', children = 'Download for Android' }: { tone?: 'ink' | 'light' | 'outline'; children?: React.ReactNode }) {
-  return <a className={`button button-${tone}`} href={DOWNLOAD}>{children}<Arrow/></a>;
-}
 
 /**
  * A phone, front on, measured from the reference handset render and finished
@@ -138,7 +137,7 @@ function Header() {
       <a href={pageLink('/guides')} onClick={shut}>Guides</a>
       <a href={pageLink('/#faq')} onClick={shut}>Questions</a>
     </nav>
-    <a className="button button-outline header-download" href={DOWNLOAD}>Download<Arrow/></a>
+    <a className="button button-outline header-download" href={PLAY_STORE}>Get the app<Arrow/></a>
     <button className="menu-toggle" aria-expanded={open} aria-controls="navigation" onClick={() => setOpen(!open)}><span className="menu-lines" aria-hidden="true"/><span className="sr-only">Menu</span></button>
   </header>;
 }
@@ -164,7 +163,7 @@ function Footer() {
 }
 
 const faq = [
-  ['Is FocusForge really free?', 'Yes. FocusForge is free and open source, with no ads and no subscriptions. The Android app is available from our GitHub releases.'],
+  ['Is FocusForge really free?', 'Yes. FocusForge is free and open source, with no ads and no subscriptions. Get the Android app on Google Play, or download the APK from our GitHub releases.'],
   ['Do I need an account?', 'The focus timer works without an account. Choose Skip for now to start locally without waiting for Firebase sign-in. Linked accounts use Firebase for private study and badge backups, groups and the optional leaderboard. Using the app without an email account is not a promise of no network activity.'],
   ['What permissions does shielding need?', 'Normal app shielding uses Usage Access to detect the app in use and Draw over other apps to display a pause screen. FocusForge shows a disclosure and asks before it reads your list of installed apps, and that list stays on your phone. Accessibility is requested separately when you enable supported YouTube Shorts or feed filtering. App boundaries run with a foreground notification and a Stop action. All access is optional and can be revoked in Android settings.'],
   ['Does it work on iPhone?', 'FocusForge is currently Android-first, for Android 7.0 and above. We do not currently offer an iOS download.'],
@@ -372,7 +371,8 @@ function Home() {
         operatingSystem: 'Android 7.0 or later',
         isAccessibleForFree: true,
         offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-        downloadUrl: DOWNLOAD,
+        downloadUrl: PLAY_STORE,
+        installUrl: PLAY_STORE,
         image: `${SITE}/images/focusforge-icon.png`,
         screenshot: ['shot-focus-dark', 'shot-shield-dark', 'shot-home-dark'].map(name => `${SITE}/images/${name}.webp`),
         publisher: { '@id': `${SITE}/#organization` },
@@ -384,12 +384,12 @@ function Home() {
   return <>
     <JsonLd data={graph}/>
     <section className="hero" aria-labelledby="hero-title">
-      <p className="hero-status"><span className="status-dot" aria-hidden="true"/>Free on Android · Open source</p>
+      <p className="hero-status"><span className="status-dot" aria-hidden="true"/>Now on Google Play · Free and open source</p>
       <Heading level={1} id="hero-title" strong="Make room" soft="for what matters."/>
       <Phone className="hero-phone" src="images/shot-focus-dark.webp" alt="FocusForge focus timer counting down a 25-minute block in dark mode" eager/>
       <div className="hero-panel">
         <p className="hero-lead">FocusForge pairs a calm study timer with Shield, a gentle lock on whatever quietly swallows your evenings.</p>
-        <div className="hero-actions"><Download/><a className="text-link" href="#features">Take a closer look<Arrow to="down"/></a></div>
+        <div className="hero-actions"><PlayBadge/><a className="text-link" href={DOWNLOAD}>Or download the APK<Arrow/></a></div>
         <p className="hero-note">Costs nothing, shows no ads, and runs on Android 7.0 or newer.</p>
       </div>
     </section>
@@ -448,7 +448,7 @@ function Home() {
       <div className="closing-copy">
         <Heading id="closing-title" strong="Less scrolling." soft="More becoming."/>
         <p className="closing-lead">Install it tonight and start your first block tomorrow morning. No account required.</p>
-        <div className="closing-actions"><Download/><a className="text-link" href={source}>View the source<Arrow/></a></div>
+        <div className="closing-actions"><PlayBadge/><a className="text-link" href={source}>View the source<Arrow/></a></div>
       </div>
       <Phone className="closing-phone" src="images/shot-focus-light.webp" alt="FocusForge focus timer in light mode with 44 minutes left"/>
     </section>
@@ -511,7 +511,7 @@ function GuidePage({ guide }: { guide: Guide }) {
     <aside className="article-next" aria-labelledby="next-title">
       <h2 id="next-title">Keep reading</h2>
       <ul className="reading-list">{others.map(other => <li key={other.slug}><a href={pageLink(other.slug)}><span className="reading-top"><span className="reading-time">{other.minutes} min read</span><Arrow to="right"/></span><h3>{other.title}</h3></a></li>)}</ul>
-      <p>Ready to try it? <a href={DOWNLOAD}>Download FocusForge for Android</a>.</p>
+      <p>Ready to try it? <a href={PLAY_STORE}>Get FocusForge on Google Play</a>.</p>
     </aside>
   </main>;
 }
@@ -546,7 +546,7 @@ function Legal({ path }: { path: string }) {
  <Section title="Privacy, deletion and contact"><p>Read the <a href={pageLink("/privacy")}>privacy policy</a> for data practices and <a href={pageLink("/delete-account")}>request account deletion</a> if you wish to leave. For questions about these terms contact developer MufasaXz at <a href={`mailto:${EMAIL}`}>{EMAIL}</a>.</p></Section>
  </> : path === '/support' ? <>
  <Section title="Talk to the developer"><p>Email is the right place for account questions, deletion requests and private information. Do not send passwords, recovery codes or sensitive screenshots.</p><EmailLink/><p className="small mail-line">Prefer to copy the address? <a href={`mailto:${EMAIL}`}>{EMAIL}</a><CopyEmail/></p></Section>
- <Section title="Download and installation"><p>Get the Android APK from the <a href={DOWNLOAD}>official GitHub release page</a>. FocusForge supports Android 7.0 and above. Android may ask you to allow installation from your browser or file manager; review the source before approving. We do not currently provide an iOS version or a Google Play download link.</p></Section>
+ <Section title="Download and installation"><p>Get FocusForge on <a href={PLAY_STORE}>Google Play</a>. You can also download the APK from the <a href={DOWNLOAD}>official GitHub release page</a>; Android may ask you to allow installation from your browser or file manager. The Play Store and GitHub versions are signed differently, so uninstall one before installing the other. FocusForge supports Android 7.0 and above. There is no iOS version yet.</p></Section>
  <Section title="Shielding not working?"><p>For normal apps, use <strong>Allow app usage</strong> on Home below Start session, review the disclosure and grant Usage Access. Allow <strong>Draw over other apps</strong> when configuring a boundary, then enable your chosen rule. Accessibility is only needed when you enable supported YouTube Shorts or feed filters. If you tapped <strong>Stop</strong> in the app-boundaries notification, enable an app rule again from FocusForge. Revoked access or device battery settings can interrupt background operation, and supported YouTube screens can change after updates. Review the <a href={pageLink("/privacy")}>access disclosure</a> before granting permissions.</p></Section>
  <Section title="Profile and shared-content help"><p>To change or remove your photo, open your profile avatar in the app. Linked accounts back up the thumbnail privately; leaderboard sharing makes it visible with your weekly entry. Turn sharing off from the leaderboard’s Sharing options menu to withdraw your entries. For concerns about a shared name or photo, email <a href={`mailto:${EMAIL}`}>{EMAIL}</a> with the displayed name, leaderboard week or group, and reason. Do not include passwords or sensitive personal information. Group report and hide controls are available inside groups.</p></Section>
  <Section title="Bugs and feature ideas"><p>Report non-private problems on <a href={`${source}/issues/new`}>GitHub Issues</a>. Include your Android version, app version and steps to reproduce. GitHub issues are public: never post account identifiers, private data or deletion requests there.</p></Section>
