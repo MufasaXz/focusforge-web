@@ -2,13 +2,13 @@ import test, { before, after, beforeEach } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { initializeTestEnvironment, assertFails } from '@firebase/rules-unit-testing';
-import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { doc, getDoc, setDoc, Timestamp } from 'firebase/firestore';
 import { deleteAccountAndData } from '../src/accountCleanup.ts';
 
 let env;
 before(async () => {
  env = await initializeTestEnvironment({ projectId: 'demo-focusforge-web', firestore: {
-  host: '127.0.0.1', port: 8180,
+  host: '127.0.0.1', port: Number(process.env.FIRESTORE_EMULATOR_HOST?.split(':').at(-1) ?? 8180),
   rules: readFileSync(new URL('./fixtures/firestore.rules', import.meta.url), 'utf8'),
  } });
 });
@@ -104,4 +104,20 @@ test('foreign identity cannot clean up another account', async () => {
  let deleted = false;
  await assert.rejects(deleteAccountAndData({ uid: 'alex', getIdToken: async () => '', delete: async () => { deleted = true; } }, db('blair')));
  assert.equal(deleted, false); assert.equal(await exists('users/alex'), true);
+});
+
+
+test('retrying an old deletion preserves its fence after Auth removal', async () => {
+ const requestedAt = Timestamp.fromMillis(Date.now() - 3 * 60 * 60 * 1000);
+ await seed({'accountCleanup/schema':{version:2}, 'accountDeletions/alex':{requestedAt},
+  'users/alex/preferences/studyBackup':{ownerUid:'alex'}});
+ let deleted = false;
+ await deleteAccountAndData({uid:'alex', getIdToken:async () => '', delete:async () => { deleted = true; }}, db('alex'));
+ assert.equal(deleted, true);
+ const marker = await getDoc(doc(db('alex'),'accountDeletions/alex'));
+ assert.equal(marker.data().requestedAt.toMillis(), requestedAt.toMillis());
+ await assertFails(setDoc(doc(db('alex'),'users/alex/preferences/studyBackup'),
+  {version:1,ownerUid:'alex',data:'{}',modifiedAt:Date.now()}));
+ await assertFails(setDoc(doc(db('alex'),'leaderboard/2026-11-09/entries/alex'),
+  {ownerUid:'alex',name:'Alex',minutes:25,updatedAt:Date.now()}));
 });
