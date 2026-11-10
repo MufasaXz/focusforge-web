@@ -15,7 +15,8 @@ import { RESET_SUBJECT, resetEmailHtml, resetEmailText } from './_resetEmail.js'
  * account, so it cannot be used to discover who signed up. Requests are
  * limited per address and per network, counted in Firestore under hashed keys
  * so no raw address or IP is stored. Clients cannot read that collection: the
- * security rules match nothing there.
+ * security rules match nothing there. A record is of no use an hour after its
+ * last attempt, and each request removes the ones that have run out.
  */
 
 const SITE = 'https://focusforgeorg.vercel.app';
@@ -23,6 +24,7 @@ const HOUR = 60 * 60 * 1000;
 const PER_ADDRESS = 3;
 const PER_NETWORK = 10;
 const MAX_BODY = 2048;
+const SWEEP_BATCH = 50;
 const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,63}$/;
 
 type Request = IncomingMessage & { body?: unknown };
@@ -57,6 +59,23 @@ async function withinLimit(key: string, limit: number) {
     transaction.set(ref, { hits: [...recent, now], expiresAt: new Date(now + HOUR) });
     return true;
   });
+}
+
+/**
+ * Deletes rate-limit records whose hour has passed.
+ *
+ * Firestore's own expiry (a TTL policy on `expiresAt`) needs a billing plan
+ * this project does not have, so without this the hashed addresses and
+ * networks were kept for good. A record past `expiresAt` holds no attempt
+ * from the last hour, so removing it changes no one's limit.
+ */
+async function sweepExpired() {
+  const { db } = admin();
+  const expired = await db.collection('_resetLimits').where('expiresAt', '<', new Date()).limit(SWEEP_BATCH).get();
+  if (expired.empty) return;
+  const batch = db.batch();
+  for (const record of expired.docs) batch.delete(record.ref);
+  await batch.commit();
 }
 
 async function readBody(req: Request): Promise<unknown> {
@@ -101,6 +120,8 @@ export default async function handler(req: Request, res: ServerResponse) {
     if (!await withinLimit(`network:${clientAddress(req)}`, PER_NETWORK) || !await withinLimit(`address:${email}`, PER_ADDRESS)) {
       return send(res, 429, { error: 'rate' });
     }
+    // Housekeeping must never cost someone their reset email.
+    await sweepExpired().catch(error => console.error('reset-limit sweep failed:', (error as Error).message));
     const { auth } = admin();
     try {
       await auth.getUserByEmail(email);
