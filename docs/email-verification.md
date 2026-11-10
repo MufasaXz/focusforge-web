@@ -26,13 +26,14 @@ Deployment configuration:
   project's public web app configuration. Do not put service account keys here.
 - Deploy the website before changing email templates.
 - Firebase Authentication → Settings → Authorized domains must include
-  `focusforgeorg.vercel.app`.
+  `www.focus-forge.in` and `focus-forge.in`. Keep the old Vercel domain authorized
+  while previously sent links still use it.
 - The action URL (`notification.sendEmail.callbackUri`) is shared by every
   email template, so it may point only at `/account-action`, which handles or
   forwards every mode (see `docs/account-emails.md`), never at this
   verification-only page.
   After the site is deployed, set the Android verification continue URL to
-  `https://focusforgeorg.vercel.app/verify-email?flow=complete`, with
+  `https://www.focus-forge.in/verify-email?flow=complete`, with
   `handleCodeInApp: false`. Continue URL and action handler are distinct.
 - With the default Firebase action handler still configured, Firebase confirms
   the address first and can continue to the branded page, which directs users
@@ -55,3 +56,11 @@ fixture-only Firebase public values, serve the build on port 4178, then run
 `node scripts/verify-email-check.mjs`. All Firebase requests are intercepted.
 Use real Vercel environment values for a production deployment, rebuilding the
 website through Vercel rather than uploading the fixture build.
+
+On November 10, 2026, the branded website routes are live and both
+`www.focus-forge.in` and `focus-forge.in` are authorized in Firebase Auth.
+Vercel's build command pins `SITE_URL` to the branded domain because its older
+environment value otherwise overrides the prerenderer's new default. The
+Firebase-hosted action handler is still configured for native verification
+and fallback reset emails; the custom reset-email endpoint uses the branded
+`/account-action` page.

@@ -37,7 +37,7 @@ Do these in order. The page must be live before Firebase points at it.
    - Subject: `Reset your FocusForge password`
    - Message: paste `docs/email-templates/password-reset.html` (without its
      leading comment).
-   - Customize action URL: `https://focusforgeorg.vercel.app/account-action`
+   - Customize action URL: `https://www.focus-forge.in/account-action`
 3. Send yourself a reset from the app and follow the button once to confirm.
 
 The action URL is shared by every template, which is why the page handles or
