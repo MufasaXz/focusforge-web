@@ -22,7 +22,7 @@ export function resetEmailHtml(email: string, link: string) {
   <tr><td align="center">
     <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:480px;background:#ffffff;border:1px solid #e2e1dc;border-radius:20px;">
       <tr><td style="padding:36px 36px 8px 36px;">
-        <img src="https://focusforgeorg.vercel.app/images/focusforge-icon.png" width="44" height="44" alt="FocusForge" style="display:block;border:0;border-radius:11px;">
+        <img src="https://www.focus-forge.in/images/focusforge-icon.png" width="44" height="44" alt="FocusForge" style="display:block;border:0;border-radius:11px;">
       </td></tr>
       <tr><td style="padding:20px 36px 0 36px;">
         <h1 style="margin:0;font-size:24px;line-height:1.25;font-weight:700;color:#1c1a17;">Reset your password</h1>

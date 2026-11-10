@@ -8,7 +8,7 @@ and Firestore use memory persistence; no administrator credential is shipped.
 Set VITE_FIREBASE_API_KEY and VITE_FIREBASE_APP_ID for local and deployment builds.
 These are the Firebase web application's public client identifiers. Keep local
 configuration in ignored .env.local. The registered website app is named
-FocusForge website. Authorize focusforgeorg.vercel.app in Firebase Authentication.
+FocusForge website. Authorize www.focus-forge.in and focus-forge.in in Firebase Authentication.
 Email/password and Google must be enabled. The CSP in vercel.json permits the
 required Firebase requests and Google authentication popup.
 

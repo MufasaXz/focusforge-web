@@ -17,7 +17,7 @@ const EMAIL = 'focusforgehelp@gmail.com';
 const DOWNLOADS = '10K+';
 /** Every prerendered path. @public Read by scripts/prerender.mjs through Vite. */
 export const ROUTES = ['/', '/guides', ...guides.map(guide => guide.slug), '/privacy', '/terms', '/support', '/delete-account', '/get-on-play', '/verify-email', '/account-action'];
-const SITE = 'https://focusforgeorg.vercel.app';
+const SITE = 'https://www.focus-forge.in';
 const source = 'https://github.com/MufasaXz/focusforge';
 /** @public Read by scripts/prerender.mjs through Vite. */
 export const pageTitles: Record<string, string> = { '/': 'FocusForge — Make room for what matters.', '/guides': 'Study guides — FocusForge', ...Object.fromEntries(guides.map(guide => [guide.slug, `${guide.title} — FocusForge`])), '/privacy': 'Privacy policy — FocusForge', '/terms': 'Terms of use — FocusForge', '/support': 'Support — FocusForge', '/delete-account': 'Delete your account — FocusForge', '/get-on-play': 'Join the Play Store test — FocusForge', '/verify-email': 'Verify your email — FocusForge', '/account-action': 'Your FocusForge account — FocusForge' };

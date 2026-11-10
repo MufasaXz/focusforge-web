@@ -19,7 +19,7 @@ test('assets and verified icon use the configured deployment base', async () => 
 });
 test('canonical, social, sitemap and robots metadata match SITE_URL', async () => {
  const html = await read('dist/privacy.html');
- const site = (process.env.SITE_URL || 'https://focusforgeorg.vercel.app').replace(/\/$/, '');
+ const site = (process.env.SITE_URL || 'https://www.focus-forge.in').replace(/\/$/, '');
  const legal = `${site}/privacy${base === '/' ? '' : '.html'}`;
  assert.ok(html.includes(`rel="canonical" href="${legal}"`));
  assert.ok(html.includes(`property="og:url" content="${legal}"`));

@@ -19,7 +19,7 @@ import { RESET_SUBJECT, resetEmailHtml, resetEmailText } from './_resetEmail.js'
  * last attempt, and each request removes the ones that have run out.
  */
 
-const SITE = 'https://focusforgeorg.vercel.app';
+const SITE = 'https://www.focus-forge.in';
 const HOUR = 60 * 60 * 1000;
 const PER_ADDRESS = 3;
 const PER_NETWORK = 10;
