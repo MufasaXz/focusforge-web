@@ -44,47 +44,72 @@ The action URL is shared by every template, which is why the page handles or
 forwards every mode. Firebase does not allow the email verification message to
 be edited; that email keeps Firebase's wording.
 
-## Rate-limited Firebase reset delivery
+## Branded reset emails with private queued delivery
 
-The app posts `{ "email": "…" }` to `/api/password-reset`. The function validates
-and bounds the request, counts attempts in Firestore, then calls Firebase's
-`accounts:sendOobCode` API with `PASSWORD_RESET`. Firebase sends its configured
-email and handles account-existence privacy. **Keep improved email privacy
-enabled in Firebase Authentication.** The custom Admin lookup and Gmail SMTP
-path were removed because their timing and delivery failures exposed whether
-an address was registered. The earlier branded SMTP templates are historical
-assets; this endpoint no longer uses them.
+The app posts `{ "email": "…" }` to `/api/password-reset`. After validation,
+App Check policy and rate limiting, the endpoint durably queues the same job for
+**every** address and returns `200 { ok: true }`. It performs no account lookup
+or SMTP work before ending the response. A successful response means the request
+was accepted, not that an email exists for every address.
+
+After the response, `@vercel/functions.waitUntil` runs an immediate delivery
+attempt. Firebase Admin generates a one-time reset link for a registered address.
+The unchanged `api/_resetEmail.ts` HTML/text template is sent through Gmail SMTP,
+with sender name FocusForge and subject “Reset your FocusForge password”. The
+button opens `/account-action` on `www.focus-forge.in`. Unknown or disabled
+accounts finish silently in the background. SMTP/link-generation failures never
+change the public status or expose provider details.
+
+Jobs live in `_resetMailQueue`, a server-only collection with no client rule
+grants. Email addresses are AES-256-GCM encrypted with a domain-separated key
+derived from the server service-account private key. The job ID is authenticated
+as associated data, preventing ciphertext substitution between jobs. Reset codes
+and generated links are never persisted. Completed jobs are deleted; pending
+jobs expire after 15 minutes. Expired records are removed by the minute worker.
+If rotating the service-account private key, let existing jobs drain first (up
+to 15 minutes), or expire them explicitly; ciphertext created with the old key
+cannot be recovered using the new key.
+
+The existing Cloudflare Worker invokes `/api/reset-delivery` every minute to
+retry durable work even when no new reset requests arrive. It signs a short-lived
+timestamp with `RESET_DELIVERY_SIGNING_KEY` (base64 PKCS8 Ed25519). Only the public
+verification key is committed in `api/_resetDeliveryAuth.ts`. Requests without a
+valid signature fail before database access. The worker handles at most five
+jobs concurrently per run and uses 90-second transactional leases, bounded
+backoff and four attempts. A crash after SMTP accepted a message but before the
+job was deleted can cause a duplicate; a stable message ID helps identify it.
+Delivery is at least once, not exactly once. Exhausted retries log a generic
+operational error with no address or reset token.
 
 Each address may ask 3 times per rolling hour and each network 10 times. Excess
-requests get `429`; the app does not retry them through its fallback. Counters
-live under hashed keys in `_resetLimits`, inaccessible to client SDKs. Expired
-records are deleted with update-time preconditions, so a concurrent request's
-fresh counter cannot be erased by an old sweep.
+requests get `429`; the app does not retry them through its fallback. Hashed
+counters in `_resetLimits` and all expiry sweeps retain update-time preconditions,
+so old snapshots cannot delete renewed records. The 2048-byte limit applies to
+parsed objects, strings, buffers and raw streams; extra fields are rejected.
+Vercel's edge-owned forwarded address supplies the network key.
 
-Malformed/oversized requests are rejected before any backend work. The 2048-byte
-limit applies to framework-parsed bodies, strings, buffers and raw streams.
-Unexpected fields are rejected. On Vercel the network key uses the edge-owned
-`x-vercel-forwarded-for` header rather than a caller-supplied proxy chain.
+Required production variables:
 
-Required production environment variables:
-
-- `FIREBASE_SERVICE_ACCOUNT`: server-only service account JSON, also used by
-  `/api/ai-authorize`. Never prefix this with `VITE_`.
-- `FIREBASE_WEB_API_KEY`, or the existing `VITE_FIREBASE_API_KEY`: public Firebase
-  client key for the native reset REST request. Do not apply browser-only
-  restrictions to a key used for server requests.
+- `FIREBASE_SERVICE_ACCOUNT`: server-only Admin credentials and queue encryption
+  material. Never prefix this with `VITE_`.
+- `SMTP_USER` and `SMTP_PASS`: the existing Gmail sender and app password; retain
+  them. The standard Firebase template is only the app's existing emergency
+  fallback when the endpoint cannot accept a request.
 - `APP_CHECK_ENFORCE=true`: require App Check on custom endpoints **after** the
   attestation rollout. During monitoring, missing tokens are allowed and invalid
   supplied tokens are rejected.
 - `VITE_RECAPTCHA_ENTERPRISE_SITE_KEY`: optional public web site-key override.
+- Cloudflare secret `RESET_DELIVERY_SIGNING_KEY`: scheduler-only private key. It
+  cannot read user data or authorize an arbitrary recipient; it can only wake
+  the bounded delivery queue.
 
-`SMTP_USER` and `SMTP_PASS` are unused and can be removed from the hosting secret
-store after this deployment. Keep the Firebase Auth handler configured; outgoing
-emails use Firebase's own template, not the old custom Gmail template.
-
-A provider/configuration outage returns a generic `503` with no provider error
-text or email address in logs. The app retains its native Firebase fallback,
-which is governed by Firebase's separate limits and App Check enforcement.
+Deploy the website first, configure the Worker secret, then deploy the minute
+scheduler. Confirm the signed endpoint returns success and unauthenticated
+requests return `401`. Monitor `reset_scheduler_failed`, deferred delivery and
+exhausted-retry logs. Queue/configuration outages before acceptance return a
+uniform `503`; known and unknown addresses follow exactly the same queue path.
+No live test email is needed for the automated tests: real Firestore emulator
+checks use fake SMTP and verify the exact legacy template and button URL.
 
 ## AI authorization
 

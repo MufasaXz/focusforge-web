@@ -15,14 +15,17 @@
     "test:security:emulator": "node --test tests/security-emulator.test.mjs"
   },
   "dependencies": {
+    "@vercel/functions": "^3.11.1",
     "firebase": "^13.0.0",
     "firebase-admin": "^13.10.0",
+    "nodemailer": "^10.5.0",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^6.0.0",
     "@playwright/test": "^1.51.1",
+    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^4.5.0",

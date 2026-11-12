@@ -1,13 +1,11 @@
 import type { ServerResponse } from 'node:http';
+import { waitUntil } from '@vercel/functions';
+import { enqueueReset, deliverReset } from './_resetQueue.js';
 import { checkApp, clientAddress, readBody, send, sweepExpired, withinLimit, type Request } from './_security.js';
 
 const EMAIL = /^[^\s@]{1,64}@[^\s@]{1,253}\.[^\s@]{2,63}$/;
 
-/**
- * Firebase owns delivery and account-existence privacy. Do not look up users,
- * generate admin reset links, or synchronously send SMTP here: those create
- * different failure/timing paths for known and unknown addresses.
- */
+/** Queue the same work for all addresses. Delivery never shapes the response. */
 export default async function handler(req: Request, res: ServerResponse) {
   if (req.method !== 'POST') {
     res.setHeader('Allow', 'POST');
@@ -29,25 +27,16 @@ export default async function handler(req: Request, res: ServerResponse) {
       return send(res, 429, { error: 'rate' });
     }
     await sweepExpired().catch(() => console.warn('reset-limit sweep deferred'));
-    const key = process.env.FIREBASE_WEB_API_KEY || process.env.VITE_FIREBASE_API_KEY;
-    if (!key) throw new Error('reset service not configured');
-    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-    if (typeof req.headers['x-firebase-appcheck'] === 'string') {
-      headers['X-Firebase-AppCheck'] = req.headers['x-firebase-appcheck'];
+    const id = await enqueueReset(email);
+    // End the response before account lookup or SMTP. A minute scheduler retries
+    // the durable record if this process exits or the immediate attempt fails.
+    send(res, 200, { ok: true });
+    try {
+      waitUntil(deliverReset(id).catch(() => console.warn('reset background delivery deferred')));
+    } catch {
+      console.warn('reset delivery left for scheduler');
     }
-    const result = await fetch(`https://identitytoolkit.googleapis.com/v1/accounts:sendOobCode?key=${encodeURIComponent(key)}`, {
-      method: 'POST', headers,
-      body: JSON.stringify({ requestType: 'PASSWORD_RESET', email }),
-      signal: AbortSignal.timeout(10000),
-    });
-    // Improved email privacy MUST stay enabled in Firebase Authentication.
-    // Its reset API deliberately gives the same success for unknown addresses.
-    if (!result.ok) {
-      // Never expose Google's error payload (which may contain request details).
-      // Surface a retryable service failure; the app can use Firebase directly.
-      return send(res, 503, { error: 'send' });
-    }
-    return send(res, 200, { ok: true });
+    return;
   } catch {
     console.error('password-reset unavailable');
     return send(res, 503, { error: 'send' });

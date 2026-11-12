@@ -13,6 +13,7 @@ const hash = value => createHash('sha256').update(value).digest('hex');
 function fixture(options = {}) {
   const records = new Map(), calls = [], logs = [];
   let version = 0, queue = Promise.resolve(), sweepHook;
+  let responseEnded = false;
   const state = {authError: null, deleted: false, unavailable: false, ...options};
   function put(key, data) {records.set(key, {data, version: ++version});}
   function snapshot(ref) {
@@ -67,6 +68,18 @@ function fixture(options = {}) {
   }};
   const appCheck = {verifyToken: async token => {if (token !== 'valid-app') throw new Error('bad app');}};
   const modules = {
+    '@vercel/functions': {waitUntil: () => {}},
+    './_resetQueue.js': {
+      enqueueReset: async email => {
+        calls.push({type: 'enqueue', email});
+        if (state.queueFails) throw new Error('sensitive provider failure');
+        return 'fixture-job';
+      },
+      deliverReset: async id => {
+        calls.push({type: 'deliver', id, responseEnded});
+        if (state.deliveryFails) throw new Error('sensitive delivery failure');
+      },
+    },
     'node:crypto': {createHash},
     'firebase-admin/app': {getApps: () => [{}]},
     'firebase-admin/auth': {getAuth: () => auth},
@@ -81,7 +94,7 @@ function fixture(options = {}) {
     const compiled = ts.transpileModule(source, {compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022}}).outputText;
     const exports = {};
     vm.runInNewContext(compiled, {
-      exports, require: name => name.startsWith('./') ? load(name.slice(2, -3)) : modules[name] || require(name),
+      exports, require: name => modules[name] || (name.startsWith('./') ? load(name.slice(2, -3)) : require(name)),
       process: {env}, Buffer, Date, URL, AbortSignal,
       console: {error: (...args) => logs.push(args), warn: (...args) => logs.push(args)},
       fetch: async (url, init) => {
@@ -93,9 +106,10 @@ function fixture(options = {}) {
     return cache[name] = exports;
   }
   async function request(name, body, headers = {}, stream = false) {
+    responseEnded = false;
     const req = stream ? Readable.from(body) : {body};
     Object.assign(req, {method: 'POST', headers, socket: {remoteAddress: '192.0.2.1'}});
-    const res = {headers: {}, setHeader(k, v) {this.headers[k] = v;}, end(body) {this.body = JSON.parse(body);}};
+    const res = {headers: {}, setHeader(k, v) {this.headers[k] = v;}, end(body) {this.body = JSON.parse(body); responseEnded = true;}};
     await load(name).default(req, res);
     return res;
   }
@@ -104,32 +118,32 @@ function fixture(options = {}) {
 
 const authorized = {authorization: 'Bearer valid-token'};
 
-test('reset delegates known and unknown addresses to the same privacy-protected Firebase API', async () => {
-  const f = fixture();
-  for (const email of ['known@example.invalid', 'unknown@example.invalid']) {
-    const r = await f.request('password-reset', {email});
-    assert.equal(r.statusCode, 200);
-    assert.deepEqual(r.body, {ok: true});
-    assert.equal(r.headers['Cache-Control'], 'no-store');
-  }
-  assert.equal(f.calls.filter(c => c.type === 'fetch').length, 2);
-  for (const c of f.calls) {
-    assert.equal(new URL(c.url).pathname, '/v1/accounts:sendOobCode');
-    assert.equal(JSON.parse(c.init.body).requestType, 'PASSWORD_RESET');
+test('known and unknown addresses get the same queued receipt, before account lookup or delivery', async () => {
+  for (const deliveryFails of [false, true]) {
+    const f = fixture({deliveryFails});
+    for (const email of ['known@example.invalid', 'unknown@example.invalid']) {
+      const r = await f.request('password-reset', {email});
+      assert.equal(r.statusCode, 200);
+      assert.deepEqual(r.body, {ok: true});
+      assert.equal(r.headers['Cache-Control'], 'no-store');
+    }
+    assert.equal(f.calls.filter(c => c.type === 'enqueue').length, 2);
+    assert.ok(f.calls.filter(c => c.type === 'deliver').every(c => c.responseEnded));
+    assert.ok(!JSON.stringify(f.logs).includes('example.invalid'));
+    assert.ok(!JSON.stringify(f.logs).includes('sensitive'));
   }
 });
 
-test('Firebase outages produce identical retryable failures without leaking provider bodies or logs', async () => {
-  for (const options of [{upstreamStatus: 500, upstreamBody: {email: 'private'}}, {fetchFails: true}]) {
-    const f = fixture(options);
-    for (const email of ['known@example.invalid', 'unknown@example.invalid']) {
-      const result = await f.request('password-reset', {email});
-      assert.equal(result.statusCode, 503);
-      assert.deepEqual(result.body, {error: 'send'});
-    }
-    assert.ok(!JSON.stringify(f.logs).includes('SMTP_PASS'));
-    assert.ok(!JSON.stringify(f.logs).includes('example.invalid'));
+test('queue outages fail identically without looking up accounts or losing an accepted request', async () => {
+  const f = fixture({queueFails: true});
+  for (const email of ['known@example.invalid', 'unknown@example.invalid']) {
+    const result = await f.request('password-reset', {email});
+    assert.equal(result.statusCode, 503);
+    assert.deepEqual(result.body, {error: 'send'});
   }
+  assert.ok(!f.calls.some(c => c.type === 'deliver'));
+  assert.ok(!JSON.stringify(f.logs).includes('example.invalid'));
+  assert.ok(!JSON.stringify(f.logs).includes('sensitive'));
 });
 
 test('reset keeps address and network limits without sending after rejection', async () => {
@@ -139,7 +153,7 @@ test('reset keeps address and network limits without sending after rejection', a
   const g = fixture();
   for (let i = 0; i < 10; i++) assert.equal((await g.request('password-reset', {email: `a${i}@example.invalid`})).statusCode, 200);
   assert.equal((await g.request('password-reset', {email: 'last@example.invalid'})).statusCode, 429);
-  assert.equal(g.calls.length, 10);
+  assert.equal(g.calls.filter(c => c.type === 'enqueue').length, 10);
 });
 
 test('concurrent expiry sweep cannot erase a refreshed address counter', async () => {
