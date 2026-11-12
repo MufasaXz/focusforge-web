@@ -5,24 +5,24 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host 0.0.0.0",
-    "build": "tsc -b && vite build && node scripts/prerender.mjs",
+    "build": "tsc -b && tsc -p tsconfig.api.json && vite build && node scripts/prerender.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "test:browser": "node scripts/browser-check.mjs && node scripts/play-test-check.mjs",
-    "test": "npm run build && node --test tests/site.test.mjs",
+    "test": "npm run build && node --test tests/site.test.mjs tests/security.test.mjs",
     "test:cleanup": "node --test tests/account-cleanup.test.mjs",
-    "slop": "AISLOP_NO_TELEMETRY=1 npx --yes aislop@0.20.0 scan ."
+    "slop": "AISLOP_NO_TELEMETRY=1 npx --yes aislop@0.20.0 scan .",
+    "test:security": "node --test tests/security.test.mjs",
+    "test:security:emulator": "node --test tests/security-emulator.test.mjs"
   },
   "dependencies": {
     "firebase": "^13.0.0",
     "firebase-admin": "^13.10.0",
-    "nodemailer": "^10.3.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0"
   },
   "devDependencies": {
     "@firebase/rules-unit-testing": "^6.0.0",
     "@playwright/test": "^1.51.1",
-    "@types/nodemailer": "^8.0.2",
     "@types/react": "^19.1.0",
     "@types/react-dom": "^19.1.0",
     "@vitejs/plugin-react": "^4.5.0",

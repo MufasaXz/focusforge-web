@@ -13,3 +13,6 @@ test-results/
 .aislop/history.jsonl
 .vercel
 .env*
+
+# Local Firebase emulator diagnostics.
+*-debug.log
