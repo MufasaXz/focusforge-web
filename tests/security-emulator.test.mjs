@@ -24,7 +24,7 @@ function load(name) {
   const mockRequire = name => {
     if (name.startsWith('./')) return load(name.slice(2, -3));
     if (name === 'firebase-admin/app') return {getApps: () => [app]};
-    if (name === 'firebase-admin/firestore') return {getFirestore: () => db};
+    if (name === 'firebase-admin/firestore') return {...require(name), getFirestore: () => db};
     if (name === 'firebase-admin/app-check') return {getAppCheck: () => ({})};
     if (name === 'nodemailer') return {default: {createTransport: () => ({
       async sendMail(mail) {
@@ -40,7 +40,7 @@ function load(name) {
       },
       verifyIdToken: async (token, revoked) => {
       assert.equal(revoked, true);
-      return {uid: token, firebase: {sign_in_provider: 'google.com'}};
+      return {uid: token, auth_time: Math.floor(Date.now() / 1000), firebase: {sign_in_provider: 'google.com'}};
     }})};
     return require(name);
   };
@@ -183,4 +183,63 @@ test('delivery endpoint signatures reject unauthenticated, expired, future and f
   assert.equal(validDeliveryRequest(req, now - 90001, pub), false);
   assert.equal(validDeliveryRequest(req, now), false);
   assert.equal(validDeliveryRequest({headers: {}}, now, pub), false);
+});
+
+async function accountData(uid, body) {
+ const res = {setHeader() {}, end(body) {this.body = JSON.parse(body);}};
+ await load('account-data').default({method: 'POST', headers: {authorization: 'Bearer ' + uid}, body}, res);
+ return res;
+}
+
+test('account export pages include only owned private, report and historical sharing rows', async () => {
+ const uid = 'export-' + crypto.randomUUID();
+ await db.doc('users/' + uid + '/preferences/studyBackup').set({ownerUid: uid, data: 'owned'});
+ await db.doc('pipReports/' + uid).set({ownerUid: uid, reply: 'own'});
+ await db.doc('pipReports/other-' + uid).set({ownerUid: 'someone-else', reply: 'private-other'});
+ await db.doc('leaderboard/test/entries/' + uid).set({ownerUid: uid, minutes: 25});
+ await db.doc('leaderboard/test/entries/other-' + uid).set({ownerUid: 'someone-else', minutes: 50});
+ for (const section of ['preferences', 'pipReports', 'entries']) {
+   const res = await accountData(uid, {operation: 'export', section});
+   assert.equal(res.statusCode, 200);
+   assert.equal(res.body.records.length, 1);
+   assert.equal(res.body.records[0].data.ownerUid, uid);
+ }
+ assert.equal((await accountData(uid, {operation: 'export', section: 'users/someone-else'})).statusCode, 400);
+});
+
+test('report storage and erasure share a transaction fence, preserving other accounts', async () => {
+ const uid = 'erase-' + crypto.randomUUID();
+ assert.equal((await accountData(uid, {operation: 'report', reason: 'harmful', reply: 'Email child@example.com'})).statusCode, 200);
+ const before = await db.collection('pipReports').where('ownerUid', '==', uid).get();
+ assert.equal(before.size, 1);
+ assert.ok(!before.docs[0].get('reply').includes('child@example.com'));
+ assert.ok(before.docs[0].get('expiresAt').toMillis() > Date.now());
+ const erase = await accountData(uid, {operation: 'erase'});
+ assert.equal(erase.statusCode, 200);
+ assert.equal(erase.body.done, true);
+ assert.equal((await db.collection('pipReports').where('ownerUid', '==', uid).get()).size, 0);
+ assert.equal((await accountData(uid, {operation: 'report', reason: 'harmful', reply: 'late'})).statusCode, 401);
+});
+
+
+test('trusted erasure covers missing-parent descendants and legacy links without removing other study data', async () => {
+ const uid = 'legacy-' + crypto.randomUUID();
+ const other = 'other-' + uid;
+ const child = 'child-' + uid;
+ const own = 'users/' + uid + '/old/missing/nested/private';
+ const keep = 'users/' + other + '/preferences/private';
+ const childKeep = 'users/' + child + '/stats/study';
+ await db.doc(own).set({private: true});
+ await db.doc(keep).set({keep: true});
+ await db.doc(childKeep).set({keep: true});
+ await db.doc('users/' + other + '/children/' + uid).set({childUid: uid});
+ await db.doc('users/' + child + '/guardian/link').set({parentUid: uid});
+ await db.doc('users/' + child + '/remoteRules/rule').set({legacy: true});
+ await db.doc('pairCodes/' + uid).set({childUid: uid});
+ assert.equal((await accountData(uid, {operation: 'erase'})).statusCode, 200);
+ for (const path of [own, 'users/' + other + '/children/' + uid,
+   'users/' + child + '/guardian/link', 'users/' + child + '/remoteRules/rule', 'pairCodes/' + uid]) {
+   assert.equal((await db.doc(path).get()).exists, false, path);
+ }
+ for (const path of [keep, childKeep]) assert.equal((await db.doc(path).get()).exists, true, path);
 });

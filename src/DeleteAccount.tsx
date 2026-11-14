@@ -1,20 +1,7 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import type { User } from 'firebase/auth';
 import './deleteAccount.css';
-
-function messageFor(error: unknown) {
- const code = typeof error === 'object' && error !== null && 'code' in error ? String(error.code) : '';
- if (['auth/invalid-credential', 'auth/wrong-password', 'auth/user-not-found', 'auth/invalid-email'].includes(code)) return 'We could not sign in. Check your email and password, or use Google if that is how you joined FocusForge.';
- if (code === 'auth/popup-closed-by-user' || code === 'auth/cancelled-popup-request') return 'Google sign-in was cancelled. Your account has not been deleted.';
- if (code === 'auth/popup-blocked') return 'Your browser blocked Google sign-in. Allow pop-ups for this website and try again.';
- if (code === 'auth/unauthorized-domain' || code === 'auth/operation-not-allowed') return 'This sign-in method is unavailable. Please contact FocusForge support.';
- if (code === 'auth/requires-recent-login' || code === 'auth/user-token-expired' || code === 'auth/invalid-user-token') return 'Please sign out here, sign in again, then retry deletion. Some cloud records may already have been removed.';
- if (code.includes('permission-denied') || code.includes('failed-precondition')) return 'Cloud cleanup could not finish. Your login has not been deleted. Please retry or contact support if this continues.';
- if (code.includes('too-many-requests') || code.includes('resource-exhausted')) return 'Too many requests. Wait a little before trying again. No deletion success has been confirmed.';
- if (code.includes('network') || code.includes('unavailable')) return 'The connection was interrupted. Keep this page open and retry when you are online. Your login is kept until cloud cleanup finishes.';
- if (error instanceof Error && !code) return error.message;
- return 'We could not complete this action. Please retry or contact support. Deletion has not been confirmed.';
-}
+import { accountErrorMessage } from './accountErrors';
 
 export default function DeleteAccount() {
  const [ready, setReady] = useState(false);
@@ -33,7 +20,7 @@ export default function DeleteAccount() {
   let active = true;
   import('./firebaseClient').then(({ getAccountClient }) => {
    getAccountClient(); if (active) setReady(true);
-  }).catch(error => { if (active) setError(messageFor(error)); });
+  }).catch(error => { if (active) setError(accountErrorMessage(error)); });
   return () => { active = false; };
  }, []);
  useEffect(() => {
@@ -43,10 +30,10 @@ export default function DeleteAccount() {
   return () => window.removeEventListener('beforeunload', warn);
  }, [deleting]);
  useEffect(() => { if (user || done) heading.current?.focus(); }, [user, done]);
- async function run(action: () => Promise<void>) {
+ async function run(action: () => Promise<void>, context?: 'export') {
   if (locked.current) return;
   locked.current = true; setBusy(true); setError(''); setStatus('');
-  try { await action(); } catch (error) { setError(messageFor(error)); }
+  try { await action(); } catch (error) { setError(context === 'export' ? 'Your cloud export could not finish. Sign in again or retry when online. No download was created.' : accountErrorMessage(error)); }
   finally { locked.current = false; setBusy(false); setPassword(''); }
  }
  async function signIn(event?: FormEvent) {
@@ -87,12 +74,28 @@ export default function DeleteAccount() {
    } finally { setDeleting(false); }
   });
  }
+ async function exportData() {
+  if (!user) return;
+  await run(async () => {
+   setStatus('Collecting your cloud data…');
+   const {exportCloudData} = await import('./accountData');
+   const data = await exportCloudData(user);
+   const url = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}));
+   const link = document.createElement('a');
+   link.href = url;
+   link.download = `focusforge-cloud-export-${new Date().toISOString().slice(0, 10)}.json`;
+   document.body.appendChild(link); link.click(); link.remove();
+   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+   setStatus('Your cloud JSON download is ready. Use Export My Data in the Android app to include phone-local records.');
+  }, 'export');
+ }
  return <section className="account-card" aria-labelledby="account-title" aria-busy={busy}>
   <p className="account-step">{done ? 'All done' : user ? 'Step 2 of 2: confirm your choice' : 'Step 1 of 2: sign in to your FocusForge account'}</p>
   <h2 id="account-title" tabIndex={-1} ref={heading}>{done ? 'Your account has been deleted.' : user ? 'Ready to say goodbye?' : 'Sign in to delete your account.'}</h2>
   {done ? <><p>Your Firebase sign-in account and associated cloud records have been removed. You can close this page.</p><p className="small">This website cannot erase data stored on your phone. Clear FocusForge’s app storage or uninstall it to remove remaining local history. A minimal security record prevents old sessions from recreating deleted data.</p></> : user ? <>
    <p className="account-identity">Signed in as <strong>{user.email || 'your linked account'}</strong></p>
-   <div className="account-warning"><strong>Deletion is permanent.</strong><p>Your login, private study and achievement backups, group memberships, shared progress and leaderboard entries will be removed. Your study backup includes your profile name and chosen photo thumbnail, subjects, custom plans, goals and dated focus sessions. Published leaderboard photos are removed with their entries. If you own a group, ownership transfers to another member; a group with no remaining members closes.</p></div>
+   <div className="account-export"><button className="button" type="button" onClick={exportData} disabled={busy}>Export My Data (JSON)</button><p className="small">Download your cloud records before deleting. Your phone’s local study history is available through the app’s export.</p></div>
+   <div className="account-warning"><strong>Deletion is permanent.</strong><p>Your login, private profile/progress and achievement backups, Pip answer reports, historical private study records, group memberships and leaderboard entries will be removed. Current private backups contain your profile and level/progress totals; detailed focus sessions and plans stay on your phone. Published leaderboard photos are removed with their entries. If you own a group, ownership transfers to another member; a group with no remaining members closes.</p></div>
    <label className="account-confirm"><input type="checkbox" checked={confirmed} onChange={e => setConfirmed(e.target.checked)} disabled={busy}/><span>I understand that deleting my account and cloud data cannot be undone.</span></label>
    <div className="account-actions"><button className="button account-danger" type="button" onClick={removeAccount} disabled={!confirmed || busy}>{deleting ? 'Deleting your account…' : 'Permanently delete my account'}</button><button className="account-secondary" type="button" onClick={signOut} disabled={busy}>Sign out</button></div>
    <p className="small">Keep this page open until completion. If interrupted, sign in again and retry. Signing out alone does not delete anything.</p>

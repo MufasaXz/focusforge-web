@@ -1,4 +1,5 @@
 import type { ServerResponse } from 'node:http';
+import { FieldValue } from 'firebase-admin/firestore';
 import { admin, checkApp, hash, readBody, send, sweepExpired, type Request } from './_security.js';
 
 /**
@@ -17,7 +18,7 @@ export default async function handler(req: Request, res: ServerResponse) {
     const body = await readBody(req, 256);
     if (Object.keys(body).some(key => key !== 'operation')) throw new Error('body');
     operation = body.operation;
-    if (operation !== 'answer' && operation !== 'report') throw new Error('operation');
+    if (!['answer', 'report', 'privacy-export', 'privacy-delete'].includes(String(operation))) throw new Error('operation');
   } catch {
     return send(res, 400, { error: 'invalid-argument' });
   }
@@ -43,6 +44,16 @@ export default async function handler(req: Request, res: ServerResponse) {
       return send(res, 401, { error: 'unauthenticated' });
     }
     if (!await checkApp(req)) return send(res, 403, { error: 'app-check' });
+    if (operation === 'privacy-export' || operation === 'privacy-delete') {
+      if (operation === 'privacy-delete') {
+        if (!Number.isFinite(user.auth_time) || Date.now() / 1000 - user.auth_time > 300) return send(res, 403, {error: 'requires-recent-login'});
+        await db.runTransaction(async tx => {
+          const fence = db.doc(`accountDeletions/${user.uid}`);
+          if (!(await tx.get(fence)).exists) tx.create(fence, {requestedAt: FieldValue.serverTimestamp()});
+        });
+      }
+      return send(res, 200, {uid: user.uid});
+    }
     const now = new Date();
     const day = now.toISOString().slice(0, 10);
     const counter = db.collection('_aiLimits').doc(hash(user.uid));

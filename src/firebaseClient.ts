@@ -1,5 +1,5 @@
 import { initializeApp } from 'firebase/app';
-import { initializeAppCheck, ReCaptchaEnterpriseProvider } from 'firebase/app-check';
+import { initializeAppCheck, ReCaptchaEnterpriseProvider, getToken, type AppCheck } from 'firebase/app-check';
 import { initializeAuth, inMemoryPersistence, browserPopupRedirectResolver, connectAuthEmulator } from 'firebase/auth';
 import { initializeFirestore, memoryLocalCache, connectFirestoreEmulator } from 'firebase/firestore';
 
@@ -16,8 +16,9 @@ function createClient() {
   ['www.focus-forge.in', 'focus-forge.in', 'focusforgeorg.vercel.app'].includes(window.location.hostname);
  const siteKey = import.meta.env.VITE_RECAPTCHA_ENTERPRISE_SITE_KEY ||
   (productionHost ? '6LdKgxwuAAAAAP2JlWbvfVROgdUOCAa9wjSOKCy2' : '');
+ let appCheck: AppCheck | undefined;
  if (!emulated && siteKey) {
-  initializeAppCheck(app, { provider: new ReCaptchaEnterpriseProvider(siteKey), isTokenAutoRefreshEnabled: true });
+  appCheck = initializeAppCheck(app, { provider: new ReCaptchaEnterpriseProvider(siteKey), isTokenAutoRefreshEnabled: true });
  }
  const auth = initializeAuth(app, { persistence: inMemoryPersistence, popupRedirectResolver: browserPopupRedirectResolver });
  const db = initializeFirestore(app, { localCache: memoryLocalCache() });
@@ -25,6 +26,12 @@ function createClient() {
   connectAuthEmulator(auth, 'http://127.0.0.1:9199', { disableWarnings: true });
   connectFirestoreEmulator(db, '127.0.0.1', 8180);
  }
- return { auth, db };
+ return { auth, db, appCheck };
 }
 export function getAccountClient() { return client ??= createClient(); }
+export async function accountAppCheckToken() {
+ try {
+  const appCheck = getAccountClient().appCheck;
+  return appCheck ? (await getToken(appCheck, false)).token : null;
+ } catch { return null; } // Server enforcement remains authoritative.
+}

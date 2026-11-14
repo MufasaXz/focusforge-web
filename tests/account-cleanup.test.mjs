@@ -58,7 +58,7 @@ test('cleanup removes private and historical rows, transfers groups, then delete
   assert.equal(await exists('users/alex/sessionData/c2Vzc2lvbi0x'), false);
   assert.equal(await exists('leaderboard/2025-01-06/entries/alex'), false);
   deleted = true;
- } }, db('alex'));
+ } }, db('alex'), () => {}, async () => {});
  assert.ok(deleted);
  for (const path of ['users/alex/achievements/earned', 'users/alex/old/nested/private/record', 'users/alex/deletionRefs/legacy', 'studyGroups/shared/members/alex', 'studyGroups/solo', 'groupInvites/WXYZ234567', 'studyGroups/missing/members/alex']) assert.equal(await exists(path), false, path);
  for (const path of ['users/blair/preferences/studyBackup', 'users/blair/sessionData/c2Vzc2lvbi0y', 'leaderboard/2025-01-06/entries/blair', 'studyGroups/shared/members/blair', 'groupInvites/ABCD234567', 'accountDeletions/alex']) assert.equal(await exists(path), true, path);
@@ -82,27 +82,27 @@ test('invalid legacy inventory fails closed, preserves login, and permits retry'
  await seed({ 'accountCleanup/schema': { version: 2 }, 'users/alex': {}, 'users/blair': { keep: true }, 'users/alex/deletionRefs/invalid': { path: 'users/blair' } });
  let deleted = false;
  const user = { uid: 'alex', getIdToken: async () => '', delete: async () => { deleted = true; } };
- await assert.rejects(deleteAccountAndData(user, db('alex')), /inventory/i);
+ await assert.rejects(deleteAccountAndData(user, db('alex'), () => {}, async () => {}), /inventory/i);
  assert.equal(deleted, false); assert.equal(await exists('users/blair'), true);
  await seed({ 'users/alex/deletionRefs/invalid': { path: 'users/alex/old/one' } });
- await deleteAccountAndData(user, db('alex'));
+ await deleteAccountAndData(user, db('alex'), () => {}, async () => {});
  assert.equal(deleted, true);
 });
 
 test('an Auth deletion failure remains retryable after cloud cleanup', async () => {
  await seed({ 'accountCleanup/schema': { version: 2 }, 'users/alex': {} });
  const user = { uid: 'alex', getIdToken: async () => '', delete: async () => { throw new Error('requires-recent-login'); } };
- await assert.rejects(deleteAccountAndData(user, db('alex')), /requires-recent-login/);
+ await assert.rejects(deleteAccountAndData(user, db('alex'), () => {}, async () => {}), /requires-recent-login/);
  let deleted = false;
  user.delete = async () => { deleted = true; };
- await deleteAccountAndData(user, db('alex'));
+ await deleteAccountAndData(user, db('alex'), () => {}, async () => {});
  assert.equal(deleted, true);
 });
 
 test('foreign identity cannot clean up another account', async () => {
  await seed({ 'accountCleanup/schema': { version: 2 }, 'users/alex': {} });
  let deleted = false;
- await assert.rejects(deleteAccountAndData({ uid: 'alex', getIdToken: async () => '', delete: async () => { deleted = true; } }, db('blair')));
+ await assert.rejects(deleteAccountAndData({ uid: 'alex', getIdToken: async () => '', delete: async () => { deleted = true; } }, db('blair'), () => {}, async () => {}));
  assert.equal(deleted, false); assert.equal(await exists('users/alex'), true);
 });
 
@@ -112,7 +112,7 @@ test('retrying an old deletion preserves its fence after Auth removal', async ()
  await seed({'accountCleanup/schema':{version:2}, 'accountDeletions/alex':{requestedAt},
   'users/alex/preferences/studyBackup':{ownerUid:'alex'}});
  let deleted = false;
- await deleteAccountAndData({uid:'alex', getIdToken:async () => '', delete:async () => { deleted = true; }}, db('alex'));
+ await deleteAccountAndData({uid:'alex', getIdToken:async () => '', delete:async () => { deleted = true; }}, db('alex'), () => {}, async () => {});
  assert.equal(deleted, true);
  const marker = await getDoc(doc(db('alex'),'accountDeletions/alex'));
  assert.equal(marker.data().requestedAt.toMillis(), requestedAt.toMillis());

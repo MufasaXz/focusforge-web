@@ -3,6 +3,7 @@ import {
  limit, query, runTransaction, serverTimestamp, where, writeBatch, deleteDoc,
  type Firestore, type Query,
 } from 'firebase/firestore';
+import { eraseAuxiliaryData } from './accountData.ts';
 
 const privateCollections = ['achievements', 'stats', 'appStats', 'preferences', 'sessions',
  'sessionData', 'guardian', 'children', 'remoteRules', 'progress', 'catalog'];
@@ -13,6 +14,7 @@ export async function deleteAccountAndData(
  user: { uid: string; getIdToken: (refresh?: boolean) => Promise<string>; delete: () => Promise<void> },
  db: Firestore,
  onProgress: (message: string) => void = () => {},
+ eraseAuxiliary: typeof eraseAuxiliaryData = eraseAuxiliaryData,
 ) {
  const uid = user.uid;
  if (!uid || uid.includes('/')) throw new Error('Invalid account identity.');
@@ -20,6 +22,8 @@ export async function deleteAccountAndData(
  onProgress('Checking account cleanup…');
  const schema = await getDocFromServer(doc(db, 'accountCleanup/schema'));
  if (schema.data()?.version !== 2) throw new Error('Account deletion setup is incomplete. Please contact support. Your login has not been deleted.');
+ onProgress('Removing Pip reports and account service records…');
+ await eraseAuxiliary(user);
  await runTransaction(db, async tx => {
   const marker = doc(db, 'accountDeletions', uid);
   if (!(await tx.get(marker)).exists()) tx.set(marker, { requestedAt: serverTimestamp() });

@@ -8,7 +8,7 @@
     "build": "tsc -b && tsc -p tsconfig.api.json && vite build && node scripts/prerender.mjs",
     "preview": "vite preview --host 0.0.0.0",
     "test:browser": "node scripts/browser-check.mjs && node scripts/play-test-check.mjs",
-    "test": "npm run build && node --test tests/site.test.mjs tests/security.test.mjs",
+    "test": "npm run build && node --test tests/site.test.mjs tests/security.test.mjs tests/account-data.test.mjs",
     "test:cleanup": "node --test tests/account-cleanup.test.mjs",
     "slop": "AISLOP_NO_TELEMETRY=1 npx --yes aislop@0.20.0 scan .",
     "test:security": "node --test tests/security.test.mjs",
