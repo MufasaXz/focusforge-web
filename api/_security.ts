@@ -22,6 +22,8 @@ export function send(res: ServerResponse, status: number, body: Record<string, u
   res.statusCode = status;
   res.setHeader('Content-Type', 'application/json');
   res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('Referrer-Policy', 'no-referrer');
   res.end(JSON.stringify(body));
 }
 

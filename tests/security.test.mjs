@@ -10,6 +10,18 @@ import ts from 'typescript';
 const require = createRequire(import.meta.url);
 const hash = value => createHash('sha256').update(value).digest('hex');
 
+test('account errors never expose raw exceptions while known codes remain actionable', () => {
+  const source = readFileSync(new URL('../src/accountErrors.ts', import.meta.url), 'utf8');
+  const code = ts.transpileModule(source, {compilerOptions: {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022}}).outputText;
+  const exports = {};
+  vm.runInNewContext(code, {exports});
+  const message = exports.accountErrorMessage;
+  assert.ok(!message(new Error('private-token and stack trace')).includes('private-token'));
+  assert.match(message({code: 'auth/network-request-failed', message: 'private-server-response'}), /connection was interrupted/);
+  assert.match(message({code: 'auth/requires-recent-login'}), /sign in again/);
+  assert.match(message({code: 'auth/wrong-password'}), /Check your email and password/);
+});
+
 function fixture(options = {}) {
   const records = new Map(), calls = [], logs = [];
   let version = 0, queue = Promise.resolve(), sweepHook;
