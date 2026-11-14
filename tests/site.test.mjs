@@ -51,8 +51,8 @@ test('privacy covers actual sensitive access and optional cloud features', async
  for (const text of ['Accessibility', 'Usage Access', 'Firebase', 'Parent control has been removed', 'Sign out', 'Existing anonymous Firebase sessions may still contact Firebase', 'Vercel', 'retention', 'Private study backup', 'custom plan library', 'dated completed focus sessions', 'Clear local analytics', 'Sharing options']) assert.ok(html.includes(text), text);
  assert.match(html, /level, weekly focus minutes/);
  assert.match(html, /including after you sign out/);
- assert.match(html, /Screen-time and app-usage history, Shield events and Accessibility screen contents stay on your device/);
- assert.match(html, /those study records can return when you recover that account/);
+ assert.match(html, /Screen-time history, Shield events and Accessibility screen contents stay on your device/);
+ assert.match(html, /Detailed focus sessions, subjects, custom plan library and goals stay on the phone/);
  assert.ok(!html.includes('Detailed focus sessions, screen time and screen contents are not included'));
  assert.match(html, /Draw over other apps/);
  assert.match(html, /Accessibility is only used for supported YouTube/);
@@ -199,3 +199,10 @@ test('section headings vary; the two-line display is kept for the opening and cl
  assert.equal((html.match(/class="display"|class="heading"/g) || []).length, 2);
  assert.ok((html.match(/class="title"/g) || []).length >= 4);
 });
+
+ test('privacy describes numeric-only consent-based coaching and realistic child/provider limits', async () => {
+  const html = await read('dist/privacy.html');
+  for (const value of ['Disagree (Offline Mode)', 'Pip Cloud Study Coach', 'Redaction cannot guarantee anonymity',
+    'under-18', 'verifiable parental consent', 'International processing and legal bases', 'Export My Data']) assert.ok(html.includes(value), value);
+  assert.ok(!html.includes('subject names with minutes studied'));
+ });
